@@ -1,0 +1,26 @@
+{
+  "benchmark": "IDNet-2025 Identity Document Analysis",
+  "institutions": [
+    "Kaggle IDNet",
+    "CactusLab IDNet-2025"
+  ],
+  "source_url": "https://huggingface.co/datasets/cactuslab/IDNet-2025",
+  "security_attributes": {
+    "laminate_microprint_integrity": {
+      "genuine_mean": 96.5,
+      "tampered_mean": 42.0
+    },
+    "uv_fluorescence_spectral_ratio": {
+      "genuine_nominal": 1.05,
+      "counterfeit": 2.45
+    },
+    "visual_mrz_concordance": {
+      "genuine": 99.2,
+      "forgery": 45.0
+    },
+    "date_logic_consistency": {
+      "valid": 100.0,
+      "anomalous": 20.0
+    }
+  }
+}

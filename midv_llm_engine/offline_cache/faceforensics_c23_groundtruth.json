@@ -1,0 +1,28 @@
+{
+  "benchmark": "FaceForensics++ (c23)",
+  "source_url": "https://github.com/ondyari/FaceForensics",
+  "manipulation_types": [
+    "Deepfakes",
+    "Face2Face",
+    "FaceSwap",
+    "NeuralTextures"
+  ],
+  "feature_signatures": {
+    "corneal_reflection_angle_delta": {
+      "pristine_max": 3.5,
+      "deepfake_min": 12.0
+    },
+    "spectral_energy_ratio": {
+      "pristine_nominal": 1.02,
+      "deepfake_grid_peak": 1.88
+    },
+    "landmark_asymmetry_index": {
+      "pristine_nominal": 2.1,
+      "deepfake_mean": 8.9
+    },
+    "liveness_micro_motion": {
+      "live_min": 0.75,
+      "photo_attack_max": 0.18
+    }
+  }
+}

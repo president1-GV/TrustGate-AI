@@ -21,7 +21,7 @@ dist
 venv
 __pycache__
 *.pyc
-midv_llm_engine
+midv_llm_engine/raw_datasets/
 *.local
 *.tsbuildinfo
 

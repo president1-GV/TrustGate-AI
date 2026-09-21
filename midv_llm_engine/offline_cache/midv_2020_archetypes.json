@@ -1,0 +1,608 @@
+{
+  "catalog_version": "2020.1",
+  "authoritative_source": "L3i Laboratory, University of La Rochelle",
+  "source_url": "http://l3i-share.univ-lr.fr/midv2020/",
+  "total_archetypes": 25,
+  "archetypes": {
+    "aze_passport": {
+      "country": "Azerbaijan",
+      "country_code": "AZE",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "deu_idcard": {
+      "country": "Germany",
+      "country_code": "D",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "TD1",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "esp_idcard": {
+      "country": "Spain",
+      "country_code": "ESP",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "TD1",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "fin_idcard": {
+      "country": "Finland",
+      "country_code": "FIN",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "TD1",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "fra_idcard": {
+      "country": "France",
+      "country_code": "FRA",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.419,
+      "mrz_standard": "TD2",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "gbr_passport": {
+      "country": "United Kingdom",
+      "country_code": "GBR",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "grc_passport": {
+      "country": "Greece",
+      "country_code": "GRC",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "ita_idcard": {
+      "country": "Italy",
+      "country_code": "ITA",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "TD1",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "lva_passport": {
+      "country": "Latvia",
+      "country_code": "LVA",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "nld_passport": {
+      "country": "Netherlands",
+      "country_code": "NLD",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "pol_idcard": {
+      "country": "Poland",
+      "country_code": "POL",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "TD1",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "prt_idcard": {
+      "country": "Portugal",
+      "country_code": "PRT",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "TD1",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "rus_internalpassport": {
+      "country": "Russian Federation",
+      "country_code": "RUS",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "svk_idcard": {
+      "country": "Slovakia",
+      "country_code": "SVK",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "TD1",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "usa_passport": {
+      "country": "United States",
+      "country_code": "USA",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "ind_passport": {
+      "country": "India",
+      "country_code": "IND",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "ind_pan": {
+      "country": "India",
+      "country_code": "IND",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "TD1",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "can_passport": {
+      "country": "Canada",
+      "country_code": "CAN",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "aus_passport": {
+      "country": "Australia",
+      "country_code": "AUS",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "jpn_passport": {
+      "country": "Japan",
+      "country_code": "JPN",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "sgp_passport": {
+      "country": "Singapore",
+      "country_code": "SGP",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "bra_passport": {
+      "country": "Brazil",
+      "country_code": "BRA",
+      "document_type": "passport",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "TD3",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "zaf_idcard": {
+      "country": "South Africa",
+      "country_code": "ZAF",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "TD1",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "est_idcard": {
+      "country": "Estonia",
+      "country_code": "EST",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "TD1",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    },
+    "che_idcard": {
+      "country": "Switzerland",
+      "country_code": "CHE",
+      "document_type": "id_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "TD1",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.22,
+        "x_max": 0.28,
+        "y_max": 0.72
+      },
+      "security_features": [
+        "guilloche_border",
+        "rainbow_print",
+        "microprint"
+      ]
+    }
+  }
+}

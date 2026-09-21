@@ -1,0 +1,614 @@
+{
+  "catalog_version": "500.2",
+  "authoritative_source": "Smart Engines / HSE University",
+  "source_url": "https://github.com/fcakyon/midv500",
+  "total_documents": 25,
+  "capture_conditions": [
+    "nominal",
+    "glare",
+    "shadow",
+    "tilt"
+  ],
+  "documents": [
+    {
+      "archetype": "aze_passport",
+      "country": "Azerbaijan",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "deu_idcard",
+      "country": "Germany",
+      "aspect_ratio": 1.586,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          489
+        ],
+        [
+          15,
+          489
+        ]
+      ]
+    },
+    {
+      "archetype": "esp_idcard",
+      "country": "Spain",
+      "aspect_ratio": 1.586,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          489
+        ],
+        [
+          15,
+          489
+        ]
+      ]
+    },
+    {
+      "archetype": "fin_idcard",
+      "country": "Finland",
+      "aspect_ratio": 1.586,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          489
+        ],
+        [
+          15,
+          489
+        ]
+      ]
+    },
+    {
+      "archetype": "fra_idcard",
+      "country": "France",
+      "aspect_ratio": 1.419,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "gbr_passport",
+      "country": "United Kingdom",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "grc_passport",
+      "country": "Greece",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "ita_idcard",
+      "country": "Italy",
+      "aspect_ratio": 1.586,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          489
+        ],
+        [
+          15,
+          489
+        ]
+      ]
+    },
+    {
+      "archetype": "lva_passport",
+      "country": "Latvia",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "nld_passport",
+      "country": "Netherlands",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "pol_idcard",
+      "country": "Poland",
+      "aspect_ratio": 1.586,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          489
+        ],
+        [
+          15,
+          489
+        ]
+      ]
+    },
+    {
+      "archetype": "prt_idcard",
+      "country": "Portugal",
+      "aspect_ratio": 1.586,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          489
+        ],
+        [
+          15,
+          489
+        ]
+      ]
+    },
+    {
+      "archetype": "rus_internalpassport",
+      "country": "Russian Federation",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "svk_idcard",
+      "country": "Slovakia",
+      "aspect_ratio": 1.586,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          489
+        ],
+        [
+          15,
+          489
+        ]
+      ]
+    },
+    {
+      "archetype": "usa_passport",
+      "country": "United States",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "ind_passport",
+      "country": "India",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "ind_pan",
+      "country": "India",
+      "aspect_ratio": 1.586,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          489
+        ],
+        [
+          15,
+          489
+        ]
+      ]
+    },
+    {
+      "archetype": "can_passport",
+      "country": "Canada",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "aus_passport",
+      "country": "Australia",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "jpn_passport",
+      "country": "Japan",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "sgp_passport",
+      "country": "Singapore",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "bra_passport",
+      "country": "Brazil",
+      "aspect_ratio": 1.42,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          548
+        ],
+        [
+          15,
+          548
+        ]
+      ]
+    },
+    {
+      "archetype": "zaf_idcard",
+      "country": "South Africa",
+      "aspect_ratio": 1.586,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          489
+        ],
+        [
+          15,
+          489
+        ]
+      ]
+    },
+    {
+      "archetype": "est_idcard",
+      "country": "Estonia",
+      "aspect_ratio": 1.586,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          489
+        ],
+        [
+          15,
+          489
+        ]
+      ]
+    },
+    {
+      "archetype": "che_idcard",
+      "country": "Switzerland",
+      "aspect_ratio": 1.586,
+      "homography_nominal_error_px": 1.25,
+      "quad_corners": [
+        [
+          15,
+          15
+        ],
+        [
+          785,
+          15
+        ],
+        [
+          785,
+          489
+        ],
+        [
+          15,
+          489
+        ]
+      ]
+    }
+  ]
+}

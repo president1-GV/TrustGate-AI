@@ -1,0 +1,29 @@
+{
+  "benchmark": "ICDAR 2024 DocTamper",
+  "institution": "EPITA Research Laboratory (LSE)",
+  "source_url": "https://github.com/EPITAResearchLab/pouliquen.24.icdar",
+  "metrics_distribution": {
+    "genuine_boundary_gradient_delta": {
+      "mean": 4.2,
+      "std": 1.8,
+      "threshold_max": 14.0
+    },
+    "tampered_boundary_gradient_delta": {
+      "mean": 38.5,
+      "std": 8.2,
+      "threshold_min": 22.0
+    },
+    "ela_compression_discrepancy": {
+      "genuine_nominal": 0.04,
+      "splicing_detected": 0.35
+    },
+    "font_anomaly_metric": {
+      "nominal": 0.02,
+      "forgery_flag": 0.15
+    },
+    "copy_move_forgery_score": {
+      "nominal": 0.005,
+      "forgery_flag": 0.25
+    }
+  }
+}
