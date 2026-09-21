@@ -1,0 +1,56 @@
+{
+  "name": "trustgate-ai",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc -b --pretty false",
+    "security:check": "node scripts/security-check.cjs",
+    "security:fix": "tsc -b --pretty false",
+    "engine:start": "python ai/inference/service.py",
+    "engine:test": "python ai/evaluation/run_100_case_validation.py",
+    "dataset:status": "python ml/datasets/ingest_midv.py --status"
+  },
+
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@insforge/sdk": "^1.5.2",
+    "@tanstack/react-query": "^5.62.8",
+    "@types/node": "^26.4.1",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^11.15.0",
+    "lucide-react": "^0.468.0",
+    "postcss": "^8.4.49",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "react-router-dom": "^7.1.1",
+    "recharts": "^2.15.0",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss": "3.4.17",
+    "tesseract.js": "^5.1.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.6",
+    "zod": "^3.24.1",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "jsdom": "^25.0.1",
+    "vitest": "^4.1.11"
+  }
+}
+
+

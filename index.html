@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#020617" />
+    <meta
+      name="description"
+      content="TRUSTGATE AI — AI-assisted identity and document screening for authorized border-security personnel. See beyond the document."
+    />
+    <title>TRUSTGATE AI — See Beyond the Document</title>
+    <!-- Official TrustGate AI Favicon & Branding -->
+    <link rel="icon" type="image/png" href="/trustgate-logo.png" />
+    <link rel="apple-touch-icon" href="/trustgate-logo.png" />
+    <!-- Hardened Security & Anti-Exploitation Policy -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' blob: data: https: ws: wss:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' blob: data: https:; media-src 'self' blob: data: mediastream:; connect-src 'self' blob: data: http://localhost:8000 https: ws: wss:; worker-src 'self' blob:; frame-ancestors 'none';"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('trustgate-theme');
+          if (t === 'light') {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch(e) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-ink text-slate-200 antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

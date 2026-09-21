@@ -1,0 +1,37 @@
+/.venv
+/venv
+/node_modules
+/dist
+/.git
+/midv_llm_engine
+/tests
+/docs
+/scratch
+/scripts
+*.py
+*.pyc
+__pycache__
+/.agents
+/.insforge
+/.trae
+/security
+/migrations
+/ml
+/ai
+/TrustGate AI Billion
+.env
+.env.*
+*.tsbuildinfo
+*.log
+*.txt
+*.bat
+*.cjs
+*.md
+vitest*
+src/test
+TrustGate AI Billion.code-workspace
+insforge.toml
+insforge-mcp-config.json
+skills-lock.json
+mcp-fetch-docs.js
+

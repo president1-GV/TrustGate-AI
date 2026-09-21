@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRUSTGATE AI — SIH 26188 Screening Dashboard</title>
+<style>
+  :root {
+    --bg-dark: #090d16;
+    --bg-card: #111827;
+    --bg-card-hover: #1f2937;
+    --border-color: #374151;
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --status-green: #10b981;
+    --status-amber: #f59e0b;
+    --status-red: #ef4444;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    padding: 16px 20px 40px;
+    line-height: 1.4;
+  }
+
+  a, button, select, input { font-family: inherit; }
+
+  button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent-cyan);
+    outline-offset: 2px;
+  }
+
+  /* Disclaimer banner */
+  .demo-banner {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid var(--status-amber);
+    color: #fcd34d;
+    font-size: 11.5px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 16px;
+  }
+
+  .brand-title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .badge-sih {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: var(--accent-cyan);
+    border: 1px solid var(--accent-blue);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .officer-status {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--status-green);
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px var(--status-green);
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr 340px;
+    gap: 16px;
+    align-items: start;
+  }
+
+  @media (max-width: 1150px) {
+    .dashboard-grid { grid-template-columns: 1fr 1fr; }
+    .right-col { grid-column: 1 / -1; }
+  }
+  @media (max-width: 700px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .right-col { grid-column: auto; }
+    body { padding: 12px; }
+  }
+
+  .card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scenario-select, .doc-select {
+    width: 100%;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+
+  label.field-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .btn {
+    width: 100%;
+    background-color: var(--accent-blue);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn:hover { opacity: 0.9; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    margin-top: 8px;
+  }
+  .btn-secondary:hover { background: var(--bg-card-hover); opacity: 1; }
+
+  .toggle-group {
+    margin-top: 14px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 10px;
+  }
+
+  .toggle-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  .toggle-item .weight-tag {
+    font-family: var(--font-mono);
+    color: #64748b;
+    font-size: 10.5px;
+  }
+
+  .no-signals-warning {
+    display: none;
+    font-size: 11px;
+    color: var(--status-amber);
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid var(--status-amber);
+    padding: 6px 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+  }
+
+  .inspection-area { display: flex; flex-direction: column; gap: 16px; }
+
+  .preview-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .preview-box {
+    background: #000;
+    border: 1px dashed var(--border-color);
+    border-radius: 6px;
+    height: 180px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .heatmap-overlay {
+    position: absolute;
+    border: 2px solid var(--status-red);
+    background-color: rgba(239, 68, 68, 0.35);
+    border-radius: 4px;
+    display: none;
+    animation: pulse 1.5s infinite;
+  }
+
+  .heatmap-label {
+    position: absolute;
+    top: -18px;
+    left: 0;
+    background: var(--status-red);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 0.85; } 50% { opacity: 0.3; } }
+
+  .scan-sweep {
+    position: absolute;
+    top: 0; left: -100%;
+    width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(6,182,212,0.35), transparent);
+    display: none;
+  }
+  .scan-sweep.active { display: block; animation: sweep 0.9s linear infinite; }
+  @keyframes sweep { from { left: -40%; } to { left: 100%; } }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th, .data-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .data-table th { color: var(--text-muted); font-weight: 600; }
+
+  .status-pill { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .pill-green { background: rgba(16,185,129,0.2); color: var(--status-green); }
+  .pill-red { background: rgba(239,68,68,0.2); color: var(--status-red); }
+  .pill-amber { background: rgba(245,158,11,0.2); color: var(--status-amber); }
+  .pill-neutral { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+
+  .risk-gauge-box {
+    text-align: center;
+    padding: 14px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+  }
+  .risk-score { font-size: 38px; font-weight: 800; font-family: var(--font-mono); margin: 4px 0; }
+  .risk-verdict { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .case-id { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); margin-top: 4px; }
+
+  .bar-group { margin-bottom: 8px; }
+  .bar-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+  .progress-track { background: #1f2937; height: 6px; border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent-blue); width: 0%; transition: width 0.4s ease, background-color 0.4s ease; }
+
+  .audit-terminal {
+    background-color: #030712;
+    border: 1px solid #1f2937;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    padding: 8px;
+    height: 150px;
+    overflow-y: auto;
+    color: #93c5fd;
+    line-height: 1.5;
+  }
+  .audit-entry { margin-bottom: 2px; word-break: break-word; }
+  .audit-entry span { color: #64748b; }
+
+  .history-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; max-height: 130px; overflow-y: auto; }
+  .history-item {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--bg-dark); border: 1px solid var(--border-color);
+    border-radius: 5px; padding: 5px 8px; font-size: 11px; cursor: pointer;
+  }
+  .history-item:hover { background: var(--bg-card-hover); }
+  .history-item .h-id { color: var(--text-muted); font-family: var(--font-mono); }
+
+  .toast {
+    position: fixed; bottom: 18px; right: 18px;
+    background: var(--bg-card); border: 1px solid var(--accent-cyan);
+    color: var(--text-main); padding: 10px 14px; border-radius: 6px;
+    font-size: 12.5px; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    opacity: 0; transform: translateY(8px); transition: all 0.25s ease;
+    pointer-events: none; max-width: 280px; z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Second row: decision, handover, batch simulation */
+  .second-row-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  @media (max-width: 1150px) {
+    .second-row-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 700px) {
+    .second-row-grid { grid-template-columns: 1fr; }
+  }
+
+  .case-status-pill {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .decision-btns { display: flex; gap: 6px; margin-top: 10px; }
+  .decision-btn {
+    flex: 1;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 4px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #fff;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .decision-btn:active { transform: scale(0.97); }
+  .decision-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .decision-approve { background: var(--status-green); }
+  .decision-secondary { background: var(--status-amber); color: #1f2937; }
+  .decision-escalate { background: var(--status-red); }
+
+  .queue-list, .handover-log-list {
+    display: flex; flex-direction: column; gap: 6px; margin-top: 8px;
+    max-height: 170px; overflow-y: auto;
+  }
+  .queue-item {
+    background: var(--bg-dark); border: 1px solid var(--border-color);
+    border-radius: 5px; padding: 6px 8px; font-size: 11px;
+  }
+  .queue-item-top { display: flex; justify-content: space-between; align-items: center; }
+  .queue-item-meta { color: var(--text-muted); font-size: 10.5px; margin-top: 2px; }
+  .queue-resolve-btns { display: flex; gap: 5px; margin-top: 6px; }
+  .queue-resolve-btns button {
+    flex: 1; font-size: 10px; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color);
+    background: var(--bg-card); color: var(--text-main); cursor: pointer;
+  }
+  .queue-resolve-btns button:hover { background: var(--bg-card-hover); }
+  .queue-empty { font-size: 11px; color: var(--text-muted); }
+
+  .notes-textarea {
+    width: 100%;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 12.5px;
+    resize: vertical;
+    min-height: 70px;
+    font-family: inherit;
+  }
+
+  .handover-log-list .handover-entry {
+    background: var(--bg-dark); border: 1px solid var(--border-color);
+    border-radius: 5px; padding: 6px 8px; font-size: 11px;
+  }
+  .handover-entry .h-head { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 10px; margin-bottom: 3px; }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+  .btn-row .btn, .btn-row .btn-secondary { margin-top: 0; }
+</style>
+</head>
+<body>
+<script>
+  (function authGuard() {
+    const params = new URLSearchParams(window.location.search);
+    const viaParam = params.get("auth") === "1";
+    let viaStorage = false;
+    try {
+      viaStorage = sessionStorage.getItem("trustgate_auth") === "true";
+    } catch (err) {}
+
+    if (!viaParam && !viaStorage) {
+      window.location.replace("trustgate-login.html");
+      return;
+    }
+
+    if (viaParam) {
+      try {
+        sessionStorage.setItem("trustgate_auth", "true");
+        const officerFromUrl = params.get("officer");
+        if (officerFromUrl) sessionStorage.setItem("trustgate_officer_id", decodeURIComponent(officerFromUrl));
+      } catch (err) {}
+    }
+  })();
+</script>
+
+<div class="demo-banner">⚠️ Prototype for SIH 26188 evaluation only — Indo-Nepal ICP Raxaul Border Screening Support (simulated baseline).</div>
+
+<header>
+  <div class="brand-title">
+    <img src="/trustgate-logo.png" alt="TrustGate AI Logo" style="height:38px;width:38px;border-radius:8px;object-fit:cover;border:1px solid rgba(6,182,212,0.4);" />
+    <span>TRUSTGATE AI</span>
+    <span class="badge-sih">SIH 26188 • Border Screening Support</span>
+  </div>
+  <div class="officer-status">
+    <span><strong style="color:#fff;">Post:</strong> Indo-Nepal ICP Raxaul</span>
+    <span><strong style="color:#fff;">Officer ID:</strong> <span id="officerIdDisplay">SSB-8842-N</span></span>
+    <span id="sessionClock"><strong style="color:#fff;">Session:</strong> --:--:--</span>
+    <span><span class="pulse-dot"></span> EDGE INFERENCE READY</span>
+    <a href="/dashboard" class="btn btn-secondary" style="text-decoration:none;display:inline-block;width:auto;padding:5px 10px;font-size:11px;margin-top:0;">📊 Main Portal</a>
+    <button class="btn btn-secondary" style="width:auto;padding:5px 10px;font-size:11px;margin-top:0;" onclick="logOut()">🚪 Log Out</button>
+  </div>
+</header>
+
+<div class="dashboard-grid">
+
+  <!-- LEFT: Ingestion & Control -->
+  <div class="card">
+    <div class="card-title">1. Test Case Simulation</div>
+
+    <label class="field-label" for="docTypeSelector">Document Type</label>
+    <select id="docTypeSelector" class="doc-select" onchange="loadScenario()">
+      <option value="passport">Passport (MRZ, ICAO 9303)</option>
+      <option value="visa">Visa Sticker (MRZ-V)</option>
+    </select>
+
+    <label class="field-label" for="caseSelector">Preset Inspection Case</label>
+    <select id="caseSelector" class="scenario-select" onchange="loadScenario()">
+      <option value="genuine">✅ Case 1: Genuine document, biometrics match</option>
+      <option value="tampered_photo">🔴 Case 2: Forged photo replacement attack</option>
+      <option value="mrz_mismatch">🔴 Case 3: Altered DOB &amp; MRZ checksum failure</option>
+      <option value="expired">🟡 Case 4: Genuine but expired document</option>
+      <option value="watchlist">🔴 Case 5: Field match against alert list</option>
+      <option value="low_quality">🟡 Case 6: Poor scan quality, low confidence</option>
+    </select>
+
+    <button class="btn" id="scanBtn" onclick="executeScan()">⚡ Run Multi-Signal Scan</button>
+    <button class="btn btn-secondary" onclick="exportReport()">📄 Generate Officer Report</button>
+
+    <div class="toggle-group">
+      <div style="font-size:11px;font-weight:700;color:#fff;margin-bottom:8px;text-transform:uppercase;">
+        Signal Weight Calibrator
+      </div>
+      <div class="toggle-item">
+        <span>Forensic Tamper (ELA/CNN)</span>
+        <span class="weight-tag">w=0.35</span>
+        <input type="checkbox" id="w_tamper" checked onchange="recalculateRisk()" aria-label="Toggle forensic tamper signal" />
+      </div>
+      <div class="toggle-item">
+        <span>Face Match (live vs. doc)</span>
+        <span class="weight-tag">w=0.25</span>
+        <input type="checkbox" id="w_face" checked onchange="recalculateRisk()" aria-label="Toggle face match signal" />
+      </div>
+      <div class="toggle-item">
+        <span>Field Consistency (VIZ/MRZ)</span>
+        <span class="weight-tag">w=0.20</span>
+        <input type="checkbox" id="w_field" checked onchange="recalculateRisk()" aria-label="Toggle field consistency signal" />
+      </div>
+      <div class="toggle-item">
+        <span>ICAO 9303 / Rule Checks</span>
+        <span class="weight-tag">w=0.20</span>
+        <input type="checkbox" id="w_rules" checked onchange="recalculateRisk()" aria-label="Toggle rule and expiry checks" />
+      </div>
+      <div class="no-signals-warning" id="noSignalsWarning">
+        No signals active — enable at least one check to compute a risk index.
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:var(--text-muted);margin-top:10px;border-top:1px solid var(--border-color);padding-top:8px;">
+      <em>DPDP 2025: in-memory screening buffer active. Raw photos purged post-session; only the field-level audit trail is retained.</em>
+    </div>
+  </div>
+
+  <!-- MIDDLE: Visual Forensics & Data Cross-Check -->
+  <div class="inspection-area">
+    <div class="card">
+      <div class="card-title">
+        <span>2. Live Sensor Capture &amp; Tampering Forensics</span>
+        <span id="docStatusPill" class="status-pill pill-green">Awaiting Feed</span>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+        <input type="file" id="docImageInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)" />
+        <button class="btn btn-secondary" style="width:auto;padding:7px 12px;font-size:11.5px;margin-top:0;" onclick="document.getElementById('docImageInput').click()">📤 Upload Document Image</button>
+        <button class="btn btn-secondary" style="width:auto;padding:7px 12px;font-size:11.5px;margin-top:0;" id="resetImageBtn" onclick="resetToPresetMode()">↺ Back to preset cases</button>
+        <span id="uploadModeLabel" style="font-size:10.5px;color:var(--text-muted);"></span>
+      </div>
+
+      <div class="preview-columns">
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+            <span>Document Image</span>
+            <label style="font-size:10px;color:var(--accent-cyan);cursor:pointer;">
+              📤 Upload<input type="file" id="docImageUpload" accept="image/*" style="display:none;" onchange="handleImageUpload(event)" />
+            </label>
+          </div>
+          <div class="preview-box">
+            <img id="uploadedImg" alt="Uploaded document" style="display:none;width:100%;height:100%;object-fit:cover;" />
+            <svg id="docPlaceholderSvg" width="100%" height="100%" viewBox="0 0 200 130" style="background:#1e293b;">
+              <rect x="15" y="20" width="45" height="55" rx="3" fill="#334155" />
+              <circle cx="37" cy="42" r="14" fill="#64748b" />
+              <rect x="70" y="25" width="110" height="8" rx="2" fill="#475569" />
+              <rect x="70" y="40" width="80" height="8" rx="2" fill="#475569" />
+              <rect x="70" y="55" width="95" height="8" rx="2" fill="#475569" />
+              <rect x="15" y="95" width="170" height="18" rx="2" fill="#0f172a" stroke="#334155" />
+            </svg>
+            <div class="scan-sweep" id="scanSweep"></div>
+            <div id="tamperHeatmapPhoto" class="heatmap-overlay" style="top:15px;left:15px;width:55px;height:65px;">
+              <span class="heatmap-label">ELA Anomaly</span>
+            </div>
+            <div id="tamperHeatmapMrz" class="heatmap-overlay" style="top:98px;left:15px;width:170px;height:22px;">
+              <span class="heatmap-label">Glyph Spacing Anomaly</span>
+            </div>
+          </div>
+          <div id="imageQualityInfo" style="font-size:10px;color:var(--text-muted);margin-top:4px;"></div>
+          <canvas id="hiddenAnalysisCanvas" style="display:none;"></canvas>
+        </div>
+
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+            <span>Live Checkpoint Camera</span>
+            <label style="font-size:10px;color:var(--accent-cyan);cursor:pointer;">
+              📤 Upload<input type="file" id="liveImageUpload" accept="image/*" style="display:none;" onchange="handleLiveImageUpload(event)" />
+            </label>
+          </div>
+          <div class="preview-box">
+            <img id="uploadedLiveImg" alt="Uploaded live capture" style="display:none;width:100%;height:100%;object-fit:cover;" />
+            <svg id="liveImagePlaceholderSvg" width="100%" height="100%" viewBox="0 0 200 130" style="background:#1e293b;">
+              <circle cx="100" cy="55" r="28" fill="#475569" />
+              <path d="M 60 115 Q 100 85 140 115" fill="#334155" />
+            </svg>
+            <div class="scan-sweep" id="scanSweepFace"></div>
+          </div>
+          <div style="font-size:10.5px;color:var(--text-muted);margin-top:4px;">
+            Liveness check: <span id="livenessResult" class="status-pill pill-neutral">Pending</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">3. Multi-Field Consistency (VIZ vs. ICAO MRZ)</div>
+      <div id="fieldTableNote" style="display:none;font-size:11px;color:var(--text-muted);margin-bottom:8px;">
+        Field/MRZ OCR is not run client-side on uploaded photos in this static prototype — only the real, computed image-quality signal below feeds the risk engine for uploaded images. A production build would call a server-side OCR + MRZ parser here.
+      </div>
+      <table class="data-table" id="fieldTable">
+        <thead>
+          <tr><th scope="col">Field</th><th scope="col">Visual Zone</th><th scope="col">MRZ String</th><th scope="col">Status</th></tr>
+        </thead>
+        <tbody id="fieldTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RIGHT: Explainable Risk Fusion & Audit Trail -->
+  <div class="card right-col">
+    <div class="card-title">4. TrustFusion Risk Engine</div>
+
+    <div class="risk-gauge-box">
+      <div style="font-size:11px;color:var(--text-muted);">COMPOSITE RISK INDEX</div>
+      <div id="riskScoreDisplay" class="risk-score" style="color:var(--status-green);" aria-live="polite">12</div>
+      <div id="verdictDisplay" class="risk-verdict" style="color:var(--status-green);">CLEAR / PASS</div>
+      <div id="caseIdDisplay" class="case-id">Case ID: —</div>
+      <div id="caseStatusPill" class="case-status-pill pill-neutral" style="background:rgba(148,163,184,0.15);color:var(--text-muted);">NO CASE OPEN</div>
+    </div>
+
+    <div class="bar-group">
+      <div class="bar-meta"><span>Tamper Forensics</span><span id="score_tamper">10%</span></div>
+      <div class="progress-track"><div id="bar_tamper" class="progress-fill" style="width:10%;"></div></div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-meta"><span>Biometric Mismatch</span><span id="score_face">8%</span></div>
+      <div class="progress-track"><div id="bar_face" class="progress-fill" style="width:8%;"></div></div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-meta"><span>Field Inconsistency</span><span id="score_field">0%</span></div>
+      <div class="progress-track"><div id="bar_field" class="progress-fill" style="width:0%;"></div></div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-meta"><span>Rule / Expiry Violation</span><span id="score_rules">0%</span></div>
+      <div class="progress-track"><div id="bar_rules" class="progress-fill" style="width:0%;"></div></div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:#fff;margin:12px 0 6px 0;text-transform:uppercase;">
+      Recent Cases
+    </div>
+    <div id="historyList" class="history-list"></div>
+
+    <div style="font-size:11px;font-weight:700;color:#fff;margin:12px 0 6px 0;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;">
+      <span>Investigation Audit Log</span>
+    </div>
+    <div id="auditLog" class="audit-terminal" aria-live="polite">
+      <div class="audit-entry"><span>[SYS]</span> Ready for document input...</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" style="font-size:11px;padding:7px;" onclick="exportAuditLog()">⬇️ Export Audit</button>
+      <button class="btn btn-secondary" style="font-size:11px;padding:7px;" onclick="clearAuditLog()">🗑️ Clear Log</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- SECOND ROW: Officer Decision, Notes & Handover -->
+<div class="second-row-grid">
+
+  <!-- Officer Decision & Secondary Review Queue -->
+  <div class="card">
+    <div class="card-title">
+      <span>5. Officer Decision</span>
+      <span id="queueCountPill" class="status-pill pill-neutral">0 pending</span>
+    </div>
+    <div style="font-size:11.5px;color:var(--text-muted);">
+      Decision applies to the currently open case (<span id="decisionCaseLabel">no case open</span>).
+    </div>
+    <div id="autoClearBanner" class="case-status-pill" style="display:none;width:100%;box-sizing:border-box;text-align:left;margin-top:8px;padding:6px 8px;background:rgba(16,185,129,0.12);color:var(--status-green);border:1px solid var(--status-green);">
+      ✅ Auto-cleared by TrustFusion risk engine — below officer's auto-clear threshold, no manual action required. Override available below.
+    </div>
+    <div class="decision-btns">
+      <button class="decision-btn decision-approve" onclick="recordDecision('approve')">✅ Approve</button>
+      <button class="decision-btn decision-secondary" onclick="recordDecision('secondary')">🟡 Secondary</button>
+      <button class="decision-btn decision-escalate" onclick="recordDecision('escalate')">🔴 Escalate</button>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:#fff;margin:14px 0 6px 0;text-transform:uppercase;">
+      Awaiting Secondary Review
+    </div>
+    <div id="reviewQueueList" class="queue-list"></div>
+  </div>
+
+  <!-- Officer Notes & Shift Handover -->
+  <div class="card">
+    <div class="card-title">6. Officer Notes &amp; Handover</div>
+    <label class="field-label" for="officerNotes">Case note (applies to open case)</label>
+    <textarea id="officerNotes" class="notes-textarea" placeholder="e.g. Traveler statement, discrepancy explanation, follow-up required..."></textarea>
+    <div class="btn-row">
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="saveNote()">📝 Add Case Note</button>
+    </div>
+    <button class="btn" style="margin-top:10px;" onclick="completeHandover()">🔄 Log Shift Handover</button>
+
+    <div style="font-size:11px;font-weight:700;color:#fff;margin:12px 0 6px 0;text-transform:uppercase;">
+      Handover Log
+    </div>
+    <div id="handoverLogList" class="handover-log-list">
+      <div class="queue-empty">No handovers logged this session.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- THIRD ROW: Global Standards Interoperability & Cybersecurity Settings -->
+<div class="second-row-grid" style="grid-template-columns:1fr 1fr;">
+
+  <!-- Global Standards Interoperability -->
+  <div class="card">
+    <div class="card-title">
+      <span>7. Global Standards Interoperability</span>
+      <span id="coveragePill" class="status-pill pill-green">100% coverage</span>
+    </div>
+    <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;">
+      Reference rule-sets this prototype aligns its field/expiry checks against (ICAO 9303, US CBP APIS, EU eu-LISA, China NIA, Japan J-BIS).
+    </div>
+    <div id="standardsList" class="queue-list"></div>
+  </div>
+
+  <!-- Advanced Settings & Cybersecurity Posture -->
+  <div class="card">
+    <div class="card-title">8. Advanced Settings &amp; Cybersecurity</div>
+    <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;">
+      Posture indicators below are simulated for border security operations.
+    </div>
+
+    <div class="toggle-item">
+      <span>AI auto-approval for low-risk cases</span>
+      <input type="checkbox" id="autoApprovalToggle" checked onchange="onSettingsChange()" aria-label="Toggle AI auto-approval" />
+    </div>
+    <div class="bar-group" style="margin-top:10px;">
+      <div class="bar-meta"><span>Auto-clear threshold (below = no officer action)</span><span id="autoClearThresholdLabel">30</span></div>
+      <input type="range" min="5" max="50" value="30" id="autoClearThresholdSlider" style="width:100%;" oninput="onSettingsChange()" aria-label="Auto-clear threshold" />
+    </div>
+    <div class="bar-group">
+      <div class="bar-meta"><span>Escalation threshold (above = escalate)</span><span id="escalateThresholdLabel">60</span></div>
+      <input type="range" min="40" max="95" value="60" id="escalateThresholdSlider" style="width:100%;" oninput="onSettingsChange()" aria-label="Escalation threshold" />
+    </div>
+
+    <div class="toggle-group" style="margin-top:12px;">
+      <div class="toggle-item"><span>Encryption in transit (TLS 1.3, verified)</span><input type="checkbox" checked disabled /></div>
+      <div class="toggle-item"><span>Encryption at rest (AES-256, verified)</span><input type="checkbox" checked disabled /></div>
+      <div class="toggle-item"><span>Multi-factor officer login (session bound)</span><input type="checkbox" checked disabled /></div>
+      <div class="toggle-item"><span>Anomalous-query rate limiting (active)</span><input type="checkbox" checked disabled /></div>
+    </div>
+
+    <label class="field-label" for="rbacSelect" style="margin-top:8px;">Access role (RBAC)</label>
+    <select id="rbacSelect" class="doc-select" onchange="onRoleChange()">
+      <option value="officer">Officer — decide + notes only</option>
+      <option value="supervisor">Supervisor — + override thresholds</option>
+      <option value="admin">Admin — + export/clear audit log</option>
+    </select>
+
+    <label class="field-label" for="lockMinutes">Session auto-lock after inactivity (minutes)</label>
+    <input type="range" min="1" max="15" value="5" id="lockMinutes" style="width:100%;" oninput="document.getElementById('lockMinutesLabel').textContent=this.value" aria-label="Auto-lock minutes" />
+    <div style="font-size:11px;color:var(--text-muted);">Locks after <span id="lockMinutesLabel">5</span> min idle — enter any 4-digit PIN to resume.</div>
+  </div>
+
+</div>
+
+<!-- FOURTH ROW: Reference Dataset & Mock Issuer/Watchlist Lookup -->
+<div class="second-row-grid" style="grid-template-columns:1fr 1fr;">
+
+  <!-- Reference dataset -->
+  <div class="card">
+    <div class="card-title">9. Image Scan Reference Dataset</div>
+    <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:8px;">
+      This prototype models its document layouts on the <strong>MIDV-2020</strong> academic benchmark (Bulatov et al., L3i Laboratory, University of La Rochelle).
+    </div>
+    <label class="field-label" for="midvCategory">MIDV-2020 document category</label>
+    <select id="midvCategory" class="doc-select" onchange="logEntry('MIDV-2020 reference category set to: ' + this.value)">
+      <option>alb_id — Albania ID card</option>
+      <option>aze_passport — Azerbaijan passport</option>
+      <option>esp_id — Spain ID card</option>
+      <option>est_id — Estonia ID card</option>
+      <option>fin_id — Finland ID card</option>
+      <option>grc_passport — Greece passport</option>
+      <option>lva_passport — Latvia passport</option>
+      <option>rus_internalpassport — Russia internal passport</option>
+      <option>srb_passport — Serbia passport</option>
+      <option>svk_id — Slovakia ID card</option>
+    </select>
+    <div style="font-size:10.5px;color:var(--text-muted);">
+      When uploading a live image, real quadrant-variance heuristic analysis executes client-side on raw pixels.
+    </div>
+  </div>
+
+  <!-- Mock issuer / watchlist database -->
+  <div class="card">
+    <div class="card-title">
+      <span>10. Mock Issuer &amp; Watchlist Database</span>
+      <span class="status-pill pill-amber">Local mock — offline</span>
+    </div>
+    <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:8px;">
+      Simulated national issuer and alert list database for border verification.
+    </div>
+    <label class="field-label" for="lookupPassportNo">Passport / document number</label>
+    <div style="display:flex;gap:6px;">
+      <input id="lookupPassportNo" class="doc-select" style="margin-bottom:0;" placeholder="e.g. M2210987 or P9182301" />
+      <button class="btn" style="width:auto;padding:8px 12px;" onclick="runIssuerLookup()">Lookup</button>
+    </div>
+    <div id="lookupResult" style="margin-top:10px;font-size:12px;"></div>
+  </div>
+
+</div>
+
+<!-- FIFTH ROW: Live Backend Connection -->
+<div class="card" style="margin-top:16px;">
+  <div class="card-title">
+    <span>11. Live Backend Connection (Real API)</span>
+    <span id="backendStatusPill" class="status-pill pill-neutral">Checking backend...</span>
+  </div>
+  <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;">
+    Connect this dashboard directly to the local Python / FastAPI LLM engine (<code>http://localhost:8000</code>) for true neural-heuristic verification.
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+    <div>
+      <label class="field-label" for="backendUrlInput">Backend base URL</label>
+      <input id="backendUrlInput" class="doc-select" style="margin-bottom:0;" value="http://localhost:8000" />
+    </div>
+    <div>
+      <label class="field-label" for="backendApiKeyInput">X-API-Key</label>
+      <input id="backendApiKeyInput" class="doc-select" style="margin-bottom:0;" placeholder="optional API key" type="password" />
+    </div>
+    <div>
+      <label class="field-label" for="mrzTextInput">MRZ text (optional, 2 lines)</label>
+      <input id="mrzTextInput" class="doc-select" style="margin-bottom:0;" placeholder="P&lt;INDSHARMA&lt;&lt;RAHUL&lt;&lt;..." />
+    </div>
+  </div>
+  <div class="btn-row" style="margin-top:10px;">
+    <button class="btn btn-secondary" style="font-size:12px;" onclick="testBackendConnection()">🔌 Test Connection</button>
+    <label class="toggle-item" style="margin:0;flex:1;">
+      <span>Use live backend for next scan</span>
+      <input type="checkbox" id="liveBackendToggle" onchange="onBackendSettingsChange()" aria-label="Use live backend" />
+    </label>
+  </div>
+</div>
+
+<div id="lockOverlay" style="display:none;position:fixed;inset:0;background:rgba(3,7,18,0.92);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+  <div style="font-size:22px;">🔒</div>
+  <div style="font-size:14px;color:#fff;">Session locked — inactivity timeout</div>
+  <div style="font-size:11.5px;color:var(--text-muted);max-width:280px;text-align:center;">Enter 4-digit PIN (e.g. 1234) to resume.</div>
+  <input id="unlockPin" maxlength="4" inputmode="numeric" style="width:120px;text-align:center;letter-spacing:6px;padding:8px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:#fff;" />
+  <button class="btn" style="width:160px;" onclick="attemptUnlock()">Resume Session</button>
+  <button class="btn-secondary" style="width:160px;background:transparent;border:1px solid var(--border-color);color:var(--text-main);padding:8px;border-radius:6px;cursor:pointer;" onclick="logOut()">Log Out Instead</button>
+</div>
+
+<div id="toast" class="toast" role="status"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  const scenarios = {
+    genuine: {
+      fields: [
+        { name: "Passport No", viz: "P9182301", mrz: "P9182301", status: "MATCH", flag: "green" },
+        { name: "Full Name", viz: "RAHUL SHARMA", mrz: "SHARMA<<RAHUL", status: "MATCH", flag: "green" },
+        { name: "Date of Birth", viz: "14/08/1995", mrz: "950814", status: "MATCH", flag: "green" },
+        { name: "Expiry Date", viz: "20/05/2032", mrz: "320520", status: "VALID", flag: "green" }
+      ],
+      rawScores: { tamper: 8, face: 6, field: 0, rules: 0 },
+      liveness: { status: "PASS", flag: "green" },
+      heatmap: { photo: false, mrz: false },
+      note: "All checks nominal. No forensic or rule anomalies detected."
+    },
+    tampered_photo: {
+      fields: [
+        { name: "Passport No", viz: "L4091823", mrz: "L4091823", status: "MATCH", flag: "green" },
+        { name: "Full Name", viz: "AMIT VERMA", mrz: "VERMA<<AMIT", status: "MATCH", flag: "green" },
+        { name: "Date of Birth", viz: "10/02/1988", mrz: "880210", status: "MATCH", flag: "green" },
+        { name: "Expiry Date", viz: "15/11/2029", mrz: "291115", status: "VALID", flag: "green" }
+      ],
+      rawScores: { tamper: 94, face: 88, field: 5, rules: 0 },
+      liveness: { status: "MISMATCH", flag: "red" },
+      heatmap: { photo: true, mrz: false },
+      note: "Error Level Analysis flags a discontinuity in the photo region consistent with digital photo substitution."
+    },
+    mrz_mismatch: {
+      fields: [
+        { name: "Passport No", viz: "Z1092834", mrz: "Z1092834", status: "MATCH", flag: "green" },
+        { name: "Full Name", viz: "VIKRAM SINGH", mrz: "SINGH<<VIKRAM", status: "MATCH", flag: "green" },
+        { name: "Date of Birth", viz: "12/04/1998", mrz: "920412", status: "MISMATCH", flag: "red" },
+        { name: "Expiry Date", viz: "01/01/2024", mrz: "240101", status: "EXPIRED", flag: "red" }
+      ],
+      rawScores: { tamper: 45, face: 12, field: 90, rules: 85 },
+      liveness: { status: "PASS", flag: "green" },
+      heatmap: { photo: false, mrz: true },
+      note: "Visible DOB does not match the encoded MRZ string, and checksum validation fails on the date field."
+    },
+    expired: {
+      fields: [
+        { name: "Passport No", viz: "K7723451", mrz: "K7723451", status: "MATCH", flag: "green" },
+        { name: "Full Name", viz: "PRIYA NAIR", mrz: "NAIR<<PRIYA", status: "MATCH", flag: "green" },
+        { name: "Date of Birth", viz: "03/09/1990", mrz: "900903", status: "MATCH", flag: "green" },
+        { name: "Expiry Date", viz: "12/03/2025", mrz: "250312", status: "EXPIRED", flag: "amber" }
+      ],
+      rawScores: { tamper: 6, face: 5, field: 2, rules: 55 },
+      liveness: { status: "PASS", flag: "green" },
+      heatmap: { photo: false, mrz: false },
+      note: "Document forensics and identity are clean; expiry rule check fails. Route to administrative renewal desk."
+    },
+    watchlist: {
+      fields: [
+        { name: "Passport No", viz: "M2210987", mrz: "M2210987", status: "MATCH", flag: "green" },
+        { name: "Full Name", viz: "ANIL KUMAR", mrz: "KUMAR<<ANIL", status: "MATCH", flag: "green" },
+        { name: "Date of Birth", viz: "22/07/1982", mrz: "820722", status: "MATCH", flag: "green" },
+        { name: "Expiry Date", viz: "09/09/2028", mrz: "280909", status: "VALID", flag: "green" }
+      ],
+      rawScores: { tamper: 10, face: 9, field: 3, rules: 70 },
+      liveness: { status: "PASS", flag: "green" },
+      heatmap: { photo: false, mrz: false },
+      note: "Name and DOB combination returns a fuzzy match against the alert list. Requires manual secondary verification.",
+      watchlistFlag: true
+    },
+    low_quality: {
+      fields: [
+        { name: "Passport No", viz: "R55019?4", mrz: "R5501984", status: "LOW CONF.", flag: "amber" },
+        { name: "Full Name", viz: "S*NJAY GUPTA", mrz: "GUPTA<<SANJAY", status: "LOW CONF.", flag: "amber" },
+        { name: "Date of Birth", viz: "18/06/1993", mrz: "930618", status: "MATCH", flag: "green" },
+        { name: "Expiry Date", viz: "27/10/2030", mrz: "301027", status: "VALID", flag: "green" }
+      ],
+      rawScores: { tamper: 20, face: 15, field: 40, rules: 5 },
+      liveness: { status: "RETRY", flag: "amber" },
+      heatmap: { photo: false, mrz: false },
+      note: "OCR confidence below threshold on 2 fields, likely due to glare or motion blur. Recommend re-scan before escalation."
+    }
+  };
+
+  let scanInProgress = false;
+  let currentCaseId = null;
+  const history = [];
+  const reviewQueue = [];
+  const handoverLog = [];
+  const caseStatus = {};
+  const caseNotes = {};
+  const caseAutoCleared = {};
+
+  function getOfficerId() {
+    const fromUrl = new URLSearchParams(window.location.search).get("officer");
+    if (fromUrl) return decodeURIComponent(fromUrl);
+    try {
+      return sessionStorage.getItem("trustgate_officer_id") || "SSB-8842-N";
+    } catch (err) {
+      return "SSB-8842-N";
+    }
+  }
+  const CURRENT_OFFICER_ID = getOfficerId();
+
+  function logOut() {
+    if (!confirm("Log out of TrustGate AI? Any unsaved notes on the open case will be lost.")) return;
+    try {
+      sessionStorage.removeItem("trustgate_auth");
+      sessionStorage.removeItem("trustgate_officer_id");
+      sessionStorage.removeItem("trustgate_login_time");
+    } catch (err) {}
+    window.location.href = "trustgate-login.html";
+  }
+
+  let autoApprovalEnabled = true;
+  let autoClearThreshold = 30;
+  let escalateThreshold = 60;
+  let standardsCoverage = 1;
+
+  const standards = [
+    { id: "icao", name: "ICAO Doc 9303 (global MRZ/biometric baseline)", region: "Global", checked: true, locked: true },
+    { id: "us", name: "US CBP / DHS APIS reference rule-set", region: "USA", checked: true },
+    { id: "eu", name: "EU eu-LISA EES/ETIAS & Frontex SIS II reference rule-set", region: "Europe", checked: true },
+    { id: "cn", name: "China NIA exit-entry reference rule-set", region: "China", checked: true },
+    { id: "jp", name: "Japan Immigration Bureau J-BIS reference rule-set", region: "Japan", checked: true }
+  ];
+
+  let idleTimer = null;
+
+  const STATUS_LABEL = {
+    open: { text: "OPEN — AWAITING DECISION", color: "var(--accent-cyan)" },
+    approved: { text: "APPROVED", color: "var(--status-green)" },
+    secondary: { text: "SECONDARY REVIEW", color: "var(--status-amber)" },
+    escalated: { text: "ESCALATED", color: "var(--status-red)" }
+  };
+
+  function pad(n) { return n.toString().padStart(2, "0"); }
+
+  function updateClock() {
+    const d = new Date();
+    document.getElementById("sessionClock").innerHTML =
+      '<strong style="color:#fff;">Session:</strong> ' + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  function genCaseId() {
+    const d = new Date();
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    return "TG-" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "-" + rand;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => t.classList.remove("show"), 2600);
+  }
+
+  function logEntry(msg) {
+    const log = document.getElementById("auditLog");
+    const time = new Date().toLocaleTimeString();
+    const entry = document.createElement("div");
+    entry.className = "audit-entry";
+    entry.innerHTML = "<span>[" + time + "]</span> " + msg;
+    log.prepend(entry);
+    while (log.children.length > 60) log.removeChild(log.lastChild);
+  }
+
+  function currentScenarioKey() {
+    return document.getElementById("caseSelector").value;
+  }
+
+  function resetToPresetMode() {
+    uploadedImageAnalysis = null;
+    uploadedImageFile = null;
+    document.getElementById("uploadedImg").style.display = "none";
+    document.getElementById("docPlaceholderSvg").style.display = "block";
+    document.getElementById("imageQualityInfo").textContent = "";
+    document.getElementById("docImageUpload").value = "";
+    document.getElementById("docImageInput").value = "";
+    document.getElementById("uploadModeLabel").textContent = "";
+    loadScenario();
+    showToast("Reset to preset test scenarios");
+  }
+
+  function loadScenario(resetUpload) {
+    if (resetUpload !== false) {
+      uploadedImageAnalysis = null;
+      document.getElementById("uploadedImg").style.display = "none";
+      document.getElementById("docPlaceholderSvg").style.display = "block";
+      document.getElementById("imageQualityInfo").textContent = "";
+      document.getElementById("docImageUpload").value = "";
+    }
+    const key = currentScenarioKey();
+    const data = scenarios[key];
+
+    const tbody = document.getElementById("fieldTableBody");
+    tbody.innerHTML = "";
+    data.fields.forEach((f) => {
+      const row = document.createElement("tr");
+      row.innerHTML =
+        "<td><strong>" + f.name + "</strong></td>" +
+        "<td>" + f.viz + "</td>" +
+        "<td><code>" + f.mrz + "</code></td>" +
+        "<td><span class=\"status-pill pill-" + f.flag + "\">" + f.status + "</span></td>";
+      tbody.appendChild(row);
+    });
+
+    document.getElementById("tamperHeatmapPhoto").style.display = data.heatmap.photo ? "block" : "none";
+    document.getElementById("tamperHeatmapMrz").style.display = data.heatmap.mrz ? "block" : "none";
+
+    const liveness = document.getElementById("livenessResult");
+    liveness.textContent = data.liveness.status;
+    liveness.className = "status-pill pill-" + data.liveness.flag;
+
+    recalculateRisk();
+  }
+
+  function recalculateRisk() {
+    const key = currentScenarioKey();
+    const data = scenarios[key].rawScores;
+    const tamperValue = uploadedImageAnalysis ? uploadedImageAnalysis.tamperScoreOverride : data.tamper;
+
+    const w_tamper = document.getElementById("w_tamper").checked;
+    const w_face = document.getElementById("w_face").checked;
+    const w_field = document.getElementById("w_field").checked;
+    const w_rules = document.getElementById("w_rules").checked;
+
+    document.getElementById("noSignalsWarning").style.display =
+      (!w_tamper && !w_face && !w_field && !w_rules) ? "block" : "none";
+
+    let totalWeight = 0;
+    if (w_tamper) totalWeight += 0.35;
+    if (w_face) totalWeight += 0.25;
+    if (w_field) totalWeight += 0.20;
+    if (w_rules) totalWeight += 0.20;
+
+    const effectiveRules = Math.round(data.rules * standardsCoverage);
+
+    let compositeRisk = null;
+    if (totalWeight > 0) {
+      let raw = 0;
+      if (w_tamper) raw += tamperValue * 0.35;
+      if (w_face) raw += data.face * 0.25;
+      if (w_field) raw += data.field * 0.20;
+      if (w_rules) raw += effectiveRules * 0.20;
+      compositeRisk = Math.round(raw / totalWeight);
+    }
+
+    updateBar("tamper", w_tamper ? tamperValue : 0);
+    updateBar("face", w_face ? data.face : 0);
+    updateBar("field", w_field ? data.field : 0);
+    updateBar("rules", w_rules ? effectiveRules : 0);
+
+    const scoreElem = document.getElementById("riskScoreDisplay");
+    const verdictElem = document.getElementById("verdictDisplay");
+    const pillElem = document.getElementById("docStatusPill");
+
+    if (compositeRisk === null) {
+      scoreElem.textContent = "—";
+      scoreElem.style.color = "#9ca3af";
+      verdictElem.style.color = "#9ca3af";
+      verdictElem.textContent = "⚪ NO SIGNALS ACTIVE";
+      pillElem.className = "status-pill pill-neutral";
+      pillElem.textContent = "INCOMPLETE";
+      return;
+    }
+
+    scoreElem.textContent = compositeRisk;
+
+    if (compositeRisk < autoClearThreshold) {
+      scoreElem.style.color = "var(--status-green)";
+      verdictElem.style.color = "var(--status-green)";
+      verdictElem.textContent = "🟢 CLEAR / LOW RISK";
+      pillElem.className = "status-pill pill-green";
+      pillElem.textContent = "PASSED";
+    } else if (compositeRisk < escalateThreshold) {
+      scoreElem.style.color = "var(--status-amber)";
+      verdictElem.style.color = "var(--status-amber)";
+      verdictElem.textContent = "🟡 SECONDARY REVIEW";
+      pillElem.className = "status-pill pill-amber";
+      pillElem.textContent = "INVESTIGATE";
+    } else {
+      scoreElem.style.color = "var(--status-red)";
+      verdictElem.style.color = "var(--status-red)";
+      verdictElem.textContent = "🔴 HIGH RISK ESCALATION";
+      pillElem.className = "status-pill pill-red";
+      pillElem.textContent = "FLAGGED";
+    }
+
+    return compositeRisk;
+  }
+
+  function classifyRisk(risk) {
+    if (risk < autoClearThreshold) return "clear";
+    if (risk < escalateThreshold) return "secondary";
+    return "escalate";
+  }
+
+  function updateBar(key, value) {
+    document.getElementById("score_" + key).textContent = value + "%";
+    const fill = document.getElementById("bar_" + key);
+    fill.style.width = value + "%";
+    if (value > 60) fill.style.backgroundColor = "var(--status-red)";
+    else if (value > 30) fill.style.backgroundColor = "var(--status-amber)";
+    else fill.style.backgroundColor = "var(--accent-blue)";
+  }
+
+  function setScanUI(active) {
+    scanInProgress = active;
+    document.getElementById("scanBtn").disabled = active;
+    document.getElementById("scanBtn").textContent = active ? "⏳ Scanning..." : "⚡ Run Multi-Signal Scan";
+    document.getElementById("scanSweep").classList.toggle("active", active);
+    document.getElementById("scanSweepFace").classList.toggle("active", active);
+  }
+
+  let liveBackendEnabled = false;
+  let backendBaseUrl = "http://localhost:8000";
+  let backendApiKey = "";
+
+  function onBackendSettingsChange() {
+    liveBackendEnabled = document.getElementById("liveBackendToggle").checked;
+    backendBaseUrl = document.getElementById("backendUrlInput").value.trim() || "http://localhost:8000";
+    backendApiKey = document.getElementById("backendApiKeyInput").value.trim();
+    logEntry("Live backend mode " + (liveBackendEnabled ? "ENABLED" : "disabled") + " — target " + backendBaseUrl + ".");
+  }
+
+  async function testBackendConnection() {
+    const pill = document.getElementById("backendStatusPill");
+    backendBaseUrl = document.getElementById("backendUrlInput").value.trim() || "http://localhost:8000";
+    pill.textContent = "Checking...";
+    pill.className = "status-pill pill-neutral";
+    try {
+      const resp = await fetch(backendBaseUrl.replace(/\/$/, "") + "/health", { method: "GET" });
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      pill.textContent = "Connected — live backend reachable";
+      pill.className = "status-pill pill-green";
+      logEntry("Backend connection test succeeded (" + backendBaseUrl + ").");
+      showToast("Backend reachable");
+    } catch (err) {
+      pill.textContent = "Unreachable — using simulated pipeline";
+      pill.className = "status-pill pill-red";
+      logEntry("Backend connection test failed: " + err.message + " — running local edge simulator.");
+      showToast("Backend offline — running local mode");
+    }
+  }
+
+  async function executeScan() {
+    if (scanInProgress) return;
+    setScanUI(true);
+
+    if (liveBackendEnabled) {
+      try {
+        const result = await callBackendScan();
+        applyBackendResult(result);
+        setScanUI(false);
+        showToast("Live scan complete — case " + result.case_id);
+        return;
+      } catch (err) {
+        logEntry("Live backend call failed (" + err.message + ") — falling back to simulated preset flow.");
+        showToast("Backend unreachable — using simulated data");
+      }
+    }
+    runSimulatedScan();
+  }
+
+  async function callBackendScan() {
+    const key = currentScenarioKey();
+    const data = scenarios[key];
+    const postPayload = {
+      doc_type: document.getElementById("docTypeSelector").value,
+      country: "IND",
+      fields: {
+        document_number: data.fields[0].viz,
+        full_name: data.fields[1].viz,
+        birth_date: data.fields[2].viz,
+        expiry_date: data.fields[3].viz
+      },
+      mrz_lines: [data.fields[0].mrz, data.fields[1].mrz],
+      tampering: {
+        probability: data.rawScores.tamper,
+        regions: data.heatmap.photo ? [{ label: "PHOTO" }] : []
+      },
+      face: {
+        detected: true,
+        match_score: 100 - data.rawScores.face
+      }
+    };
+
+    logEntry("Sending scan request to live backend at " + backendBaseUrl + "...");
+    const resp = await fetch(backendBaseUrl.replace(/\/$/, "") + "/verify", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(backendApiKey ? { "X-API-Key": backendApiKey } : {})
+      },
+      body: JSON.stringify(postPayload)
+    });
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => "");
+      throw new Error("HTTP " + resp.status + (text ? (": " + text.slice(0, 140)) : ""));
+    }
+    const resJson = await resp.json();
+    return {
+      case_id: genCaseId(),
+      risk: {
+        composite_risk: Math.round(100 - resJson.evaluation.overall_score),
+        verdict: resJson.evaluation.conformity_level === "CONFORMANT" ? "clear" :
+                 resJson.evaluation.conformity_level === "SUSPICIOUS" ? "secondary" : "escalate",
+        auto_cleared: resJson.evaluation.overall_score >= 70
+      },
+      forensics: {
+        tamper_score: data.rawScores.tamper
+      },
+      face: {
+        match_score: 100 - data.rawScores.face
+      }
+    };
+  }
+
+  function applyBackendResult(result) {
+    currentCaseId = result.case_id;
+    caseNotes[currentCaseId] = [];
+    document.getElementById("caseIdDisplay").textContent = "Case ID: " + currentCaseId + " (live backend)";
+
+    const risk = result.risk.composite_risk;
+    const scoreElem = document.getElementById("riskScoreDisplay");
+    const verdictElem = document.getElementById("verdictDisplay");
+    const pillElem = document.getElementById("docStatusPill");
+    scoreElem.textContent = risk;
+    if (result.risk.verdict === "clear") {
+      scoreElem.style.color = "var(--status-green)"; verdictElem.style.color = "var(--status-green)";
+      verdictElem.textContent = "🟢 CLEAR / LOW RISK"; pillElem.className = "status-pill pill-green"; pillElem.textContent = "PASSED";
+    } else if (result.risk.verdict === "secondary") {
+      scoreElem.style.color = "var(--status-amber)"; verdictElem.style.color = "var(--status-amber)";
+      verdictElem.textContent = "🟡 SECONDARY REVIEW"; pillElem.className = "status-pill pill-amber"; pillElem.textContent = "INVESTIGATE";
+    } else {
+      scoreElem.style.color = "var(--status-red)"; verdictElem.style.color = "var(--status-red)";
+      verdictElem.textContent = "🔴 HIGH RISK ESCALATION"; pillElem.className = "status-pill pill-red"; pillElem.textContent = "FLAGGED";
+    }
+
+    pushHistory(currentCaseId, "live-backend", risk);
+    if (result.risk.auto_cleared) {
+      caseStatus[currentCaseId] = "approved";
+      caseAutoCleared[currentCaseId] = true;
+      logEntry("Live backend auto-cleared case " + currentCaseId + " (risk " + risk + ").");
+    } else {
+      const queueLevel = result.risk.verdict === "escalate" ? "escalated" : "secondary";
+      caseStatus[currentCaseId] = queueLevel;
+      caseAutoCleared[currentCaseId] = false;
+      addToQueue(currentCaseId, "live-backend", risk, queueLevel);
+      logEntry("Live backend flagged case " + currentCaseId + " for " + queueLevel.toUpperCase() + ".");
+    }
+    setCaseStatusUI(caseStatus[currentCaseId]);
+  }
+
+  function runSimulatedScan() {
+    const key = currentScenarioKey();
+    currentCaseId = genCaseId();
+    logEntry("Scan initialized — case <strong>" + currentCaseId + "</strong>, ingesting high-res capture...");
+
+    setTimeout(() => logEntry("OCR complete: text extraction across all visible zones."), 300);
+    setTimeout(() => logEntry("ICAO Doc 9303 checksum validation run."), 650);
+    setTimeout(() => logEntry("Forensic tamper model (ELA + CNN classifier) scored."), 950);
+    setTimeout(() => {
+      loadScenario(false);
+      const risk = recalculateRisk();
+      document.getElementById("caseIdDisplay").textContent = "Case ID: " + currentCaseId;
+      logEntry("Risk fusion complete — composite index " + risk + ". " + scenarios[key].note);
+      pushHistory(currentCaseId, key, risk);
+      caseNotes[currentCaseId] = [];
+      applyAutoClassification(currentCaseId, key, risk);
+      setScanUI(false);
+      showToast("Scan complete — case " + currentCaseId);
+    }, 1300);
+  }
+
+  function applyAutoClassification(caseId, scenarioKey, risk) {
+    const level = classifyRisk(risk);
+    if (level === "clear" && autoApprovalEnabled) {
+      caseStatus[caseId] = "approved";
+      caseAutoCleared[caseId] = true;
+      removeFromQueue(caseId);
+      logEntry("AI auto-cleared case " + caseId + " (risk " + risk + ", below auto-clear threshold " + autoClearThreshold + ") — no officer action required.");
+    } else if (level === "clear") {
+      caseStatus[caseId] = "open";
+      caseAutoCleared[caseId] = false;
+      logEntry("Case " + caseId + " scored low risk (" + risk + ") but auto-approval is disabled — awaiting manual officer decision.");
+    } else {
+      const queueLevel = level === "escalate" ? "escalated" : "secondary";
+      caseStatus[caseId] = queueLevel;
+      caseAutoCleared[caseId] = false;
+      addToQueue(caseId, scenarioKey, risk, queueLevel);
+      logEntry("AI flagged case " + caseId + " for <strong>" + queueLevel.toUpperCase() + "</strong> (risk " + risk + ") — officer confirmation required.");
+    }
+    if (caseId === currentCaseId) setCaseStatusUI(caseStatus[caseId]);
+  }
+
+  function setCaseStatusUI(status) {
+    const pill = document.getElementById("caseStatusPill");
+    const label = document.getElementById("decisionCaseLabel");
+    const banner = document.getElementById("autoClearBanner");
+    if (!currentCaseId || !status) {
+      pill.textContent = "NO CASE OPEN";
+      pill.style.background = "rgba(148,163,184,0.15)";
+      pill.style.color = "var(--text-muted)";
+      label.textContent = "no case open";
+      banner.style.display = "none";
+      return;
+    }
+    const s = STATUS_LABEL[status];
+    pill.textContent = s.text;
+    pill.style.color = s.color;
+    pill.style.background = "rgba(255,255,255,0.06)";
+    label.innerHTML = "<strong>" + currentCaseId + "</strong> (" + s.text.toLowerCase() + ")";
+    banner.style.display = caseAutoCleared[currentCaseId] ? "block" : "none";
+  }
+
+  function recordDecision(decision) {
+    if (!currentCaseId || !caseStatus[currentCaseId]) {
+      showToast("Run a scan first — no open case to decide on.");
+      return;
+    }
+    const risk = recalculateRisk();
+    const key = currentScenarioKey();
+    caseAutoCleared[currentCaseId] = false;
+
+    if (decision === "approve") {
+      caseStatus[currentCaseId] = "approved";
+      logEntry("Officer decision: <strong>APPROVED</strong> for case " + currentCaseId + " (risk index " + risk + ").");
+      removeFromQueue(currentCaseId);
+      showToast("Case " + currentCaseId + " approved");
+    } else if (decision === "secondary") {
+      caseStatus[currentCaseId] = "secondary";
+      logEntry("Officer decision: routed to <strong>SECONDARY REVIEW</strong> — case " + currentCaseId + ".");
+      addToQueue(currentCaseId, key, risk, "secondary");
+      showToast("Case " + currentCaseId + " sent to secondary review");
+    } else if (decision === "escalate") {
+      caseStatus[currentCaseId] = "escalated";
+      logEntry("Officer decision: <strong>ESCALATED</strong> — case " + currentCaseId + " referred to duty supervisor.");
+      addToQueue(currentCaseId, key, risk, "escalated");
+      showToast("Case " + currentCaseId + " escalated");
+    }
+    setCaseStatusUI(caseStatus[currentCaseId]);
+  }
+
+  function addToQueue(caseId, scenarioKey, risk, level) {
+    removeFromQueue(caseId);
+    reviewQueue.unshift({ caseId, scenarioKey, risk, level, time: new Date().toLocaleTimeString() });
+    if (reviewQueue.length > 30) reviewQueue.pop();
+    renderReviewQueue();
+  }
+
+  function removeFromQueue(caseId) {
+    const idx = reviewQueue.findIndex((q) => q.caseId === caseId);
+    if (idx !== -1) reviewQueue.splice(idx, 1);
+    renderReviewQueue();
+  }
+
+  function renderReviewQueue() {
+    const list = document.getElementById("reviewQueueList");
+    document.getElementById("queueCountPill").textContent = reviewQueue.length + " pending";
+    list.innerHTML = "";
+    if (reviewQueue.length === 0) {
+      list.innerHTML = '<div class="queue-empty">No cases currently awaiting secondary review.</div>';
+      return;
+    }
+    reviewQueue.forEach((q) => {
+      const flag = q.level === "escalated" ? "red" : "amber";
+      const item = document.createElement("div");
+      item.className = "queue-item";
+      item.innerHTML =
+        '<div class="queue-item-top"><strong>' + q.caseId + '</strong>' +
+        '<span class="status-pill pill-' + flag + '">' + (q.level === "escalated" ? "Escalated" : "Secondary") + '</span></div>' +
+        '<div class="queue-item-meta">Logged ' + q.time + ' · risk ' + q.risk + '</div>' +
+        '<div class="queue-resolve-btns">' +
+        '<button data-action="approve">Clear</button>' +
+        '<button data-action="escalate">Escalate</button>' +
+        '</div>';
+      item.querySelector('[data-action="approve"]').addEventListener("click", () => {
+        caseStatus[q.caseId] = "approved";
+        removeFromQueue(q.caseId);
+        logEntry("Queue item " + q.caseId + " cleared after review — approved.");
+        if (q.caseId === currentCaseId) setCaseStatusUI("approved");
+        showToast(q.caseId + " cleared");
+      });
+      item.querySelector('[data-action="escalate"]').addEventListener("click", () => {
+        q.level = "escalated";
+        caseStatus[q.caseId] = "escalated";
+        logEntry("Queue item " + q.caseId + " escalated to duty supervisor.");
+        if (q.caseId === currentCaseId) setCaseStatusUI("escalated");
+        renderReviewQueue();
+        showToast(q.caseId + " escalated");
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function saveNote() {
+    const textarea = document.getElementById("officerNotes");
+    const text = textarea.value.trim();
+    if (!text) { showToast("Note is empty"); return; }
+    if (!currentCaseId) { showToast("Run a scan first — no open case for this note."); return; }
+    if (!caseNotes[currentCaseId]) caseNotes[currentCaseId] = [];
+    caseNotes[currentCaseId].push({ text, time: new Date().toLocaleTimeString() });
+    logEntry("Note added to case " + currentCaseId + ": \"" + escapeHtml(text) + "\"");
+    textarea.value = "";
+    showToast("Note saved to case " + currentCaseId);
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function completeHandover() {
+    const pending = reviewQueue.length;
+    const notesText = document.getElementById("officerNotes").value.trim();
+    const entry = {
+      time: new Date().toLocaleTimeString(),
+      officer: CURRENT_OFFICER_ID,
+      pending: pending,
+      lastCase: currentCaseId || "none",
+      summary: notesText || "No additional remarks."
+    };
+    handoverLog.unshift(entry);
+    if (handoverLog.length > 15) handoverLog.pop();
+    renderHandoverLog();
+    logEntry("Shift handover logged by " + entry.officer + " — " + pending + " case(s) pending secondary review.");
+    document.getElementById("officerNotes").value = "";
+    showToast("Handover logged");
+  }
+
+  function renderHandoverLog() {
+    const list = document.getElementById("handoverLogList");
+    if (handoverLog.length === 0) {
+      list.innerHTML = '<div class="queue-empty">No handovers logged this session.</div>';
+      return;
+    }
+    list.innerHTML = "";
+    handoverLog.forEach((h) => {
+      const div = document.createElement("div");
+      div.className = "handover-entry";
+      div.innerHTML =
+        '<div class="h-head"><span>' + h.time + " · " + h.officer + '</span><span>' + h.pending + ' pending</span></div>' +
+        '<div>Last case: ' + h.lastCase + '</div>' +
+        '<div style="color:var(--text-muted);margin-top:2px;">' + escapeHtml(h.summary) + '</div>';
+      list.appendChild(div);
+    });
+  }
+
+  function exportAuditLog() {
+    const log = document.getElementById("auditLog");
+    const lines = Array.from(log.children).reverse().map((el) => el.textContent);
+    const header = [
+      "TRUSTGATE AI — FULL AUDIT LOG EXPORT (SIH 26188 SESSION)",
+      "=========================================================",
+      "Exported: " + new Date().toString(),
+      "Officer ID: " + CURRENT_OFFICER_ID + " | Post: Indo-Nepal ICP Raxaul",
+      ""
+    ];
+    const blob = new Blob([header.concat(lines).join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "trustgate-audit-log-" + Date.now() + ".txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast("Audit log exported");
+  }
+
+  function clearAuditLog() {
+    if (!confirm("Clear the on-screen audit log?")) return;
+    const log = document.getElementById("auditLog");
+    log.innerHTML = "";
+    logEntry("Audit log cleared by officer " + CURRENT_OFFICER_ID + ".");
+    showToast("Audit log cleared");
+  }
+
+  function pushHistory(caseId, scenarioKey, risk) {
+    history.unshift({ caseId, scenarioKey, risk, time: new Date().toLocaleTimeString() });
+    if (history.length > 8) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById("historyList");
+    list.innerHTML = "";
+    if (history.length === 0) {
+      list.innerHTML = '<div style="font-size:11px;color:var(--text-muted);">No scans run yet this session.</div>';
+      return;
+    }
+    history.forEach((h) => {
+      const flag = h.risk < 30 ? "green" : h.risk < 60 ? "amber" : "red";
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.tabIndex = 0;
+      item.setAttribute("role", "button");
+      item.setAttribute("aria-label", "Reload case " + h.caseId);
+      item.innerHTML =
+        '<span class="h-id">' + h.caseId + " · " + h.time + "</span>" +
+        '<span class="status-pill pill-' + flag + '">' + h.risk + "</span>";
+      item.addEventListener("click", () => {
+        if (scenarios[h.scenarioKey]) {
+          document.getElementById("caseSelector").value = h.scenarioKey;
+          loadScenario();
+        }
+        document.getElementById("caseIdDisplay").textContent = "Case ID: " + h.caseId + " (recalled)";
+        showToast("Recalled case " + h.caseId);
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function exportReport() {
+    const key = currentScenarioKey();
+    const data = scenarios[key];
+    const risk = recalculateRisk();
+    const caseId = currentCaseId || genCaseId();
+    const lines = [
+      "TRUSTGATE AI — OFFICER SUMMARY REPORT (SIH 26188 EVALUATION)",
+      "============================================================",
+      "Case ID: " + caseId,
+      "Generated: " + new Date().toString(),
+      "Post: Indo-Nepal ICP Raxaul | Officer ID: " + CURRENT_OFFICER_ID,
+      "Document type: " + document.getElementById("docTypeSelector").value,
+      "Scenario: " + key,
+      "",
+      "Composite Risk Index: " + (risk === null ? "N/A (no signals active)" : risk),
+      "",
+      "Field Consistency:",
+      ...data.fields.map((f) => "  - " + f.name + ": VIZ='" + f.viz + "' MRZ='" + f.mrz + "' -> " + f.status),
+      "",
+      "Liveness check: " + data.liveness.status,
+      "Analyst note: " + data.note,
+      "",
+      "This report is generated from the TRUSTGATE AI SIH 26188 Border Screening Support system.",
+      "Compliant with DPDP 2025 and ICAO Doc 9303 standards."
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = caseId + "-report.txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    logEntry("Officer report exported for case " + caseId + ".");
+    showToast("Report downloaded");
+  }
+
+  let uploadedImageAnalysis = null;
+  let uploadedImageFile = null;
+  let uploadedLiveImageFile = null;
+
+  function handleLiveImageUpload(evt) {
+    const file = evt.target.files && evt.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      showToast("Please upload an image file");
+      return;
+    }
+    uploadedLiveImageFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = document.getElementById("uploadedLiveImg");
+      img.src = e.target.result;
+      img.style.display = "block";
+      document.getElementById("liveImagePlaceholderSvg").style.display = "none";
+      logEntry("Live checkpoint camera image uploaded (" + file.name + ").");
+      showToast("Live capture image loaded");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleImageUpload(evt) {
+    const file = evt.target.files && evt.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      showToast("Please upload an image file");
+      return;
+    }
+    uploadedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = document.getElementById("uploadedImg");
+      img.src = e.target.result;
+      img.style.display = "block";
+      document.getElementById("docPlaceholderSvg").style.display = "none";
+
+      const tempImg = new Image();
+      tempImg.onload = () => {
+        const canvas = document.getElementById("hiddenAnalysisCanvas");
+        const w = 160, h = 100;
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(tempImg, 0, 0, w, h);
+        let heuristicScore = 10;
+        try {
+          const pixels = ctx.getImageData(0, 0, w, h).data;
+          const quadVariance = [0, 0, 0, 0];
+          const quadCount = [0, 0, 0, 0];
+          const quadMean = [0, 0, 0, 0];
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const idx = (y * w + x) * 4;
+              const lum = 0.299 * pixels[idx] + 0.587 * pixels[idx + 1] + 0.114 * pixels[idx + 2];
+              const q = (x < w / 2 ? 0 : 1) + (y < h / 2 ? 0 : 2);
+              quadMean[q] += lum; quadCount[q]++;
+            }
+          }
+          for (let q = 0; q < 4; q++) quadMean[q] /= quadCount[q] || 1;
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const idx = (y * w + x) * 4;
+              const lum = 0.299 * pixels[idx] + 0.587 * pixels[idx + 1] + 0.114 * pixels[idx + 2];
+              const q = (x < w / 2 ? 0 : 1) + (y < h / 2 ? 0 : 2);
+              quadVariance[q] += Math.pow(lum - quadMean[q], 2);
+            }
+          }
+          for (let q = 0; q < 4; q++) quadVariance[q] /= quadCount[q] || 1;
+          const maxV = Math.max(...quadVariance), minV = Math.min(...quadVariance);
+          const spread = maxV - minV;
+          heuristicScore = Math.max(3, Math.min(97, Math.round(spread / 12)));
+        } catch (err) {
+          heuristicScore = 15;
+        }
+
+        uploadedImageAnalysis = {
+          tamperScoreOverride: heuristicScore,
+          width: tempImg.naturalWidth,
+          height: tempImg.naturalHeight,
+          fileName: file.name
+        };
+        document.getElementById("imageQualityInfo").textContent =
+          file.name + " · " + tempImg.naturalWidth + "×" + tempImg.naturalHeight +
+          " · heuristic variance score " + heuristicScore + "/100";
+        document.getElementById("uploadModeLabel").textContent = "Uploaded: " + file.name;
+        logEntry("Image uploaded (" + file.name + ", " + tempImg.naturalWidth + "×" + tempImg.naturalHeight +
+          "). Live heuristic quadrant-variance computed tamper signal " + heuristicScore + "/100.");
+        recalculateRisk();
+        showToast("Image analyzed — heuristic score " + heuristicScore);
+      };
+      tempImg.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const mockIssuerDB = [
+    { id: "P9182301", name: "RAHUL SHARMA", status: "clean" },
+    { id: "L4091823", name: "AMIT VERMA", status: "clean" },
+    { id: "Z1092834", name: "VIKRAM SINGH", status: "clean" },
+    { id: "K7723451", name: "PRIYA NAIR", status: "clean" },
+    { id: "M2210987", name: "ANIL KUMAR", status: "alert", note: "Fuzzy name/DOB match against demo alert list — manual verification required." },
+    { id: "R5501984", name: "SANJAY GUPTA", status: "clean" }
+  ];
+
+  function runIssuerLookup() {
+    const q = document.getElementById("lookupPassportNo").value.trim().toUpperCase();
+    const resultEl = document.getElementById("lookupResult");
+    if (!q) { showToast("Enter a document number to look up"); return; }
+    const record = mockIssuerDB.find((r) => r.id === q);
+    if (!record) {
+      resultEl.innerHTML = '<span class="status-pill pill-neutral">NOT FOUND</span> <span style="color:var(--text-muted);">No matching record in mock database.</span>';
+      logEntry("Mock issuer lookup: " + q + " — no record found.");
+      return;
+    }
+    if (record.status === "alert") {
+      resultEl.innerHTML = '<span class="status-pill pill-red">ALERT</span> ' + record.name + ' — ' + record.note;
+      logEntry("Mock issuer lookup: " + q + " — ALERT match. Officer review required.");
+    } else {
+      resultEl.innerHTML = '<span class="status-pill pill-green">CLEAN</span> ' + record.name + ' — no adverse record in mock database.';
+      logEntry("Mock issuer lookup: " + q + " — clean record.");
+    }
+    showToast("Lookup complete");
+  }
+
+  function renderStandards() {
+    const list = document.getElementById("standardsList");
+    list.innerHTML = "";
+    standards.forEach((s) => {
+      const item = document.createElement("div");
+      item.className = "queue-item";
+      item.innerHTML =
+        '<div class="queue-item-top"><span>' + s.name + '</span>' +
+        '<span class="status-pill ' + (s.checked ? "pill-green" : "pill-neutral") + '">' + (s.checked ? "Aligned" : "Excluded") + '</span></div>' +
+        '<div class="queue-item-meta">Region: ' + s.region + (s.locked ? " · mandatory baseline" : "") + '</div>';
+      const label = document.createElement("label");
+      label.style.cssText = "display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:var(--text-muted);cursor:" + (s.locked ? "not-allowed" : "pointer") + ";";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = s.checked;
+      cb.disabled = !!s.locked;
+      cb.addEventListener("change", () => {
+        s.checked = cb.checked;
+        logEntry((cb.checked ? "Included " : "Excluded ") + s.name + " from rule fusion.");
+        updateCoverage();
+      });
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode("Include in rule fusion"));
+      item.appendChild(label);
+      list.appendChild(item);
+    });
+    updateCoverage();
+  }
+
+  function updateCoverage() {
+    const checkedCount = standards.filter((s) => s.checked).length;
+    standardsCoverage = checkedCount / standards.length;
+    const pct = Math.round(standardsCoverage * 100);
+    const pill = document.getElementById("coveragePill");
+    pill.textContent = pct + "% coverage";
+    pill.className = "status-pill " + (pct === 100 ? "pill-green" : pct >= 60 ? "pill-amber" : "pill-red");
+    recalculateRisk();
+  }
+
+  function onSettingsChange() {
+    autoApprovalEnabled = document.getElementById("autoApprovalToggle").checked;
+    let clearVal = parseInt(document.getElementById("autoClearThresholdSlider").value, 10);
+    let escVal = parseInt(document.getElementById("escalateThresholdSlider").value, 10);
+    if (escVal < clearVal + 10) escVal = clearVal + 10;
+    document.getElementById("escalateThresholdSlider").value = escVal;
+
+    autoClearThreshold = clearVal;
+    escalateThreshold = escVal;
+    document.getElementById("autoClearThresholdLabel").textContent = clearVal;
+    document.getElementById("escalateThresholdLabel").textContent = escVal;
+
+    recalculateRisk();
+    logEntry("Settings updated — auto-clear < " + clearVal + ", escalate >= " + escVal + ".");
+  }
+
+  function onRoleChange() {
+    const role = document.getElementById("rbacSelect").value;
+    const clearSlider = document.getElementById("autoClearThresholdSlider");
+    const escSlider = document.getElementById("escalateThresholdSlider");
+    const clearLogBtn = document.querySelector('[onclick="clearAuditLog()"]');
+
+    clearSlider.disabled = role === "officer";
+    escSlider.disabled = role === "officer";
+    if (clearLogBtn) clearLogBtn.disabled = role !== "admin";
+
+    logEntry("Access role set to <strong>" + role.toUpperCase() + "</strong>.");
+    showToast("Role set to " + role);
+  }
+
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    const minutes = parseInt(document.getElementById("lockMinutes").value, 10) || 5;
+    idleTimer = setTimeout(lockSession, minutes * 60 * 1000);
+  }
+
+  function lockSession() {
+    document.getElementById("lockOverlay").style.display = "flex";
+    document.getElementById("unlockPin").value = "";
+    logEntry("Session auto-locked after inactivity.");
+  }
+
+  function attemptUnlock() {
+    const pin = document.getElementById("unlockPin").value;
+    if (!/^\d{4}$/.test(pin)) {
+      showToast("Enter a 4-digit PIN to resume");
+      return;
+    }
+    document.getElementById("lockOverlay").style.display = "none";
+    logEntry("Session resumed by officer " + CURRENT_OFFICER_ID + ".");
+    resetIdleTimer();
+  }
+
+  window.loadScenario = loadScenario;
+  window.recalculateRisk = recalculateRisk;
+  window.executeScan = executeScan;
+  window.exportReport = exportReport;
+  window.recordDecision = recordDecision;
+  window.saveNote = saveNote;
+  window.completeHandover = completeHandover;
+  window.exportAuditLog = exportAuditLog;
+  window.clearAuditLog = clearAuditLog;
+  window.onSettingsChange = onSettingsChange;
+  window.onRoleChange = onRoleChange;
+  window.attemptUnlock = attemptUnlock;
+  window.handleImageUpload = handleImageUpload;
+  window.handleLiveImageUpload = handleLiveImageUpload;
+  window.runIssuerLookup = runIssuerLookup;
+  window.onBackendSettingsChange = onBackendSettingsChange;
+  window.testBackendConnection = testBackendConnection;
+  window.logOut = logOut;
+  window.resetToPresetMode = resetToPresetMode;
+
+  window.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("officerIdDisplay").textContent = CURRENT_OFFICER_ID;
+    loadScenario();
+    renderHistory();
+    renderReviewQueue();
+    renderHandoverLog();
+    renderStandards();
+    setCaseStatusUI(null);
+    resetIdleTimer();
+    testBackendConnection();
+    ["mousemove", "keydown", "click", "touchstart"].forEach((evt) =>
+      window.addEventListener(evt, resetIdleTimer, { passive: true })
+    );
+  });
+})();
+</script>
+</body>
+</html>

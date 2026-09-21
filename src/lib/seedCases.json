@@ -1,0 +1,478 @@
+[
+  {
+    "id": "280e69ec-ad4d-4054-9a8a-a51ab0fd4690",
+    "case_code": "TG-MTO5W4ER-D3BB86AC",
+    "created_by": "06d9077b-2a97-460e-b6ed-38d6a16581c3",
+    "created_at": "2026-09-05T09:09:43.853652+00:00",
+    "updated_at": "2026-09-05T09:29:49.736222+00:00",
+    "document_type": "passport",
+    "country_code": null,
+    "status": "CLEARED",
+    "risk_score": 32,
+    "risk_level": "MEDIUM",
+    "processing_time_ms": 6051,
+    "review_status": "COMPLETED",
+    "priority": "NORMAL",
+    "is_demo": false,
+    "officer_decision": "CLEARED",
+    "decision_timestamp": "2026-09-05T09:29:48.4+00:00",
+    "notes": null,
+    "profiles": {
+      "id": "06d9077b-2a97-460e-b6ed-38d6a16581c3",
+      "badge_id": "OF-001",
+      "display_name": "Border Screening Officer"
+    },
+    "assigned": {
+      "id": "06d9077b-2a97-460e-b6ed-38d6a16581c3",
+      "display_name": "Border Screening Officer"
+    }
+  },
+  {
+    "id": "dd554d5a-d2d7-4e84-8334-8cc256380b73",
+    "case_code": "TG-LIVE-20260904-4571",
+    "created_by": "d78d7bfa-d033-412d-8d20-987e0019467c",
+    "created_at": "2026-09-04T20:20:23.835867+00:00",
+    "updated_at": "2026-09-04T20:21:54.763928+00:00",
+    "document_type": "unknown",
+    "country_code": null,
+    "status": "ESCALATED",
+    "risk_score": 33,
+    "risk_level": "MEDIUM",
+    "processing_time_ms": 3259,
+    "review_status": "OPEN",
+    "priority": "NORMAL",
+    "is_demo": false,
+    "officer_decision": "ESCALATED",
+    "decision_timestamp": "2026-09-04T20:21:55.196+00:00",
+    "notes": null,
+    "profiles": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "badge_id": "ADMIN-001",
+      "display_name": "Chief Administrator"
+    },
+    "assigned": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "display_name": "Chief Administrator"
+    }
+  },
+  {
+    "id": "073cdf92-d3e0-4483-925f-aa9d065fb55c",
+    "case_code": "TG-LIVE-20260904-2035",
+    "created_by": "e49cf4a5-e63d-4cac-a54a-436f47da9e52",
+    "created_at": "2026-09-04T19:02:27.85158+00:00",
+    "updated_at": "2026-09-04T19:05:11.925287+00:00",
+    "document_type": "unknown",
+    "country_code": null,
+    "status": "FLAGGED",
+    "risk_score": 30,
+    "risk_level": "MEDIUM",
+    "processing_time_ms": 4979,
+    "review_status": "OPEN",
+    "priority": "NORMAL",
+    "is_demo": false,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "e49cf4a5-e63d-4cac-a54a-436f47da9e52",
+      "badge_id": "SUP-001",
+      "display_name": "Border Supervisor Officer"
+    },
+    "assigned": {
+      "id": "e49cf4a5-e63d-4cac-a54a-436f47da9e52",
+      "display_name": "Border Supervisor Officer"
+    }
+  },
+  {
+    "id": "129ca118-aa24-4631-b446-d4903415f417",
+    "case_code": "TG-MTN2UZDC-46C98341",
+    "created_by": "06d9077b-2a97-460e-b6ed-38d6a16581c3",
+    "created_at": "2026-09-04T14:57:04.417367+00:00",
+    "updated_at": "2026-09-04T14:57:04.417367+00:00",
+    "document_type": "unknown",
+    "country_code": null,
+    "status": "UNDER_REVIEW",
+    "risk_score": 30,
+    "risk_level": "MEDIUM",
+    "processing_time_ms": 5554,
+    "review_status": "OPEN",
+    "priority": "NORMAL",
+    "is_demo": false,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "06d9077b-2a97-460e-b6ed-38d6a16581c3",
+      "badge_id": "OF-001",
+      "display_name": "Border Screening Officer"
+    },
+    "assigned": {
+      "id": "06d9077b-2a97-460e-b6ed-38d6a16581c3",
+      "display_name": "Border Screening Officer"
+    }
+  },
+  {
+    "id": "5ef6e63e-8e68-4f97-b5a1-369247be96c2",
+    "case_code": "TG-MTN1ATVV-74030F4A",
+    "created_by": "d78d7bfa-d033-412d-8d20-987e0019467c",
+    "created_at": "2026-09-04T14:13:25.889433+00:00",
+    "updated_at": "2026-09-04T14:13:25.889433+00:00",
+    "document_type": "unknown",
+    "country_code": null,
+    "status": "UNDER_REVIEW",
+    "risk_score": 30,
+    "risk_level": "MEDIUM",
+    "processing_time_ms": 5941,
+    "review_status": "OPEN",
+    "priority": "NORMAL",
+    "is_demo": false,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "badge_id": "ADMIN-001",
+      "display_name": "Chief Administrator"
+    },
+    "assigned": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "display_name": "Chief Administrator"
+    }
+  },
+  {
+    "id": "6ab64585-ed3d-4f7e-a3b3-52a787cec161",
+    "case_code": "TG-DEMO-FACE_MISMATCH-7SZQ",
+    "created_by": "547d9029-d850-433c-8c8a-6ff271f6a40a",
+    "created_at": "2026-09-04T07:28:23.30645+00:00",
+    "updated_at": "2026-09-04T07:28:23.30645+00:00",
+    "document_type": "permit",
+    "country_code": null,
+    "status": "UNDER_REVIEW",
+    "risk_score": 43,
+    "risk_level": "MEDIUM",
+    "processing_time_ms": 529,
+    "review_status": "OPEN",
+    "priority": "NORMAL",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "547d9029-d850-433c-8c8a-6ff271f6a40a",
+      "badge_id": "TG-14608",
+      "display_name": "Nishant Agarwal"
+    },
+    "assigned": {
+      "id": "547d9029-d850-433c-8c8a-6ff271f6a40a",
+      "display_name": "Nishant Agarwal"
+    }
+  },
+  {
+    "id": "e845b666-a454-43f6-8e07-47a8d8b0c252",
+    "case_code": "TG-TEST-MTMGZGB1",
+    "created_by": "06d9077b-2a97-460e-b6ed-38d6a16581c3",
+    "created_at": "2026-09-04T04:44:41.794733+00:00",
+    "updated_at": "2026-09-04T04:44:42.817301+00:00",
+    "document_type": "passport",
+    "country_code": "US",
+    "status": "UNDER_REVIEW",
+    "risk_score": 42,
+    "risk_level": "MEDIUM",
+    "processing_time_ms": 3100,
+    "review_status": "OPEN",
+    "priority": "NORMAL",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": "Integration test notes.",
+    "profiles": {
+      "id": "06d9077b-2a97-460e-b6ed-38d6a16581c3",
+      "badge_id": "OF-001",
+      "display_name": "Border Screening Officer"
+    },
+    "assigned": {
+      "id": "06d9077b-2a97-460e-b6ed-38d6a16581c3",
+      "display_name": "Border Screening Officer"
+    }
+  },
+  {
+    "id": "2853939a-dfe2-4bd4-bb9f-109fb112b79f",
+    "case_code": "TG-SMOKE-MTMG9DI4",
+    "created_by": "d78d7bfa-d033-412d-8d20-987e0019467c",
+    "created_at": "2026-09-04T04:24:25.107231+00:00",
+    "updated_at": "2026-09-04T04:24:25.107231+00:00",
+    "document_type": "passport",
+    "country_code": null,
+    "status": "UNDER_REVIEW",
+    "risk_score": 55,
+    "risk_level": "MEDIUM",
+    "processing_time_ms": 2500,
+    "review_status": "OPEN",
+    "priority": "NORMAL",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "badge_id": "ADMIN-001",
+      "display_name": "Chief Administrator"
+    },
+    "assigned": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "display_name": "Chief Administrator"
+    }
+  },
+  {
+    "id": "6dbabc1b-8d9e-4ec1-80e6-9a33327ca612",
+    "case_code": "TG-DEMO-0008",
+    "created_by": "d78d7bfa-d033-412d-8d20-987e0019467c",
+    "created_at": "2026-09-03T14:33:11.334015+00:00",
+    "updated_at": "2026-09-03T14:33:11.334015+00:00",
+    "document_type": "passport",
+    "country_code": "USA",
+    "status": "ESCALATED",
+    "risk_score": 93,
+    "risk_level": "HIGH",
+    "processing_time_ms": 6200,
+    "review_status": "OPEN",
+    "priority": "CRITICAL",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "badge_id": "ADMIN-001",
+      "display_name": "Chief Administrator"
+    },
+    "assigned": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "display_name": "Chief Administrator"
+    }
+  },
+  {
+    "id": "35ee1247-f869-475c-bd43-7f171310faa2",
+    "case_code": "TG-DEMO-0004",
+    "created_by": "d78d7bfa-d033-412d-8d20-987e0019467c",
+    "created_at": "2026-09-03T14:33:09.505032+00:00",
+    "updated_at": "2026-09-03T14:33:09.505032+00:00",
+    "document_type": "passport",
+    "country_code": "USA",
+    "status": "ESCALATED",
+    "risk_score": 78,
+    "risk_level": "HIGH",
+    "processing_time_ms": 5100,
+    "review_status": "OPEN",
+    "priority": "HIGH",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "badge_id": "ADMIN-001",
+      "display_name": "Chief Administrator"
+    },
+    "assigned": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "display_name": "Chief Administrator"
+    }
+  },
+  {
+    "id": "f8b54657-1126-4507-883c-fe28b0a4aa66",
+    "case_code": "TG-DEMO-0007",
+    "created_by": "d78d7bfa-d033-412d-8d20-987e0019467c",
+    "created_at": "2026-09-03T14:32:37.239267+00:00",
+    "updated_at": "2026-09-03T14:32:37.239267+00:00",
+    "document_type": "id",
+    "country_code": "NG",
+    "status": "CLEARED",
+    "risk_score": 12,
+    "risk_level": "LOW",
+    "processing_time_ms": 2980,
+    "review_status": "OPEN",
+    "priority": "LOW",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "badge_id": "ADMIN-001",
+      "display_name": "Chief Administrator"
+    },
+    "assigned": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "display_name": "Chief Administrator"
+    }
+  },
+  {
+    "id": "a0973c5a-7131-4e24-8785-34c92bbc9ffe",
+    "case_code": "TG-DEMO-0006",
+    "created_by": "d78d7bfa-d033-412d-8d20-987e0019467c",
+    "created_at": "2026-09-03T14:32:36.022118+00:00",
+    "updated_at": "2026-09-03T14:32:36.022118+00:00",
+    "document_type": "visa",
+    "country_code": "USA",
+    "status": "UNDER_REVIEW",
+    "risk_score": 66,
+    "risk_level": "MEDIUM",
+    "processing_time_ms": 4020,
+    "review_status": "OPEN",
+    "priority": "NORMAL",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "badge_id": "ADMIN-001",
+      "display_name": "Chief Administrator"
+    },
+    "assigned": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "display_name": "Chief Administrator"
+    }
+  },
+  {
+    "id": "c692c273-c261-40b3-a031-4337b58916c9",
+    "case_code": "TG-DEMO-0005",
+    "created_by": "d78d7bfa-d033-412d-8d20-987e0019467c",
+    "created_at": "2026-09-03T14:32:34.887393+00:00",
+    "updated_at": "2026-09-03T14:32:34.887393+00:00",
+    "document_type": "visa",
+    "country_code": "DE",
+    "status": "CLEARED",
+    "risk_score": 51,
+    "risk_level": "MEDIUM",
+    "processing_time_ms": 3750,
+    "review_status": "OPEN",
+    "priority": "NORMAL",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "badge_id": "ADMIN-001",
+      "display_name": "Chief Administrator"
+    },
+    "assigned": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "display_name": "Chief Administrator"
+    }
+  },
+  {
+    "id": "438f23f4-b1e6-41e7-ad60-6174e95cd76c",
+    "case_code": "TG-DEMO-0003",
+    "created_by": "d78d7bfa-d033-412d-8d20-987e0019467c",
+    "created_at": "2026-09-03T14:32:32.742246+00:00",
+    "updated_at": "2026-09-03T14:32:32.742246+00:00",
+    "document_type": "passport",
+    "country_code": "USA",
+    "status": "FLAGGED",
+    "risk_score": 74,
+    "risk_level": "HIGH",
+    "processing_time_ms": 4890,
+    "review_status": "OPEN",
+    "priority": "HIGH",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "badge_id": "ADMIN-001",
+      "display_name": "Chief Administrator"
+    },
+    "assigned": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "display_name": "Chief Administrator"
+    }
+  },
+  {
+    "id": "6d8d6869-94c4-458c-80e5-e6ac856a953f",
+    "case_code": "TG-DEMO-0002",
+    "created_by": "d78d7bfa-d033-412d-8d20-987e0019467c",
+    "created_at": "2026-09-03T14:32:31.793962+00:00",
+    "updated_at": "2026-09-03T14:32:31.793962+00:00",
+    "document_type": "passport",
+    "country_code": "UAE",
+    "status": "UNDER_REVIEW",
+    "risk_score": 62,
+    "risk_level": "MEDIUM",
+    "processing_time_ms": 4280,
+    "review_status": "OPEN",
+    "priority": "NORMAL",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "badge_id": "ADMIN-001",
+      "display_name": "Chief Administrator"
+    },
+    "assigned": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "display_name": "Chief Administrator"
+    }
+  },
+  {
+    "id": "9137aea0-c01e-423f-96f8-eca25dc90fee",
+    "case_code": "TG-DEMO-0001",
+    "created_by": "d78d7bfa-d033-412d-8d20-987e0019467c",
+    "created_at": "2026-09-03T14:32:30.217628+00:00",
+    "updated_at": "2026-09-03T14:32:30.217628+00:00",
+    "document_type": "passport",
+    "country_code": "US",
+    "status": "CLEARED",
+    "risk_score": 8,
+    "risk_level": "LOW",
+    "processing_time_ms": 3120,
+    "review_status": "OPEN",
+    "priority": "LOW",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "badge_id": "ADMIN-001",
+      "display_name": "Chief Administrator"
+    },
+    "assigned": {
+      "id": "d78d7bfa-d033-412d-8d20-987e0019467c",
+      "display_name": "Chief Administrator"
+    }
+  },
+  {
+    "id": "8cdba66a-c107-4fa5-8311-644af35ced0a",
+    "case_code": "TG-E2E-MTLM2ERJ",
+    "created_by": "220197a5-8254-4229-b0fc-924d8df4d43a",
+    "created_at": "2026-09-03T14:19:17.565649+00:00",
+    "updated_at": "2026-09-03T14:19:17.565649+00:00",
+    "document_type": "passport",
+    "country_code": "US",
+    "status": "UNDER_REVIEW",
+    "risk_score": 87,
+    "risk_level": "HIGH",
+    "processing_time_ms": 4120,
+    "review_status": "OPEN",
+    "priority": "HIGH",
+    "is_demo": true,
+    "officer_decision": null,
+    "decision_timestamp": null,
+    "notes": null,
+    "profiles": {
+      "id": "220197a5-8254-4229-b0fc-924d8df4d43a",
+      "badge_id": null,
+      "display_name": "Full E2E Officer"
+    },
+    "assigned": {
+      "id": "220197a5-8254-4229-b0fc-924d8df4d43a",
+      "display_name": "Full E2E Officer"
+    }
+  }
+]

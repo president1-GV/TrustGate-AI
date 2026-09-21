@@ -1,0 +1,40 @@
+[auth]
+# Restrict redirect URLs to known hosts only — no wildcards
+# Update the production URL to your actual Vercel deployment domain
+allowed_redirect_urls = [
+  "http://localhost:5173/reset-password",
+  "https://trustgate-ai.vercel.app/reset-password"
+]
+# NOTE: Set to true for production deployment
+# Kept false for SIH demo convenience — must enable before live border deployment
+require_email_verification = false
+verify_email_method = "code"
+reset_password_method = "code"
+disable_signup = false
+
+[auth.password]
+# Hardened: 12-char minimum with complexity requirements
+# Appropriate for a government border-security screening platform
+min_length = 12
+require_number = true
+require_lowercase = true
+require_uppercase = true
+require_special_char = true
+
+[auth.smtp]
+enabled = false
+host = ""
+port = 465
+username = ""
+sender_email = ""
+sender_name = ""
+min_interval_seconds = 60
+
+[storage]
+max_file_size_mb = 20
+
+[realtime]
+retention_days = 0
+
+[schedules]
+retention_days = 7

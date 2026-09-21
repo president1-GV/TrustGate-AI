@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRUSTGATE AI — Officer Login (SIH 26188)</title>
+<style>
+  :root {
+    --bg-dark: #090d16;
+    --bg-card: #111827;
+    --border-color: #374151;
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --status-green: #10b981;
+    --status-amber: #f59e0b;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .login-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    text-align: center;
+  }
+  .logo-img {
+    width: 72px;
+    height: 72px;
+    border-radius: 14px;
+    border: 1px solid rgba(6, 182, 212, 0.4);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
+    margin-bottom: 16px;
+    object-fit: cover;
+  }
+  .brand-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .slogan {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent-cyan);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .badge-sih {
+    display: inline-block;
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    border: 1px solid var(--accent-blue);
+    font-size: 10.5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .form-group {
+    text-align: left;
+    margin-bottom: 16px;
+  }
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+  }
+  .btn {
+    width: 100%;
+    background: var(--accent-blue);
+    color: #fff;
+    border: none;
+    padding: 11px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    margin-top: 8px;
+  }
+  .btn:hover { background: #2563eb; }
+  .btn:active { transform: scale(0.98); }
+  .btn-demo {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid var(--status-green);
+    color: #34d399;
+    margin-top: 10px;
+  }
+  .btn-demo:hover { background: rgba(16, 185, 129, 0.25); }
+  .footer-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 18px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 12px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <img src="/trustgate-logo.png" alt="TrustGate AI" class="logo-img" />
+  <div class="brand-title">TRUSTGATE AI</div>
+  <div class="slogan">VERIFY · DETECT · PROTECT</div>
+  <div class="badge-sih">SIH 26188 • Indo-Nepal ICP Raxaul</div>
+
+  <form onsubmit="handleLogin(event)">
+    <div class="form-group">
+      <label for="officerId">Officer Credential ID</label>
+      <input type="text" id="officerId" value="SSB-8842-N" required />
+    </div>
+
+    <div class="form-group">
+      <label for="password">Security Passcode</label>
+      <input type="password" id="password" value="••••••••" placeholder="Enter security passcode" />
+    </div>
+
+    <button type="submit" class="btn">🛂 Sign In to Post Session</button>
+    <button type="button" class="btn btn-demo" onclick="demoLogin()">⚡ 1-Click SIH Evaluator Demo Access</button>
+  </form>
+
+  <div class="footer-note">
+    <em>Checkpoint terminal restricted to authorized Indo-Nepal ICP Raxaul SSB border screening personnel.</em>
+  </div>
+</div>
+
+<script>
+function proceed(officerId) {
+  try {
+    sessionStorage.setItem("trustgate_auth", "true");
+    sessionStorage.setItem("trustgate_officer_id", officerId);
+    sessionStorage.setItem("trustgate_login_time", new Date().toISOString());
+  } catch (err) {}
+  window.location.href = "trustgate-screening.html?auth=1&officer=" + encodeURIComponent(officerId);
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  const id = document.getElementById("officerId").value.trim() || "SSB-8842-N";
+  proceed(id);
+}
+
+function demoLogin() {
+  proceed("SSB-8842-N");
+}
+</script>
+
+</body>
+</html>

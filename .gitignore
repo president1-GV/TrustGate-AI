@@ -1,0 +1,45 @@
+# InsForge & AI agent skills
+.insforge
+.agent
+.agents
+.augment
+.claude
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf
+
+# Dependencies and build
+node_modules
+dist
+.vite
+.venv
+venv
+__pycache__
+*.pyc
+midv_llm_engine
+*.local
+*.tsbuildinfo
+
+# Secrets & temporary files
+.env
+.env.local
+.env*.local
+.env.integration
+cli_secrets.txt
+cli_dbtables.txt
+npm_install_log.txt
+scratch/
+
+# Nested duplicate folder
+TrustGate AI Billion/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode
+.idea
