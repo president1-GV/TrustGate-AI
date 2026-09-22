@@ -41,6 +41,7 @@ import { ShieldCheck, RefreshCw, AlertOctagon, Sparkles, Copy, Brain, Check } fr
 import { CameraCapture, type StorageUploadResult } from "@/components/camera";
 import { AutomatedPipelineModal } from "@/components/screening/AutomatedPipelineModal";
 import { BorderDossierReportModal } from "@/components/screening/BorderDossierReportModal";
+import { AuditIntegrityCard } from "@/components/screening/AuditIntegrityCard";
 import type { FullPipelineResult } from "@/ai/types";
 import {
   resolveCleanDocumentUrl,
@@ -370,6 +371,8 @@ export function SihScreeningDashboard() {
     compositeRisk: ctxCompositeRisk,
     verdictText: ctxVerdictText,
     verdictTone: ctxVerdictTone,
+    blockchainAnchor,
+    blockchainStatus,
     ingestDocument,
     loadDemoScenario,
   } = useScreeningContext();
@@ -458,9 +461,9 @@ export function SihScreeningDashboard() {
     const isTampered = (activeRealCaseBundle?.row?.risk_score ?? 0) > 60;
 
     if (docType === "visa") {
-      return getVisaSpecimenSvg(activeCode, name, docNo);
+      return getVisaSpecimenSvg(activeCode, name ?? undefined, docNo ?? undefined);
     }
-    return getPassportSpecimenSvg(activeCode, name, docNo, "IND", isTampered);
+    return getPassportSpecimenSvg(activeCode, name ?? undefined, docNo ?? undefined, "IND", isTampered);
   }, [
     docImageLoadFailed,
     ctxDocImage,
@@ -2372,9 +2375,20 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
               )}
             </div>
 
+            {/* Blockchain Evidence Integrity & Provenance Card */}
+            <AuditIntegrityCard
+              caseId={ctxCaseId || activeRealCaseBundle?.row?.id}
+              caseCode={effectiveCaseId}
+              documentHash={ctxDocHash || activeRealCaseBundle?.documents?.[0]?.document_hash}
+              processingRunId={ctxRunId || activeRealCaseBundle?.documents?.[0]?.processing_run_id}
+              anchorRecord={blockchainAnchor}
+              anchorStatus={blockchainStatus}
+              className="mb-4"
+            />
+
             <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 space-y-2 shadow-xs">
               <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
-                <span className="font-mono text-signal-cyan font-semibold">PostgreSQL Audit Trail Log (heicn84u.us-east.insforge.app)</span>
+                <span className="font-mono text-signal-cyan font-semibold">PostgreSQL Audit Trail Log (i8yy29ec.us-east.insforge.app)</span>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">● LIVE REPLICATION</span>
               </div>
               <div
@@ -3059,6 +3073,17 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                 </div>
               </CardContent>
             </Card>
+
+            {/* Blockchain Evidence Integrity & Provenance Card */}
+            <AuditIntegrityCard
+              caseId={ctxCaseId || activeRealCaseBundle?.row?.id}
+              caseCode={effectiveCaseId}
+              documentHash={ctxDocHash || activeRealCaseBundle?.documents?.[0]?.document_hash}
+              processingRunId={ctxRunId || activeRealCaseBundle?.documents?.[0]?.processing_run_id}
+              anchorRecord={blockchainAnchor}
+              anchorStatus={blockchainStatus}
+              className="mb-4"
+            />
 
             {/* Live Database Audit Log */}
             <Card className="border-ink-border bg-ink-card/70 backdrop-blur-md">

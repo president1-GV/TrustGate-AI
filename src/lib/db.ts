@@ -18,6 +18,14 @@ import type {
   RiskFactor,
   Finding,
 } from "../ai/types";
+import {
+  EvidenceManifestService,
+  BlockchainQueueWorker,
+  PermissionedBlockchainAdapter,
+  IndependentVerificationEngine,
+  type BlockchainAnchorRecord,
+  type VerificationResult,
+} from "./blockchain";
 
 export type CaseStatus =
   | "PENDING"
@@ -586,11 +594,71 @@ export async function saveScreeningCase(params: {
       window.dispatchEvent(new CustomEvent("cases_changed", { detail: { caseId, caseCode } }));
     }
 
+    // Asynchronous Blockchain Evidence Anchoring (Non-blocking)
+    try {
+      const docHash = result.provenance?.documentHash || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+      const runId = result.provenance?.processingRunId || `RUN-${caseCode}`;
+
+      let finalDecision: "PASS" | "FAIL" | "REVIEW" | "INCONCLUSIVE" = "PASS";
+      if (result.risk.level === "HIGH" || result.risk.score >= 70) {
+        finalDecision = "FAIL";
+      } else if (result.risk.level === "MEDIUM" || result.risk.score >= 35) {
+        finalDecision = "REVIEW";
+      }
+
+      EvidenceManifestService.buildManifest({
+        caseId,
+        caseCode,
+        documentType: result.docDetect.documentType,
+        countryCode: countryCode ?? null,
+        priority,
+        isDemo,
+        documentId,
+        documentHash: docHash,
+        processingRunId: runId,
+        fileSizeBytes,
+        mimeType: mime,
+        riskScore: result.risk.score,
+        riskLevel: result.risk.level,
+        finalDecision,
+        aiConfidence: Math.round(result.ocr.overallConfidence * 100),
+        pipelineLatencyMs: result.totalMs,
+        officerId: validUserId,
+        stationId: "ICP-RAXAUL-01",
+      }).then(({ manifest, manifestHash }) => {
+        BlockchainQueueWorker.getInstance().enqueue({
+          caseId,
+          documentId,
+          processingRunId: runId,
+          manifest,
+          manifestHash,
+        });
+      }).catch((mErr) => {
+        console.warn("[TrustGate] Manifest build error:", mErr);
+      });
+    } catch (bcErr) {
+      console.warn("[TrustGate] Blockchain anchoring queue error:", bcErr);
+    }
+
     return caseId;
   } catch (remoteErr) {
     console.warn("[TrustGate] InsForge remote save failed or unreachable, persisting locally:", remoteErr);
     return offlineCaseId;
   }
+}
+
+/**
+ * Retrieves the blockchain audit anchor record for a case.
+ */
+export async function fetchBlockchainAnchor(caseId: string): Promise<BlockchainAnchorRecord | null> {
+  return PermissionedBlockchainAdapter.getInstance().getAnchorByCaseId(caseId);
+}
+
+/**
+ * Runs live independent verification of a case against its blockchain anchor.
+ */
+export async function verifyCaseBlockchainIntegrity(caseId: string): Promise<VerificationResult> {
+  return IndependentVerificationEngine.verifyCaseIntegrity(caseId);
 }
 
 export async function fetchCaseDetails(

@@ -37,6 +37,12 @@ import {
 } from "@/lib/midvService";
 import { genCaseCode, uploadScreeningDocument } from "@/lib/insforge";
 import { useAuthStore } from "@/store/auth";
+import {
+  BlockchainQueueWorker,
+  IndependentVerificationEngine,
+  type BlockchainAnchorRecord,
+  type VerificationResult,
+} from "@/lib/blockchain";
 
 export type ExecutionMode = "PRODUCTION" | "DEMO" | "TRAINING" | "EVALUATION";
 
@@ -93,6 +99,11 @@ export interface ScreeningContextValue {
   auditEvents: AuditEventItem[];
   addAuditEvent: (msg: string, action?: string, eventType?: string) => void;
 
+  // Blockchain Anchor & Provenance
+  blockchainAnchor: BlockchainAnchorRecord | null;
+  blockchainStatus: "IDLE" | "PENDING" | "CONFIRMED" | "ERROR";
+  verifyIntegrity: () => Promise<VerificationResult | null>;
+
   // Actions
   ingestDocument: (
     file: File,
@@ -147,6 +158,29 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
 
   // Audit Events
   const [auditEvents, setAuditEvents] = React.useState<AuditEventItem[]>([]);
+
+  // Blockchain Anchor & Integrity State
+  const [blockchainAnchor, setBlockchainAnchor] = React.useState<BlockchainAnchorRecord | null>(null);
+  const [blockchainStatus, setBlockchainStatus] = React.useState<"IDLE" | "PENDING" | "CONFIRMED" | "ERROR">("IDLE");
+
+  // Subscribe to BlockchainQueueWorker confirmations
+  React.useEffect(() => {
+    const unsub = BlockchainQueueWorker.getInstance().onConfirmed((anchor) => {
+      if (
+        (caseId && anchor.case_id === caseId) ||
+        (documentHash && anchor.document_hash === documentHash)
+      ) {
+        setBlockchainAnchor(anchor);
+        setBlockchainStatus("CONFIRMED");
+      }
+    });
+    return unsub;
+  }, [caseId, documentHash]);
+
+  const verifyIntegrity = React.useCallback(async (): Promise<VerificationResult | null> => {
+    if (!caseId) return null;
+    return IndependentVerificationEngine.verifyCaseIntegrity(caseId);
+  }, [caseId]);
 
   // Concurrency Guard Refs
   const activeRunIdRef = React.useRef<string | null>(null);
@@ -221,6 +255,8 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
     setCompositeRisk(null);
     setAiConfidence(null);
     setFinalDecision(null);
+    setBlockchainAnchor(null);
+    setBlockchainStatus("IDLE");
   }, []);
 
   // Mode Switcher: Enforces complete state clearing upon switching
@@ -564,6 +600,9 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
     verdictTone,
     auditEvents,
     addAuditEvent,
+    blockchainAnchor,
+    blockchainStatus,
+    verifyIntegrity,
     ingestDocument,
     resetScreening,
     loadDemoScenario,

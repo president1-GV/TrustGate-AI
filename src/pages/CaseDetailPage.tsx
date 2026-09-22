@@ -65,11 +65,13 @@ import {
   fetchCaseDetails,
   updateCaseStatus,
   saveReport,
+  fetchBlockchainAnchor,
   type CaseDetailBundle,
 } from "@/lib/db";
 import { useAuthStore } from "@/store/auth";
 import { RealtimeDigitalSignature } from "@/components/common/RealtimeDigitalSignature";
 import { ForensicSpecimenCard } from "@/components/common/ForensicSpecimenCard";
+import { AuditIntegrityCard } from "@/components/screening/AuditIntegrityCard";
 
 import {
   cn,
@@ -246,6 +248,13 @@ export function CaseDetailPage() {
     queryKey: ["case", id],
     queryFn: () => (id ? fetchCaseDetails(id) : null),
     staleTime: 15_000,
+    enabled: !!id,
+  });
+
+  const { data: blockchainAnchor } = useQuery({
+    queryKey: ["case-blockchain-anchor", id],
+    queryFn: () => (id ? fetchBlockchainAnchor(id) : null),
+    staleTime: 30_000,
     enabled: !!id,
   });
 
@@ -1717,7 +1726,16 @@ export function CaseDetailPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="audit">
+        <TabsContent value="audit" className="space-y-4">
+          <AuditIntegrityCard
+            caseId={id}
+            caseCode={row.case_code}
+            documentHash={doc?.document_hash}
+            processingRunId={doc?.processing_run_id}
+            anchorRecord={blockchainAnchor}
+            anchorStatus={blockchainAnchor ? "CONFIRMED" : "IDLE"}
+          />
+
           <Card>
             <CardHeader className="flex items-center justify-between gap-3">
               <div>

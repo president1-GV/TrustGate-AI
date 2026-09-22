@@ -51,13 +51,15 @@ export async function ensureAuthenticatedClient(): Promise<string | null> {
     // 1. Check in-memory user
     const { data: userRes } = await insforge.auth.getCurrentUser();
     if (userRes?.user) {
-      const token = typeof window !== "undefined" ? window.localStorage.getItem("tg_access_token") : null;
+      const token = typeof window !== "undefined" && typeof window.localStorage?.getItem === "function"
+        ? window.localStorage.getItem("tg_access_token")
+        : null;
       return token || "active";
     }
   } catch {}
 
   // 2. Check localStorage
-  if (typeof window !== "undefined" && window.localStorage) {
+  if (typeof window !== "undefined" && typeof window.localStorage?.getItem === "function") {
     const savedToken = window.localStorage.getItem("tg_access_token");
     if (savedToken) {
       insforge.setAccessToken(savedToken);

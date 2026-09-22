@@ -22,6 +22,7 @@ import type {
   ReportRow,
 } from "./db";
 import type { FullPipelineResult } from "../ai/types";
+import { SEED_CASES } from "./seedCases";
 
 const DB_NAME = "trustgate_realtime_offline_db";
 const DB_VERSION = 1;
@@ -457,7 +458,7 @@ export async function fetchCaseDetailsOffline(caseId: string): Promise<CaseDetai
 
     tx.oncomplete = async () => {
       if (!caseRow) {
-        const fallbackSeed = SEED_CASES.find((c) => c.id === caseId || c.case_code === caseId);
+        const fallbackSeed = SEED_CASES.find((c: CaseRow) => c.id === caseId || c.case_code === caseId);
         if (fallbackSeed) {
           resolve({
             row: fallbackSeed,

@@ -255,6 +255,7 @@ export function getBiometricPortraitSpecimenSvg(
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 340" width="100%" height="100%">
     <rect width="340" height="340" rx="10" fill="#090d16" stroke="#1e293b"/>
+    <text x="170" y="32" fill="#94a3b8" font-family="monospace" font-size="10" text-anchor="middle">${name ? name.toUpperCase() : "LIVE BORDER PASSENGER CAPTURE"}</text>
     
     <!-- Facial Silhouette Base -->
     <ellipse cx="170" cy="150" rx="72" ry="94" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
