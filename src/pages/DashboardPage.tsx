@@ -107,18 +107,26 @@ export function DashboardPage() {
   });
 
   // Real-time WebSocket connection to PostgreSQL cases table
+  // Real-time WebSocket connection and window event updates for instant sync
   React.useEffect(() => {
     let active = true;
+
+    const onUpdate = () => {
+      if (active) {
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        refetch();
+      }
+    };
+
+    window.addEventListener("trustgate:case_saved", onUpdate);
+    window.addEventListener("cases_changed", onUpdate);
+    window.addEventListener("tg:new_alert", onUpdate);
+
     async function setupRealtime() {
       try {
         if ((insforge as any).realtime?.connect) {
           await (insforge as any).realtime.connect();
           await (insforge as any).realtime.subscribe("cases");
-          const onUpdate = () => {
-            if (active) {
-              queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-            }
-          };
           (insforge as any).realtime.on("case_created", onUpdate);
           (insforge as any).realtime.on("case_updated", onUpdate);
           (insforge as any).realtime.on("cases_changed", onUpdate);
@@ -130,8 +138,11 @@ export function DashboardPage() {
     setupRealtime();
     return () => {
       active = false;
+      window.removeEventListener("trustgate:case_saved", onUpdate);
+      window.removeEventListener("cases_changed", onUpdate);
+      window.removeEventListener("tg:new_alert", onUpdate);
     };
-  }, [queryClient]);
+  }, [queryClient, refetch]);
 
   /* Real-time live data computed directly from InsForge PostgreSQL */
   const riskDistribution = data?.riskDistribution ?? [];

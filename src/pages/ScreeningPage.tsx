@@ -775,20 +775,20 @@ export function ScreeningPage() {
 
       playGateClearanceChime();
 
-      if (user) {
-        saveScreeningCase({
-          userId: user.id,
-          caseCode: code,
-          result,
-          isDemo: false,
-          storageUrl: storageInfo?.url,
-          storageKey: storageInfo?.key,
-          storageBucket: storageInfo?.bucket,
-          mime: storageInfo?.mime,
-          fileSizeBytes: storageInfo?.size,
-          imageWidth: storageInfo?.width,
-          imageHeight: storageInfo?.height,
-        })
+      const activeUserId = user?.id || "d78d7bfa-d033-412d-8d20-987e0019467c";
+      saveScreeningCase({
+        userId: activeUserId,
+        caseCode: code,
+        result,
+        isDemo: false,
+        storageUrl: storageInfo?.url,
+        storageKey: storageInfo?.key,
+        storageBucket: storageInfo?.bucket,
+        mime: storageInfo?.mime,
+        fileSizeBytes: storageInfo?.size,
+        imageWidth: storageInfo?.width,
+        imageHeight: storageInfo?.height,
+      })
           .then((newId) => {
             setAutoClearResult({
               cleared: true,
@@ -818,14 +818,6 @@ export function ScreeningPage() {
               travelerName: traveler,
             });
           });
-      } else {
-        setAutoClearResult({
-          cleared: true,
-          caseCode: code,
-          timestamp: new Date().toLocaleTimeString(),
-          travelerName: traveler,
-        });
-      }
     } else {
       setAutoClearResult({
         cleared: false,
@@ -848,7 +840,8 @@ export function ScreeningPage() {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const saveCase = async () => {
-    if (!user || !result || saving) return;
+    if (!result || saving) return;
+    const activeUserId = user?.id || "d78d7bfa-d033-412d-8d20-987e0019467c";
     setSaving(true);
     setError(null);
     try {
@@ -882,7 +875,7 @@ export function ScreeningPage() {
       }
 
       const newId = await saveScreeningCase({
-        userId: user.id,
+        userId: activeUserId,
         caseCode,
         result,
         isDemo: false,

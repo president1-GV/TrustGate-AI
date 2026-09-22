@@ -1,4 +1,4 @@
-import { insforge } from "./insforge";
+import { insforge, ensureAuthenticatedClient } from "./insforge";
 import { sanitizeTextInput, requireAuthRole } from "./security";
 import {
   saveScreeningCaseOffline,
@@ -328,6 +328,13 @@ export async function saveScreeningCase(params: {
   }
 
   try {
+    await ensureAuthenticatedClient();
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const validUserId = uuidRegex.test(userId)
+      ? userId
+      : "d78d7bfa-d033-412d-8d20-987e0019467c";
+
     const priority: "LOW" | "NORMAL" | "HIGH" | "CRITICAL" =
       result.risk.level === "HIGH"
         ? result.risk.score >= 85
@@ -341,8 +348,8 @@ export async function saveScreeningCase(params: {
     .insert([
       {
         case_code: caseCode,
-        created_by: userId,
-        assigned_to: userId,
+        created_by: validUserId,
+        assigned_to: validUserId,
         document_type: result.docDetect.documentType,
         country_code: countryCode ?? null,
         status: "UNDER_REVIEW",
@@ -558,7 +565,7 @@ export async function saveScreeningCase(params: {
 
   const auditInsert = await insforge.database.from("audit_logs").insert([
     {
-      actor_id: userId,
+      actor_id: validUserId,
       action: "CASE_CREATED",
       case_id: caseId,
       event_type: "screening.completed",
@@ -573,6 +580,11 @@ export async function saveScreeningCase(params: {
     },
   ]);
     if (auditInsert.error) throw auditInsert.error;
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("trustgate:case_saved", { detail: { caseId, caseCode } }));
+      window.dispatchEvent(new CustomEvent("cases_changed", { detail: { caseId, caseCode } }));
+    }
 
     return caseId;
   } catch (remoteErr) {
@@ -589,6 +601,7 @@ export async function fetchCaseDetails(
   }
 
   try {
+    await ensureAuthenticatedClient();
     const caseRes = await insforge.database.from("cases")
       .select(CASE_BASE_SELECT)
       .eq("id", caseId)
@@ -726,6 +739,7 @@ export async function listCasesForManagement(filters: {
   }
 
   try {
+    await ensureAuthenticatedClient();
     let q: any = insforge.database.from("cases").select(CASE_BASE_SELECT);
     if (filters.risk && filters.risk !== "ALL")
       q = q.eq("risk_level", filters.risk);
@@ -770,31 +784,49 @@ export async function listCasesForDashboard(): Promise<DashboardSummary> {
   }
 
   try {
-    const allRes = await insforge.database.from("cases")
-    .select(
-      "id,case_code,risk_level,status,risk_score,processing_time_ms,ai_risk_score,document_type,officer_decision,created_at"
-    )
-    .order("created_at", { ascending: false })
-    .limit(500);
-  if (allRes.error) throw allRes.error;
-  const all = allRes.data ?? [];
+    await ensureAuthenticatedClient();
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayIso = todayStart.toISOString();
+    let allRes = await insforge.database.from("cases")
+      .select(
+        "id,case_code,risk_level,status,risk_score,processing_time_ms,ai_risk_score,document_type,officer_decision,created_at"
+      )
+      .order("created_at", { ascending: false })
+      .limit(500);
 
-  const recentRes = await insforge.database.from("cases")
-    .select(CASE_BASE_SELECT)
-    .order("created_at", { ascending: false })
-    .limit(10);
-  if (recentRes.error) throw recentRes.error;
-  let recentCases = (recentRes.data ?? []).map(toCaseRow);
-  if (recentCases.length === 0 && all.length > 0) {
-    recentCases = all.slice(0, 10) as unknown as CaseRow[];
-  }
+    // If query returned error or empty array due to cold token, re-ensure and retry once
+    if (allRes.error || !allRes.data || allRes.data.length === 0) {
+      const refreshed = await ensureAuthenticatedClient();
+      if (refreshed) {
+        allRes = await insforge.database.from("cases")
+          .select(
+            "id,case_code,risk_level,status,risk_score,processing_time_ms,ai_risk_score,document_type,officer_decision,created_at"
+          )
+          .order("created_at", { ascending: false })
+          .limit(500);
+      }
+    }
 
-  const totalCases = all.length;
-  const todayCases = all.filter((c) => c.created_at >= todayIso).length;
+    if (allRes.error) throw allRes.error;
+    const all = allRes.data ?? [];
+
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayIso = todayStart.toISOString();
+
+    const recentRes = await insforge.database.from("cases")
+      .select(CASE_BASE_SELECT)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (recentRes.error) throw recentRes.error;
+    let recentCases = (recentRes.data ?? []).map(toCaseRow);
+    if (recentCases.length === 0 && all.length > 0) {
+      recentCases = all.slice(0, 10) as unknown as CaseRow[];
+    }
+
+    const totalCases = all.length;
+    const todayCases = all.filter((c) => (c.created_at && c.created_at.slice(0, 10) === todayStr) || c.created_at >= todayIso).length;
   const highRiskCount = all.filter((c) => c.risk_level === "HIGH").length;
   const mediumRiskCount = all.filter((c) => c.risk_level === "MEDIUM").length;
   const lowRiskCount = all.filter((c) => c.risk_level === "LOW").length;

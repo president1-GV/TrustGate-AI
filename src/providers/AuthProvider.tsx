@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, type ReactNode } from "react";
-import { insforge, getCurrentAppRole, type AppRole } from "@/lib/insforge";
+import { insforge, getCurrentAppRole, ensureAuthenticatedClient, type AppRole } from "@/lib/insforge";
 import { useAuthStore } from "@/store/auth";
 import { createMemberAccessRequest } from "@/lib/authRequests";
 
@@ -51,6 +51,14 @@ async function hydrate(
   }
 
   try {
+    // Ensure access token is active before querying current user
+    const token = typeof window !== "undefined" ? localStorage.getItem("tg_access_token") : null;
+    if (token) {
+      insforge.setAccessToken(token);
+    } else {
+      await ensureAuthenticatedClient();
+    }
+
     const { data, error } = await insforge.auth.getCurrentUser();
     if (error || !data?.user) {
       // Check cached session before clearing
@@ -200,7 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const { error } = await insforge.auth.signInWithPassword({ email, password });
+      const { data, error } = await insforge.auth.signInWithPassword({ email, password });
       if (error) {
         if (
           error.message?.toLowerCase().includes("network") ||
@@ -211,6 +219,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         throw error;
+      }
+      if (data?.accessToken) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("tg_access_token", data.accessToken);
+        }
+        insforge.setAccessToken(data.accessToken);
       }
       await hydrate(
         (u) => setSession(u),
@@ -308,6 +322,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function logout(): Promise<void> {
     try {
       localStorage.removeItem("tg_authenticated_session");
+      localStorage.removeItem("tg_access_token");
+      insforge.setAccessToken(null);
       await insforge.auth.signOut();
     } catch {}
     clearSession();

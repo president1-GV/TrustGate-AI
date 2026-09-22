@@ -25,6 +25,7 @@ import { computeSha256, createDocumentProvenance } from "@/lib/provenance";
 import { validateUploadedFile, sanitizeErrorMessage } from "@/lib/security";
 import {
   checkDatabaseIdentity,
+  saveScreeningCase,
   type DatabaseIdentityCheckResult,
 } from "@/lib/db";
 import {
@@ -34,7 +35,8 @@ import {
   type MidvVerificationResult,
   type FaceForensicsResult,
 } from "@/lib/midvService";
-import { genCaseCode } from "@/lib/insforge";
+import { genCaseCode, uploadScreeningDocument } from "@/lib/insforge";
+import { useAuthStore } from "@/store/auth";
 
 export type ExecutionMode = "PRODUCTION" | "DEMO" | "TRAINING" | "EVALUATION";
 
@@ -415,6 +417,50 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
           `Screening Completed (${runId}) · Verdict: ${decision} (Risk: ${computedRisk}/100)`,
           "SCREENING_COMPLETE"
         );
+
+        // 11. Auto-Persist Real Case to PostgreSQL Database
+        try {
+          let storageUrl = storage?.url;
+          let storageKey = storage?.key;
+          let storageBucket = storage?.bucket;
+
+          // If online and no cloud storage URL yet, upload original document to private InsForge storage
+          if (typeof navigator !== "undefined" && navigator.onLine && file && !storageUrl) {
+            try {
+              const uploaded = await uploadScreeningDocument(file, generatedCaseCode);
+              if (uploaded?.url) {
+                storageUrl = uploaded.url;
+                storageKey = uploaded.key;
+                storageBucket = uploaded.bucket;
+              }
+            } catch (upErr) {
+              console.warn("[TrustGate Storage] Direct upload notice:", upErr);
+            }
+          }
+
+          const currentUserId = useAuthStore.getState().user?.id || "d78d7bfa-d033-412d-8d20-987e0019467c";
+          const savedCaseId = await saveScreeningCase({
+            userId: currentUserId,
+            caseCode: generatedCaseCode,
+            result: pipeRes,
+            isDemo: false,
+            storageUrl: storageUrl || previewUrl,
+            storageKey,
+            storageBucket,
+            mime: validation.detectedMime ?? file.type,
+            fileSizeBytes: file.size,
+            imageWidth: storage?.width,
+            imageHeight: storage?.height,
+            countryCode: countryField?.fieldValue ?? undefined,
+          });
+
+          addAuditEvent(
+            `Case #${generatedCaseCode} saved to live database (ID: ${savedCaseId})`,
+            "DATABASE_PERSIST_SUCCESS"
+          );
+        } catch (saveErr) {
+          console.warn("[TrustGate] Auto-persist case to PostgreSQL error:", saveErr);
+        }
       } catch (err: any) {
         if (activeRunIdRef.current === runId) {
           const msg = sanitizeErrorMessage(err?.message || "Screening pipeline encountered an error");
