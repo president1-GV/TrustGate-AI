@@ -1,0 +1,39 @@
+{
+  "strategy": "DISJOINT_CLASS_STRATIFIED",
+  "seed": 42,
+  "train_ratio": 0.7,
+  "val_ratio": 0.15,
+  "test_ratio": 0.15,
+  "splits": {
+    "train": {
+      "total": 2100,
+      "by_category": {
+        "aadhaar": 420,
+        "pan": 420,
+        "passport": 420,
+        "visa": 420,
+        "voter_id": 420
+      }
+    },
+    "validation": {
+      "total": 450,
+      "by_category": {
+        "aadhaar": 90,
+        "pan": 90,
+        "passport": 90,
+        "visa": 90,
+        "voter_id": 90
+      }
+    },
+    "test": {
+      "total": 450,
+      "by_category": {
+        "aadhaar": 90,
+        "pan": 90,
+        "passport": 90,
+        "visa": 90,
+        "voter_id": 90
+      }
+    }
+  }
+}

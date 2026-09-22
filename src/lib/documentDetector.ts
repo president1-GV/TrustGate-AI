@@ -5,7 +5,7 @@ export interface DetectedCredential {
   isDetected: boolean;
   countryCode: string | null;
   countryName: string;
-  documentType: "passport" | "idcard" | "pan" | "aadhaar" | "drivinglicense" | "visa" | "permit" | "unknown";
+  documentType: "passport" | "idcard" | "pan" | "aadhaar" | "voter_id" | "drivinglicense" | "visa" | "permit" | "unknown";
   documentTitle: string;
   matchedArchetypeId: string | null;
   standard: string;
@@ -229,6 +229,29 @@ export function detectCredential(
     nominalAspect = 1.586;
     if (!countryCode) countryCode = "IND";
   } else if (
+    rawText.includes("ELECTION COMMISSION OF INDIA") ||
+    rawText.includes("ELECTOR PHOTO IDENTITY CARD") ||
+    rawText.includes("ELECTOR'S PHOTO") ||
+    rawText.includes("VOTER ID") ||
+    /\b[A-Z]{3}[0-9]{7}\b/.test(rawText)
+  ) {
+    docType = "voter_id";
+    docTitle = "Election Commission of India — Elector's Photo Identity Card (EPIC / Voter ID)";
+    standard = "National Identity Smart Card";
+    nominalAspect = 1.586;
+    if (!countryCode) countryCode = "IND";
+  } else if (
+    rawText.includes("VISA TYPE") ||
+    rawText.includes("VISA NO") ||
+    rawText.includes("REPUBLIC OF INDIA VISA") ||
+    (rawText.includes("VISA") && (rawText.includes("ENTRIES") || rawText.includes("VALID FOR")))
+  ) {
+    docType = "visa";
+    docTitle = "Republic of India Visa Endorsement";
+    standard = "ICAO 9303 MRV-B";
+    nominalAspect = 1.420;
+    if (!countryCode) countryCode = "IND";
+  } else if (
     rawText.includes("DRIVING LICENCE") ||
     rawText.includes("DRIVING LICENSE") ||
     rawText.includes("DVLA")
@@ -290,6 +313,8 @@ export function detectCredential(
       case "IND":
         if (docType === "pan") matchedArchId = "ind_pan";
         else if (docType === "aadhaar") matchedArchId = "ind_aadhaar";
+        else if (docType === "voter_id") matchedArchId = "ind_voter_id";
+        else if (docType === "visa") matchedArchId = "ind_visa";
         else matchedArchId = "ind_passport";
         break;
       case "USA":

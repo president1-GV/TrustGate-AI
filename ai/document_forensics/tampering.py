@@ -11,7 +11,7 @@ Techniques:
 
 import io
 import time
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 import numpy as np
 import cv2
 from PIL import Image, ImageChops, ImageEnhance

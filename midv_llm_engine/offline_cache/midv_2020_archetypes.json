@@ -412,6 +412,82 @@
         "microprint"
       ]
     },
+    "ind_aadhaar": {
+      "country": "India",
+      "country_code": "IND",
+      "document_type": "aadhaar_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "NONE",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "qr_code_zone",
+        "text_zone",
+        "uid_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.25,
+        "x_max": 0.28,
+        "y_max": 0.75
+      },
+      "security_features": [
+        "secure_qr_code",
+        "guilloche_pattern",
+        "holographic_emblem",
+        "microtext"
+      ]
+    },
+    "ind_visa": {
+      "country": "India",
+      "country_code": "IND",
+      "document_type": "visa_sticker",
+      "nominal_aspect_ratio": 1.42,
+      "mrz_standard": "MRV_B",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "mrz_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.20,
+        "x_max": 0.28,
+        "y_max": 0.70
+      },
+      "security_features": [
+        "kinegram_stripe",
+        "rainbow_fluorescent_ink",
+        "microprint",
+        "intaglio_latent_image"
+      ]
+    },
+    "ind_voter_id": {
+      "country": "India",
+      "country_code": "IND",
+      "document_type": "voter_card",
+      "nominal_aspect_ratio": 1.586,
+      "mrz_standard": "NONE",
+      "visual_inspection_zones": [
+        "header",
+        "photo_box",
+        "text_zone",
+        "epic_zone"
+      ],
+      "nominal_photo_box": {
+        "x_min": 0.05,
+        "y_min": 0.25,
+        "x_max": 0.28,
+        "y_max": 0.75
+      },
+      "security_features": [
+        "hologram_sticker",
+        "microline_borders",
+        "ghost_image",
+        "eci_seal"
+      ]
+    },
     "can_passport": {
       "country": "Canada",
       "country_code": "CAN",

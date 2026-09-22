@@ -1,0 +1,88 @@
+{
+  "dataset_name": "Indian KYC Document Extraction Dataset (SIH 26188)",
+  "source": "Uploaded archive (dataset for SIH26188 (addhar,pan,visa,passport,voter-id).zip)",
+  "total_images_processed": 3000,
+  "unique_images": 3000,
+  "exact_duplicates_count": 0,
+  "exact_duplicates": [],
+  "corrupt_files_count": 0,
+  "corrupt_files": [],
+  "category_summaries": {
+    "aadhaar": {
+      "total_images": 600,
+      "width_range": [
+        600,
+        600
+      ],
+      "height_range": [
+        380,
+        380
+      ],
+      "mean_aspect_ratio": 1.579,
+      "formats": {
+        "JPEG": 600
+      }
+    },
+    "pan": {
+      "total_images": 600,
+      "width_range": [
+        600,
+        600
+      ],
+      "height_range": [
+        380,
+        380
+      ],
+      "mean_aspect_ratio": 1.579,
+      "formats": {
+        "JPEG": 600
+      }
+    },
+    "passport": {
+      "total_images": 600,
+      "width_range": [
+        650,
+        650
+      ],
+      "height_range": [
+        450,
+        450
+      ],
+      "mean_aspect_ratio": 1.444,
+      "formats": {
+        "JPEG": 600
+      }
+    },
+    "visa": {
+      "total_images": 600,
+      "width_range": [
+        650,
+        650
+      ],
+      "height_range": [
+        420,
+        420
+      ],
+      "mean_aspect_ratio": 1.548,
+      "formats": {
+        "JPEG": 600
+      }
+    },
+    "voter_id": {
+      "total_images": 600,
+      "width_range": [
+        600,
+        600
+      ],
+      "height_range": [
+        400,
+        400
+      ],
+      "mean_aspect_ratio": 1.5,
+      "formats": {
+        "JPEG": 600
+      }
+    }
+  },
+  "audit_timestamp": "\"2026-09-22T08:00:00Z\""
+}

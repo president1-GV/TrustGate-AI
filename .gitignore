@@ -22,6 +22,11 @@ venv
 __pycache__
 *.pyc
 midv_llm_engine/raw_datasets/
+ai/downloads/
+ai/checkpoints/
+ai/datasets/kyc_uploaded/
+ai/datasets/kyc_huggingface/
+ai/datasets/merged/
 *.local
 *.tsbuildinfo
 

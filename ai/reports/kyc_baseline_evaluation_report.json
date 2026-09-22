@@ -1,0 +1,47 @@
+{
+  "evaluation_dataset": "Indian KYC Test Split (Strictly Disjoint)",
+  "samples_evaluated": 450,
+  "classification_accuracy": 100.0,
+  "class_breakdown": {
+    "aadhaar": {
+      "correct": 90,
+      "total": 90,
+      "accuracy": 100.0
+    },
+    "pan": {
+      "correct": 90,
+      "total": 90,
+      "accuracy": 100.0
+    },
+    "passport": {
+      "correct": 90,
+      "total": 90,
+      "accuracy": 100.0
+    },
+    "visa": {
+      "correct": 90,
+      "total": 90,
+      "accuracy": 100.0
+    },
+    "voter_id": {
+      "correct": 90,
+      "total": 90,
+      "accuracy": 100.0
+    }
+  },
+  "field_extraction_accuracy": 85.63,
+  "field_hits": {
+    "document_number": 436,
+    "date_of_birth": 270,
+    "issuing_authority": 450
+  },
+  "latency_metrics_ms": {
+    "mean": 4151.41,
+    "p50": 4023.14,
+    "p95": 5009.62
+  },
+  "character_error_rate_estimate": 0.018,
+  "word_error_rate_estimate": 0.024,
+  "macro_f1": 1.0,
+  "duration_seconds": 1868.48
+}
