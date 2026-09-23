@@ -670,14 +670,27 @@ export async function fetchCaseDetails(
 
   try {
     await ensureAuthenticatedClient();
-    const caseRes = await insforge.database.from("cases")
+
+    // 1. Try querying by primary UUID first
+    let caseRes = await insforge.database.from("cases")
       .select(CASE_BASE_SELECT)
       .eq("id", caseId)
       .maybeSingle();
+
+    // 2. If not found by UUID, try querying by human-readable case_code
+    if (!caseRes.data && !caseRes.error) {
+      caseRes = await insforge.database.from("cases")
+        .select(CASE_BASE_SELECT)
+        .eq("case_code", caseId)
+        .maybeSingle();
+    }
+
     if (caseRes.error) throw caseRes.error;
     if (!caseRes.data) return fetchCaseDetailsOffline(caseId);
     const row = toCaseRow(caseRes.data);
+    const targetCaseId = row.id;
 
+    // Resilient subquery execution: one failing child table will not crash the entire case
     const [docsRes, valRes, riskRes, findingsRes, reportsRes, auditsRes] =
       await Promise.all([
         insforge.database.from("documents")
@@ -689,40 +702,40 @@ export async function fetchCaseDetails(
             tampering:tampering_results(id,probability,confidence,severity,regions:tampering_regions(id,manipulation_type,region_label,bounding_box,evidence,probability)),
             face:face_results(id,detected,quality,similarity,pose_yaw,pose_pitch,blur_score,result_label,bounding_box)`
           )
-          .eq("case_id", caseId)
+          .eq("case_id", targetCaseId)
           .order("created_at", { ascending: true }),
         insforge.database.from("validation_results")
           .select("id,rule_code,severity,message,details")
-          .eq("case_id", caseId),
+          .eq("case_id", targetCaseId),
         insforge.database.from("risk_scores")
           .select(
             "id,score,level,recommended_action,engine_version,factors:risk_factors(id,code,weight,contribution,explanation)"
           )
-          .eq("case_id", caseId)
+          .eq("case_id", targetCaseId)
           .maybeSingle(),
         insforge.database.from("findings")
           .select(
             "id,title,severity,location,confidence,evidence,model_name,recommendation,created_at"
           )
-          .eq("case_id", caseId)
+          .eq("case_id", targetCaseId)
           .order("created_at", { ascending: true }),
         insforge.database.from("reports")
           .select("id,generated_by,format,payload,created_at")
-          .eq("case_id", caseId),
+          .eq("case_id", targetCaseId),
         insforge.database.from("audit_logs")
           .select(
             "id,actor_id,action,case_id,event_type,result,metadata,created_at,actor:profiles!audit_logs_actor_id_fkey(id,display_name)"
           )
-          .eq("case_id", caseId)
+          .eq("case_id", targetCaseId)
           .order("created_at", { ascending: false }),
       ]);
 
-    if (docsRes.error) throw docsRes.error;
-    if (valRes.error) throw valRes.error;
-    if (riskRes.error) throw riskRes.error;
-    if (findingsRes.error) throw findingsRes.error;
-    if (reportsRes.error) throw reportsRes.error;
-    if (auditsRes.error) throw auditsRes.error;
+    if (docsRes.error) console.warn("[TrustGate] Error fetching documents for case:", docsRes.error);
+    if (valRes.error) console.warn("[TrustGate] Error fetching validation results for case:", valRes.error);
+    if (riskRes.error) console.warn("[TrustGate] Error fetching risk scores for case:", riskRes.error);
+    if (findingsRes.error) console.warn("[TrustGate] Error fetching findings for case:", findingsRes.error);
+    if (reportsRes.error) console.warn("[TrustGate] Error fetching reports for case:", reportsRes.error);
+    if (auditsRes.error) console.warn("[TrustGate] Error fetching audit logs for case:", auditsRes.error);
 
     const documents = (docsRes.data ?? []).map((d: any) => {
       const ocrArr = Array.isArray(d.ocr) ? d.ocr : d.ocr ? [d.ocr] : [];
@@ -768,6 +781,15 @@ export async function fetchCaseDetails(
           recommended_action: riskRaw.recommended_action,
           engine_version: riskRaw.engine_version,
           factors: Array.isArray(riskRaw.factors) ? riskRaw.factors : [],
+        }
+      : row.risk_score !== null && row.risk_score !== undefined
+      ? {
+          id: `derived-${row.id}`,
+          score: row.risk_score,
+          level: (row.risk_level ?? "LOW") as RiskLevel,
+          recommended_action: row.risk_level === "HIGH" ? "ESCALATE" : row.risk_level === "MEDIUM" ? "REVIEW" : "CLEAR",
+          engine_version: "2.1.0",
+          factors: [],
         }
       : null;
 

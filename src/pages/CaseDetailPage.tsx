@@ -251,11 +251,12 @@ export function CaseDetailPage() {
     enabled: !!id,
   });
 
+  const caseDbId = data?.row?.id || id;
   const { data: blockchainAnchor } = useQuery({
-    queryKey: ["case-blockchain-anchor", id],
-    queryFn: () => (id ? fetchBlockchainAnchor(id) : null),
+    queryKey: ["case-blockchain-anchor", caseDbId],
+    queryFn: () => (caseDbId ? fetchBlockchainAnchor(caseDbId) : null),
     staleTime: 30_000,
-    enabled: !!id,
+    enabled: !!caseDbId,
   });
 
   React.useEffect(() => {
