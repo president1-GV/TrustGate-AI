@@ -34,10 +34,21 @@ export function LoginPage() {
   const [quickLoggingIn, setQuickLoggingIn] = React.useState<string | null>(null);
   const isInactivity = searchParams.get("reason") === "inactivity";
 
+  const isDemoEmail = (emailStr?: string | null) => {
+    if (!emailStr) return false;
+    const lower = emailStr.toLowerCase().trim();
+    return [
+      "officer@trustgate.ai",
+      "supervisor@trustgate.ai",
+      "admin@trustgate.ai",
+      "analyst@trustgate.ai",
+    ].includes(lower);
+  };
+
   // If already authenticated, check approval status before routing
   React.useEffect(() => {
     if (isAuthenticated && user) {
-      if (user.role !== "admin" && (user.status === "pending" || user.status === "rejected")) {
+      if (!isDemoEmail(user.email) && user.role !== "admin" && (user.status === "pending" || user.status === "rejected")) {
         const pid = user.processId || localStorage.getItem("tg_last_process_id");
         navigate(`/authorization-gate${pid ? `?processId=${pid}` : ""}`, { replace: true });
       } else {
@@ -61,7 +72,7 @@ export function LoginPage() {
     try {
       await login(values.email, values.password);
       const currentUser = useAuthStore.getState().user;
-      if (currentUser?.role !== "admin" && (currentUser?.status === "pending" || currentUser?.status === "rejected")) {
+      if (!isDemoEmail(values.email) && currentUser?.role !== "admin" && (currentUser?.status === "pending" || currentUser?.status === "rejected")) {
         const pid = currentUser.processId || localStorage.getItem("tg_last_process_id");
         navigate(`/authorization-gate${pid ? `?processId=${pid}` : ""}`, { replace: true });
       } else {
@@ -101,15 +112,17 @@ export function LoginPage() {
       setValue("password", "TrustGate@SIH2026", { shouldValidate: true });
       await login(email, "TrustGate@SIH2026");
       const currentUser = useAuthStore.getState().user;
-      if (currentUser?.role !== "admin" && (currentUser?.status === "pending" || currentUser?.status === "rejected")) {
-        const pid = currentUser.processId || localStorage.getItem("tg_last_process_id");
-        navigate(`/authorization-gate${pid ? `?processId=${pid}` : ""}`, { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
+      // Pre-authorized demo personas always enter dashboard immediately
+      if (currentUser && currentUser.status !== "approved") {
+        useAuthStore.getState().setSession({
+          ...currentUser,
+          status: "approved",
+          role: targetRole,
+        });
       }
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       console.warn("Direct BaaS authentication encountered an issue, transitioning to verified demo station session:", err);
-      // Guarantee infallible 1-click access without displaying invalid authentication
       loginOffline(targetRole, email);
       navigate("/dashboard", { replace: true });
     } finally {

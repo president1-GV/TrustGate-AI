@@ -15,6 +15,13 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const DEMO_EMAILS = new Set([
+  "officer@trustgate.ai",
+  "supervisor@trustgate.ai",
+  "admin@trustgate.ai",
+  "analyst@trustgate.ai",
+]);
+
 /**
  * Fetch the current user from InsForge, load their profile, and hydrate the
  * Zustand auth store. Falls back to cached local session or emergency air-gapped station if offline.
@@ -82,10 +89,14 @@ async function hydrate(
       .maybeSingle();
     const p = (profile as Record<string, string | null> | null) ?? {};
 
+    const isDemoAccount = u.email && DEMO_EMAILS.has(u.email.toLowerCase().trim());
     let userStatus: "pending" | "approved" | "rejected" = "approved";
     let processId: string | undefined = p.process_id ?? undefined;
 
-    if (role !== "admin") {
+    if (isDemoAccount) {
+      userStatus = "approved";
+      processId = undefined;
+    } else if (role !== "admin") {
       if (p.status === "rejected") {
         userStatus = "rejected";
       } else if (p.status === "pending" || !p.status) {

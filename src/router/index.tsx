@@ -55,7 +55,14 @@ function ProtectedRoute({
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
-  if (user && (user.status === "pending" || user.status === "rejected") && user.role !== "admin" && location.pathname !== "/authorization-gate") {
+  const isDemo = user?.email && [
+    "officer@trustgate.ai",
+    "supervisor@trustgate.ai",
+    "admin@trustgate.ai",
+    "analyst@trustgate.ai",
+  ].includes(user.email.toLowerCase().trim());
+
+  if (user && !isDemo && (user.status === "pending" || user.status === "rejected") && user.role !== "admin" && location.pathname !== "/authorization-gate") {
     return <Navigate to="/authorization-gate" replace />;
   }
   if (role && user && !roleAtLeast(user.role, role)) {
@@ -74,7 +81,14 @@ function UnauthLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   if (isAuthenticated) {
-    if (user && (user.status === "pending" || user.status === "rejected") && user.role !== "admin") {
+    const isDemo = user?.email && [
+      "officer@trustgate.ai",
+      "supervisor@trustgate.ai",
+      "admin@trustgate.ai",
+      "analyst@trustgate.ai",
+    ].includes(user.email.toLowerCase().trim());
+
+    if (user && !isDemo && (user.status === "pending" || user.status === "rejected") && user.role !== "admin") {
       return <Navigate to="/authorization-gate" replace />;
     }
     return <Navigate to="/dashboard" replace />;
