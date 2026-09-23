@@ -946,7 +946,9 @@ export async function listCasesForDashboard(): Promise<DashboardSummary> {
   for (const c of all) {
     const raw = ((c as any).document_type || "other").toLowerCase().trim();
     const label =
-      raw === "id" || raw === "national_id"
+      raw === "aadhaar"
+        ? "Aadhaar Card"
+        : raw === "id" || raw === "national_id"
         ? "National ID"
         : raw === "permit" || raw === "residence_permit"
         ? "Residence Permit"

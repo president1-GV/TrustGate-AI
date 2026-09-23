@@ -82,15 +82,20 @@ export async function detectDocument(
     documentType = "unknown";
     confidence = 0.35;
   }
-  // Live camera 4:3 frame containing document (aspect ~1.33)
+  // Live camera 4:3 frame containing document (aspect ~1.30 - 1.36)
   else if (aspect >= 1.30 && aspect < 1.36 && hasDocumentTextStructure) {
     documentType = "passport";
     confidence = 0.70;
   }
-  // ID Permit / Portrait orientation mobile scan
-  else if (aspect >= 0.62 && aspect <= 0.76 && hasDocumentTextStructure) {
-    documentType = "permit";
-    confidence = 0.68;
+  // Camera capture framing of ID card / credential (aspect ~1.15 - 1.30)
+  else if (aspect >= 1.15 && aspect < 1.30 && hasDocumentTextStructure) {
+    documentType = "id";
+    confidence = 0.75;
+  }
+  // ID Permit / Portrait orientation mobile scan / e-Aadhaar letter slip (aspect ~0.38 - 0.78)
+  else if (aspect >= 0.38 && aspect <= 0.78 && hasDocumentTextStructure) {
+    documentType = "id";
+    confidence = 0.82;
   }
   // Non-matching aspect ratio or lacks document structures
   else {

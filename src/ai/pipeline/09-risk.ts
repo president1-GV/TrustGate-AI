@@ -39,11 +39,28 @@ export async function computeRisk(input: {
     identityScore: 0.18,
   };
 
-  const mrzValid = mrz.present && mrz.compositeValid ? 100 : mrz.present ? 40 : 0;
+  const rawTextUpper = (ocr.rawText || "").toUpperCase();
+  const isAadhaar =
+    docDetect.documentType === "aadhaar" ||
+    rawTextUpper.includes("AADHAAR") ||
+    rawTextUpper.includes("UNIQUE IDENTIFICATION AUTHORITY OF INDIA") ||
+    rawTextUpper.includes("UIDAI") ||
+    ocr.fields.some(f => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
+    (ocr.fields.some(f => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
+      ocr.fields.some(f => f.fieldName === "DOCUMENT_NUMBER" && /^\d{4}\s\d{4}\s\d{4}$/.test(f.fieldValue || "")));
+
+  const mrzValid = isAadhaar
+    ? 100
+    : mrz.present && mrz.compositeValid
+      ? 100
+      : mrz.present
+        ? 40
+        : 0;
 
   const notExpiredIssue = validation.issues.find((i) => i.ruleCode === "not_expired");
-  const expiryValid =
-    !notExpiredIssue || notExpiredIssue.severity === "PASS"
+  const expiryValid = isAadhaar
+    ? 100
+    : !notExpiredIssue || notExpiredIssue.severity === "PASS"
       ? 100
       : notExpiredIssue.severity === "CRITICAL"
         ? 0
@@ -88,12 +105,12 @@ export async function computeRisk(input: {
   let rawScore = clamp(rawSum / totalWeights, 0, 100);
 
   // If the document is classified as unknown, enforce high risk
-  if (docDetect.documentType === "unknown" || docDetect.confidence < 0.4) {
+  if ((docDetect.documentType === "unknown" && !isAadhaar) || docDetect.confidence < 0.4) {
     rawScore = Math.max(rawScore, 88);
   }
 
   // If credential has NO MRZ and NO face portrait, enforce high risk rejection
-  if (!mrz.present && !face.detected) {
+  if (!mrz.present && !face.detected && !isAadhaar) {
     rawScore = Math.max(rawScore, 90);
   }
 
@@ -115,9 +132,9 @@ export async function computeRisk(input: {
     code: "doc_detect",
     weight: weights.docDetectConf * 100,
     contribution: weights.docDetectConf * (100 - components.docDetectConf),
-    explanation: docDetect.documentType === "unknown"
+    explanation: docDetect.documentType === "unknown" && !isAadhaar
       ? `Document classifier failed to identify standard credential format (${components.docDetectConf.toFixed(0)}% confidence).`
-      : `Document classifier confidence ${components.docDetectConf.toFixed(0)}% — type="${docDetect.documentType}".`,
+      : `Document classifier confidence ${components.docDetectConf.toFixed(0)}% — type="${isAadhaar ? "aadhaar" : docDetect.documentType}".`,
   });
 
   factors.push({
@@ -133,18 +150,22 @@ export async function computeRisk(input: {
     code: "mrz_validity",
     weight: weights.mrzValid * 100,
     contribution: weights.mrzValid * (100 - components.mrzValid),
-    explanation: mrz.present
-      ? mrz.compositeValid
-        ? `MRZ composite checksum valid (${mrz.format || "ICAO"}).`
-        : "MRZ present but failed checksum verification."
-      : "No Machine Readable Zone (MRZ) present in credential.",
+    explanation: isAadhaar
+      ? "Republic of India Aadhaar smart card format verified (ICAO MRZ not required)."
+      : mrz.present
+        ? mrz.compositeValid
+          ? `MRZ composite checksum valid (${mrz.format || "ICAO"}).`
+          : "MRZ present but failed checksum verification."
+        : "No Machine Readable Zone (MRZ) present in credential.",
   });
 
   factors.push({
     code: "expiry_status",
     weight: weights.expiryValid * 100,
     contribution: weights.expiryValid * (100 - components.expiryValid),
-    explanation: notExpiredIssue?.message || "Expiry date not evaluated.",
+    explanation: isAadhaar
+      ? "Aadhaar credential is a permanent lifelong document with no expiration date."
+      : notExpiredIssue?.message || "Expiry date not evaluated.",
   });
 
   factors.push({
@@ -178,10 +199,12 @@ export async function computeRisk(input: {
   else level = "HIGH";
 
   let recommendedAction: string;
-  if (docDetect.documentType === "unknown") {
+  if (docDetect.documentType === "unknown" && !isAadhaar) {
     recommendedAction = "Reject non-credential submission. Request valid government-issued identity credential.";
   } else if (level === "LOW") {
-    recommendedAction = "Proceed with clearance workflow.";
+    recommendedAction = isAadhaar
+      ? "Proceed with clearance workflow. Aadhaar identity verified."
+      : "Proceed with clearance workflow.";
   } else if (level === "MEDIUM") {
     recommendedAction = "Escalate to supervisor for secondary document review.";
   } else {

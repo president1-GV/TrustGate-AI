@@ -369,6 +369,11 @@ export function detectCredential(
     detectedAspect = docDetect.boundingBox.w / docDetect.boundingBox.h;
   }
 
+  // Handle e-Aadhaar portrait format vs standard PVC card
+  if (docType === "aadhaar" && detectedAspect && detectedAspect < 1.0) {
+    nominalAspect = 0.50; // Official portrait e-Aadhaar slip format
+  }
+
   if (detectedAspect && nominalAspect) {
     devPercent = Math.abs(detectedAspect - nominalAspect) / nominalAspect * 100;
   }
@@ -395,6 +400,7 @@ export function detectCredential(
   if (countryCode) conf += 0.25;
   if (mrz?.present) conf += 0.2;
   if (mrz?.checkDigitsValid) conf += 0.1;
+  if (docType === "aadhaar" || docType === "pan") conf += 0.25;
   if (resolvedDocNum) conf += 0.05;
   conf = Math.min(0.99, conf);
 

@@ -27,7 +27,7 @@ export interface ImageQualityResult {
 }
 
 export interface DocDetectResult {
-  documentType: "passport" | "visa" | "id" | "permit" | "unknown";
+  documentType: "passport" | "visa" | "id" | "permit" | "aadhaar" | "unknown";
   confidence: number;
   boundingBox?: BBox;
 }

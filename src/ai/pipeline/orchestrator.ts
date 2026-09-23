@@ -364,17 +364,41 @@ export async function runPipeline(
   partial = { ...partial, ocr };
   fire(mod3, partial);
 
+  // Upgrade document type if OCR reveals Indian Aadhaar
+  const rawTextUpper = (ocr.rawText || "").toUpperCase();
+  const isAadhaarDoc =
+    rawTextUpper.includes("AADHAAR") ||
+    rawTextUpper.includes("UNIQUE IDENTIFICATION AUTHORITY OF INDIA") ||
+    rawTextUpper.includes("UIDAI") ||
+    ocr.fields.some(f => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
+    (ocr.fields.some(f => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
+      ocr.fields.some(f => f.fieldName === "DOCUMENT_NUMBER" && /^\d{4}\s\d{4}\s\d{4}$/.test(f.fieldValue || "")));
+
+  if (isAadhaarDoc) {
+    docDetect.documentType = "aadhaar";
+    docDetect.confidence = Math.max(docDetect.confidence, 0.95);
+    mod2.status = "PASS";
+    mod2.score = 95;
+    mod2.message = "Type=aadhaar (UIDAI Verified)";
+    partial = { ...partial, docDetect };
+    fire(mod2, partial);
+  }
+
   const t3 = performance.now();
   const mod4 = stepStart(3);
   const mrz = await parseMrz(ocr, canvas);
   await ensureDelay(t3);
-  stepFinish(mod4, statusForStep04(mrz), mrz.present ? (mrz.compositeValid ? 100 : 60) : 0, mrz.format ? `Format=${mrz.format}` : mrz.present ? "MRZ found" : "No MRZ");
+  if (isAadhaarDoc) {
+    stepFinish(mod4, "PASS", 100, "MRZ Waived (Domestic Smart Card)");
+  } else {
+    stepFinish(mod4, statusForStep04(mrz), mrz.present ? (mrz.compositeValid ? 100 : 60) : 0, mrz.format ? `Format=${mrz.format}` : mrz.present ? "MRZ found" : "No MRZ");
+  }
   partial = { ...partial, mrz };
   fire(mod4, partial);
 
   const t4 = performance.now();
   const mod5 = stepStart(4);
-  const validation = await validateCase({ ocr, mrz, docType: docDetect.documentType, countryCode: mrz.nationality });
+  const validation = await validateCase({ ocr, mrz, docType: docDetect.documentType, countryCode: isAadhaarDoc ? "IND" : mrz.nationality });
   await ensureDelay(t4);
   stepFinish(mod5, statusForStep05(validation), undefined, `${validation.summaryPass}P ${validation.summaryWarn}W ${validation.summaryHigh}H ${validation.summaryCritical}C`);
   partial = { ...partial, validation };

@@ -39,6 +39,23 @@ export async function parseMrz(
   _canvas: HTMLCanvasElement
 ): Promise<MrzResult> {
   const rawText = ocr.rawText || "";
+  const isAadhaarDoc =
+    /Unique\s+Identification\s+Authority\s+of\s+India/i.test(rawText) ||
+    /Aadhaar|Aadhar/i.test(rawText) ||
+    /UIDAI/i.test(rawText) ||
+    /\b[2-9]\d{3}\s\d{4}\s\d{4}\b/.test(rawText);
+
+  // Indian Aadhaar credentials are national smart cards that do not have an ICAO MRZ
+  if (isAadhaarDoc && !rawText.includes("P<") && !rawText.includes("I<IND")) {
+    return {
+      present: false,
+      compositeValid: false,
+      checkDigitsValid: false,
+      rawLines: [],
+      mismatches: [],
+    };
+  }
+
   const rawLines = rawText.split(/\r?\n/).map((l) => l.trim());
 
   const mrzLines: string[] = [];
@@ -48,15 +65,17 @@ export async function parseMrz(
 
   for (const l of rawLines) {
     const clean = l.toUpperCase().replace(/\s+/g, "");
-    if (clean.startsWith("P<") && clean.length >= 35) {
+    const fillerCount = (clean.match(/</g) || []).length;
+
+    if (clean.startsWith("P<") && clean.length >= 35 && fillerCount >= 2) {
       mrzLines.push(clean.padEnd(44, "<").slice(0, 44));
-    } else if (mrzLines.length === 1 && mrzLines[0].length === 44 && /^[A-Z0-9<]{35,55}$/.test(clean)) {
+    } else if (mrzLines.length === 1 && mrzLines[0].length === 44 && /^[A-Z0-9<]{35,55}$/.test(clean) && fillerCount >= 1) {
       mrzLines.push(clean.padEnd(44, "<").slice(0, 44));
-    } else if ((clean.startsWith("ID") || clean.startsWith("I<") || clean.startsWith("A<") || clean.startsWith("C<")) && clean.length >= 25 && clean.length <= 34) {
+    } else if ((clean.startsWith("ID") || clean.startsWith("I<") || clean.startsWith("A<") || clean.startsWith("C<")) && clean.length >= 25 && clean.length <= 34 && fillerCount >= 2) {
       mrzLines.push(clean.padEnd(30, "<").slice(0, 30));
-    } else if (mrzLines.length >= 1 && mrzLines[0].length === 30 && /^[A-Z0-9<]{25,35}$/.test(clean)) {
+    } else if (mrzLines.length >= 1 && mrzLines[0].length === 30 && /^[A-Z0-9<]{25,35}$/.test(clean) && fillerCount >= 1) {
       mrzLines.push(clean.padEnd(30, "<").slice(0, 30));
-    } else if (mrz44.test(clean) || mrz36.test(clean) || mrz30.test(clean)) {
+    } else if ((mrz44.test(clean) || mrz36.test(clean) || mrz30.test(clean)) && fillerCount >= 2) {
       mrzLines.push(clean);
     }
   }

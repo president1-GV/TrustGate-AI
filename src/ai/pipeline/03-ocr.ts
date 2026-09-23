@@ -5,8 +5,37 @@ function parseDate(text: string): string | null {
   const iso = text.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
   if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
 
-  const dmy = text.match(/(\d{1,2})[\/\-\s](\d{1,2})[\/\-\s](\d{4})/);
+  const dmy = text.match(/(\d{1,2})[\/\-\.\s](\d{1,2})[\/\-\.\s](\d{4})/);
   if (dmy) return `${dmy[3]}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
+
+  // Handle OCR noise where slash is recognized as 7 or digit in DOB: e.g. DOB: 210772006 or 21072006
+  const dobNoise = text.match(/(?:DOB|Birth|Date\s+of\s+Birth)[:\s]*(\d{2})[0-9/\-\.]?(\d{2})[0-9/\-\.]?(\d{4})/i);
+  if (dobNoise) {
+    const day = dobNoise[1];
+    const month = dobNoise[2];
+    const year = dobNoise[3];
+    const dNum = parseInt(day, 10);
+    const mNum = parseInt(month, 10);
+    if (dNum >= 1 && dNum <= 31 && mNum >= 1 && mNum <= 12) {
+      return `${year}-${month}-${day}`;
+    }
+  }
+
+  // Handle 8-digit continuous date in line mentioning DOB: e.g. 21072006
+  if (/DOB|Birth/i.test(text)) {
+    const eight = text.match(/\b(\d{2})(\d{2})(\d{4})\b/);
+    if (eight) {
+      const dNum = parseInt(eight[1], 10);
+      const mNum = parseInt(eight[2], 10);
+      if (dNum >= 1 && dNum <= 31 && mNum >= 1 && mNum <= 12) {
+        return `${eight[3]}-${eight[2]}-${eight[1]}`;
+      }
+    }
+    const yob = text.match(/(?:Year\s+of\s+Birth|Birth\s*Year)[:\s]*(\d{4})/i);
+    if (yob) {
+      return `${yob[1]}-01-01`;
+    }
+  }
 
   const mdy = text.match(
     /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2})[,\s]+(\d{4})/i
@@ -33,6 +62,193 @@ function parseDate(text: string): string | null {
   }
 
   return null;
+}
+
+function enrichOcrFields(
+  fields: OcrField[],
+  rawText: string,
+  baseConfidence: number
+): OcrField[] {
+  const lines = rawText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const zeroBBox = { x: 0, y: 0, w: 0, h: 0 };
+  const conf = Math.max(0.85, baseConfidence);
+
+  const isAadhaarDoc =
+    /Unique\s+Identification\s+Authority\s+of\s+India/i.test(rawText) ||
+    (/Government\s+of\s+India/i.test(rawText) && /Aadhaar|Aadhar|UID/i.test(rawText)) ||
+    /Aadhaar|Aadhar/i.test(rawText) ||
+    /UIDAI/i.test(rawText) ||
+    /\b[2-9]\d{3}\s\d{4}\s\d{4}\b/.test(rawText);
+
+  if (isAadhaarDoc) {
+    // 1. Aadhaar 12-digit Number
+    let aadhaarNum: string | null = null;
+    const uidMatch = rawText.match(/(?:Your\s+Aadhaar\s+No\.?|Aadhaar\s+No\.?|UID\s*[:\-]?)\s*[:\-]?\s*([2-9]\d{3}\s?\d{4}\s?\d{4})/i);
+    if (uidMatch) {
+      aadhaarNum = uidMatch[1].replace(/(\d{4})\s*(\d{4})\s*(\d{4})/, "$1 $2 $3");
+    }
+    if (!aadhaarNum) {
+      const match12 = rawText.match(/\b([2-9]\d{3}\s\d{4}\s\d{4})\b/);
+      if (match12) {
+        aadhaarNum = match12[1];
+      }
+    }
+    if (!aadhaarNum) {
+      const match12NoSpace = rawText.match(/\b([2-9]\d{11})\b/);
+      if (match12NoSpace) {
+        aadhaarNum = match12NoSpace[1].replace(/(\d{4})(\d{4})(\d{4})/, "$1 $2 $3");
+      }
+    }
+
+    if (aadhaarNum) {
+      const existingDocNum = fields.find((f) => f.fieldName === "DOCUMENT_NUMBER");
+      if (existingDocNum) {
+        // Overwrite if existing was a 10-digit mobile number, noise, or missing spaces
+        if (!existingDocNum.fieldValue || existingDocNum.fieldValue.replace(/\s+/g, "").length !== 12 || /^[6-9]\d{9}$/.test(existingDocNum.fieldValue)) {
+          existingDocNum.fieldValue = aadhaarNum;
+          existingDocNum.confidence = Math.max(existingDocNum.confidence, 0.95);
+        }
+      } else {
+        fields.push({
+          fieldName: "DOCUMENT_NUMBER",
+          fieldValue: aadhaarNum,
+          confidence: 0.95,
+          boundingBox: zeroBBox,
+          source: "ocr",
+        });
+      }
+    }
+
+    // 2. Nationality (Always IND for Aadhaar)
+    const existingNat = fields.find((f) => f.fieldName === "NATIONALITY");
+    if (existingNat) {
+      existingNat.fieldValue = "IND";
+      existingNat.confidence = Math.max(existingNat.confidence, 0.98);
+    } else {
+      fields.push({
+        fieldName: "NATIONALITY",
+        fieldValue: "IND",
+        confidence: 0.98,
+        boundingBox: zeroBBox,
+        source: "ocr",
+      });
+    }
+
+    // 3. Issuing Authority
+    const existingAuth = fields.find((f) => f.fieldName === "ISSUING_AUTHORITY");
+    if (existingAuth) {
+      if (!existingAuth.fieldValue || !existingAuth.fieldValue.includes("UIDAI")) {
+        existingAuth.fieldValue = "UIDAI (Govt of India)";
+      }
+    } else {
+      fields.push({
+        fieldName: "ISSUING_AUTHORITY",
+        fieldValue: "UIDAI (Govt of India)",
+        confidence: 0.98,
+        boundingBox: zeroBBox,
+        source: "ocr",
+      });
+    }
+
+    // 4. Full Name for Aadhaar
+    const existingName = fields.find((f) => f.fieldName === "FULL_NAME");
+    if (existingName?.fieldValue) {
+      existingName.fieldValue = existingName.fieldValue
+        .replace(/^(SL|Sh\.|Sri|Shri|Smt\.|Mr\.|Mrs\.|Kumari|Ms\.)\s+/i, "")
+        .trim();
+    } else {
+      let nameCandidate: string | null = null;
+      const dobLineIdx = lines.findIndex((l) => /DOB|Date\s+of\s+Birth|Birth/i.test(l));
+      if (dobLineIdx > 0) {
+        const prevLine = lines[dobLineIdx - 1];
+        if (
+          !/Government|Authority|Enrolment|Address|Gali|VTC|District|State|PIN|Mobile|Aadhaar/i.test(prevLine) &&
+          /[a-zA-Z]{3,}/.test(prevLine)
+        ) {
+          nameCandidate = prevLine.replace(/^(SL|Sh\.|Sri|Shri|Smt\.|Mr\.|Mrs\.|Kumari|Ms\.)\s+/i, "").trim();
+        }
+      }
+      if (!nameCandidate) {
+        for (const l of lines) {
+          if (/Government|Authority|Enrolment|Address|Gali|VTC|District|State|PIN|Mobile|Aadhaar|Unique|India/i.test(l)) continue;
+          const cleaned = l.replace(/^(SL|Sh\.|Sri|Shri|Smt\.|Mr\.|Mrs\.|Kumari|Ms\.)\s+/i, "").trim();
+          if (/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}$/.test(cleaned)) {
+            nameCandidate = cleaned;
+            break;
+          }
+        }
+      }
+      if (nameCandidate) {
+        fields.push({
+          fieldName: "FULL_NAME",
+          fieldValue: nameCandidate,
+          confidence: conf,
+          boundingBox: zeroBBox,
+          source: "ocr",
+        });
+      }
+    }
+
+    // 5. Date of Birth
+    const existingDob = fields.find((f) => f.fieldName === "DATE_OF_BIRTH");
+    if (!existingDob?.fieldValue) {
+      let parsedDob: string | null = null;
+      const dobLine = lines.find((l) => /DOB|Date\s+of\s+Birth|Birth/i.test(l));
+      if (dobLine) parsedDob = parseDate(dobLine);
+      if (!parsedDob) {
+        for (const l of lines) {
+          parsedDob = parseDate(l);
+          if (parsedDob) break;
+        }
+      }
+      if (parsedDob) {
+        if (existingDob) {
+          existingDob.fieldValue = parsedDob;
+        } else {
+          fields.push({
+            fieldName: "DATE_OF_BIRTH",
+            fieldValue: parsedDob,
+            confidence: conf,
+            boundingBox: zeroBBox,
+            source: "ocr",
+          });
+        }
+      }
+    }
+
+    // 6. Sex / Gender
+    const existingSex = fields.find((f) => f.fieldName === "SEX");
+    if (!existingSex?.fieldValue) {
+      let foundSex: string | null = null;
+      for (const l of lines) {
+        if (/^Male$/i.test(l) || (/\bMale\b/i.test(l) && !/Female/i.test(l))) {
+          foundSex = "M";
+          break;
+        } else if (/^Female$/i.test(l) || /\bFemale\b/i.test(l)) {
+          foundSex = "F";
+          break;
+        } else if (/Transgender/i.test(l)) {
+          foundSex = "T";
+          break;
+        }
+      }
+      if (foundSex) {
+        if (existingSex) {
+          existingSex.fieldValue = foundSex;
+        } else {
+          fields.push({
+            fieldName: "SEX",
+            fieldValue: foundSex,
+            confidence: conf,
+            boundingBox: zeroBBox,
+            source: "ocr",
+          });
+        }
+      }
+    }
+  }
+
+  return fields;
 }
 
 export interface OcrRunContext {
@@ -91,12 +307,14 @@ export async function runOcr(
         }
       }
 
+      const rawText = data.raw_text || "";
+      const enrichedFields = enrichOcrFields(fields, rawText, data.confidence_mean || 0.95);
       const executionMs = performance.now() - start;
       return {
         provider: "PaddleOCR 3.7.0",
-        rawText: data.raw_text || "",
-        overallConfidence: data.confidence_mean || (fields.length > 0 ? 0.95 : 0.0),
-        fields,
+        rawText,
+        overallConfidence: data.confidence_mean || (enrichedFields.length > 0 ? 0.95 : 0.0),
+        fields: enrichedFields,
         executionMs,
       };
     }
@@ -160,8 +378,10 @@ export async function runOcr(
   }
   if (!docNum) {
     for (const l of lines) {
+      if (/Mobile|Phone|Tel|Mob|PIN\s*Code|Enrolment/i.test(l)) continue;
       const m = l.match(/\b[A-Z0-9]{8,10}\b/);
-      if (m && !/^(PASSPORT|DOCUMENT|NATIONAL)$/i.test(m[0])) {
+      if (m && !/^(PASSPORT|DOCUMENT|NATIONAL|ENROLMENT|MAHARASHTRA|AUTHORITY|GOVERNMENT)$/i.test(m[0])) {
+        if (/^[6-9]\d{9}$/.test(m[0])) continue;
         docNum = m[0];
         break;
       }
@@ -187,6 +407,14 @@ export async function runOcr(
   if (sexLine) {
     const m = sexLine.match(/\b(M|F)\b/i);
     if (m) sex = m[1].toUpperCase();
+  }
+  if (!sex) {
+    const standaloneSex = lines.find((l) => /^(Male|Female|Transgender)$/i.test(l) || /\b(Male|Female|Transgender)\b/i.test(l));
+    if (standaloneSex) {
+      if (/Female/i.test(standaloneSex)) sex = "F";
+      else if (/Male/i.test(standaloneSex)) sex = "M";
+      else if (/Transgender/i.test(standaloneSex)) sex = "T";
+    }
   }
 
   // 7. Issue Date
@@ -230,6 +458,7 @@ export async function runOcr(
     fields.push({ fieldName: "ISSUING_AUTHORITY", fieldValue: issuingAuth, confidence: baseConf, boundingBox: zeroBBox, source: "ocr" });
   }
 
+  const enrichedFields = enrichOcrFields(fields, rawText, overallConfidence);
   const executionMs = performance.now() - start;
-  return { provider: "tesseract.js", rawText, overallConfidence, fields, executionMs };
+  return { provider: "tesseract.js", rawText, overallConfidence, fields: enrichedFields, executionMs };
 }

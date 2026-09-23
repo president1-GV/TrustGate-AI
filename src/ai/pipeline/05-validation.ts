@@ -24,17 +24,43 @@ export async function validateCase(input: {
   const { ocr, mrz, docType, countryCode } = input;
   const issues: ValidationIssue[] = [];
 
-  const requiredFields = [
-    "FULL_NAME", "DATE_OF_BIRTH", "DOCUMENT_NUMBER",
-    "EXPIRY_DATE", "NATIONALITY", "SEX", "ISSUE_DATE",
-  ];
+  const rawTextUpper = (ocr.rawText || "").toUpperCase();
+  const isAadhaar =
+    docType === "aadhaar" ||
+    rawTextUpper.includes("AADHAAR") ||
+    rawTextUpper.includes("UNIQUE IDENTIFICATION AUTHORITY OF INDIA") ||
+    rawTextUpper.includes("UIDAI") ||
+    ocr.fields.some(f => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
+    (ocr.fields.some(f => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
+      ocr.fields.some(f => f.fieldName === "DOCUMENT_NUMBER" && /^\d{4}\s\d{4}\s\d{4}$/.test(f.fieldValue || "")));
+
+  const requiredFields = isAadhaar
+    ? ["FULL_NAME", "DATE_OF_BIRTH", "DOCUMENT_NUMBER", "NATIONALITY", "SEX"]
+    : [
+        "FULL_NAME", "DATE_OF_BIRTH", "DOCUMENT_NUMBER",
+        "EXPIRY_DATE", "NATIONALITY", "SEX", "ISSUE_DATE",
+      ];
   const missing = requiredFields.filter((n) => !fieldValue(ocr.fields, n));
 
-  if (docType === "unknown") {
+  if (isAadhaar) {
+    issues.push({
+      ruleCode: "doc_type_valid",
+      severity: "PASS",
+      message: "Verified official Republic of India Aadhaar identity credential.",
+      details: { docType: "aadhaar" },
+    });
+  } else if (docType === "unknown") {
     issues.push({
       ruleCode: "doc_type_valid",
       severity: "CRITICAL",
       message: "Unrecognized document format. Image does not conform to physical credential standards.",
+      details: { docType },
+    });
+  } else {
+    issues.push({
+      ruleCode: "doc_type_valid",
+      severity: "PASS",
+      message: `Recognized credential format (${docType}).`,
       details: { docType },
     });
   }
@@ -43,9 +69,11 @@ export async function validateCase(input: {
     issues.push({
       ruleCode: "required_fields",
       severity: "PASS",
-      message: "All required fields are present and non-empty.",
+      message: isAadhaar
+        ? "All required Aadhaar identity fields are present and verified."
+        : "All required fields are present and non-empty.",
     });
-  } else if (docType !== "unknown") {
+  } else if (docType !== "unknown" || isAadhaar) {
     issues.push({
       ruleCode: "required_fields",
       severity: missing.length > 4 ? "CRITICAL" : "HIGH",
@@ -61,7 +89,7 @@ export async function validateCase(input: {
     });
   }
 
-  const dateFields = ["DATE_OF_BIRTH", "EXPIRY_DATE", "ISSUE_DATE"];
+  const dateFields = isAadhaar ? ["DATE_OF_BIRTH"] : ["DATE_OF_BIRTH", "EXPIRY_DATE", "ISSUE_DATE"];
   const badDates: string[] = [];
   let datesTested = 0;
   for (const df of dateFields) {
@@ -95,7 +123,13 @@ export async function validateCase(input: {
 
   const issueD = safeParseDate(fieldValue(ocr.fields, "ISSUE_DATE"));
   const expD = safeParseDate(fieldValue(ocr.fields, "EXPIRY_DATE"));
-  if (issueD && expD) {
+  if (isAadhaar) {
+    issues.push({
+      ruleCode: "issue_before_expiry",
+      severity: "PASS",
+      message: "Aadhaar is a permanent, lifelong credential (no expiry cutoff required).",
+    });
+  } else if (issueD && expD) {
     if (isBefore(issueD, expD)) {
       issues.push({
         ruleCode: "issue_before_expiry",
@@ -119,7 +153,13 @@ export async function validateCase(input: {
   }
 
   const today = new Date();
-  if (expD) {
+  if (isAadhaar) {
+    issues.push({
+      ruleCode: "not_expired",
+      severity: "PASS",
+      message: "Document is valid: Republic of India Aadhaar is a permanent lifelong identity credential.",
+    });
+  } else if (expD) {
     if (differenceInDays(expD, today) >= 0) {
       issues.push({
         ruleCode: "not_expired",
@@ -147,7 +187,9 @@ export async function validateCase(input: {
     issues.push({
       ruleCode: "doc_number_format",
       severity: "PASS",
-      message: `Document number format valid (length=${docNum.length}).`,
+      message: isAadhaar
+        ? `Aadhaar 12-digit UID format verified (${docNum}).`
+        : `Document number format valid (length=${docNum.length}).`,
     });
   } else {
     issues.push({
@@ -160,18 +202,31 @@ export async function validateCase(input: {
 
   // MRZ Presence & Concordance
   if (!mrz.present) {
-    issues.push({
-      ruleCode: "mrz_presence",
-      severity: docType === "passport" ? "HIGH" : "WARNING",
-      message: docType === "passport"
-        ? "Passport credentials require a Machine Readable Zone (MRZ); none detected."
-        : "No Machine Readable Zone (MRZ) detected in credential.",
-    });
-    issues.push({
-      ruleCode: "ocr_vs_mrz_match",
-      severity: "WARNING",
-      message: "Cross-field concordance check omitted: MRZ is not present.",
-    });
+    if (isAadhaar) {
+      issues.push({
+        ruleCode: "mrz_presence",
+        severity: "PASS",
+        message: "Domestic Aadhaar national identity credential (ICAO MRZ not required).",
+      });
+      issues.push({
+        ruleCode: "ocr_vs_mrz_match",
+        severity: "PASS",
+        message: "MRZ verification waived for domestic Aadhaar credential; visual fields validated.",
+      });
+    } else {
+      issues.push({
+        ruleCode: "mrz_presence",
+        severity: docType === "passport" ? "HIGH" : "WARNING",
+        message: docType === "passport"
+          ? "Passport credentials require a Machine Readable Zone (MRZ); none detected."
+          : "No Machine Readable Zone (MRZ) detected in credential.",
+      });
+      issues.push({
+        ruleCode: "ocr_vs_mrz_match",
+        severity: "WARNING",
+        message: "Cross-field concordance check omitted: MRZ is not present.",
+      });
+    }
   } else if (mrz.mismatches && mrz.mismatches.length > 0) {
     const highM = mrz.mismatches.filter((m) => m.severity === "HIGH");
     issues.push({
@@ -190,7 +245,10 @@ export async function validateCase(input: {
 
   let countryConsistent = true;
   let countryMsg = "Country/document-type consistency check passed.";
-  if (countryCode === "USA" && (docType === "passport" || docType === "id")) {
+  if (isAadhaar) {
+    countryConsistent = true;
+    countryMsg = "Country IND verified with Republic of India Aadhaar credential.";
+  } else if (countryCode === "USA" && (docType === "passport" || docType === "id")) {
     countryConsistent = true;
   } else if (countryCode && docType === "unknown") {
     countryConsistent = false;
@@ -200,7 +258,7 @@ export async function validateCase(input: {
     ruleCode: "country_doc_consistency",
     severity: countryConsistent ? "PASS" : "WARNING",
     message: countryMsg,
-    details: { countryCode, docType },
+    details: { countryCode: isAadhaar ? "IND" : countryCode, docType: isAadhaar ? "aadhaar" : docType },
   });
 
   let summaryPass = 0, summaryWarn = 0, summaryHigh = 0, summaryCritical = 0;

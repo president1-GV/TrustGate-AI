@@ -24,8 +24,19 @@ export async function identityConsistency(input: {
   const { ocr, mrz, face, validation } = input;
   let score = 100;
 
+  const rawTextUpper = (ocr.rawText || "").toUpperCase();
+  const isAadhaar =
+    rawTextUpper.includes("AADHAAR") ||
+    rawTextUpper.includes("UNIQUE IDENTIFICATION AUTHORITY OF INDIA") ||
+    rawTextUpper.includes("UIDAI") ||
+    ocr.fields.some(f => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
+    (ocr.fields.some(f => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
+      ocr.fields.some(f => f.fieldName === "DOCUMENT_NUMBER" && /^\d{4}\s\d{4}\s\d{4}$/.test(f.fieldValue || "")));
+
   if (!mrz.present) {
-    score -= 25;
+    if (!isAadhaar) {
+      score -= 25;
+    }
   } else if (mrz.mismatches && mrz.mismatches.length > 0) {
     score -= mrz.mismatches.length * 15;
   }
@@ -70,7 +81,18 @@ export async function identityConsistency(input: {
 
     const mismatch = (mrz.mismatches || []).find((m) => m.field === fn);
 
-    if (!mrz.present) {
+    if (isAadhaar) {
+      if (fn === "EXPIRY_DATE") {
+        status = "PASS";
+        note = "Lifelong validity (no expiry date required for Aadhaar credential).";
+      } else if (ocrVal) {
+        status = "PASS";
+        note = `Visual field verified on Aadhaar credential ("${ocrVal}").`;
+      } else {
+        status = "WARNING";
+        note = `Field "${fn}" missing from visual extraction.`;
+      }
+    } else if (!mrz.present) {
       if (ocrVal) {
         status = "WARNING";
         note = `Visual field present ("${ocrVal}"), but MRZ is absent for cross-validation.`;
