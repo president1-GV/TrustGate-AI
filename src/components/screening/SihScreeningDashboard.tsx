@@ -1845,7 +1845,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                   </div>
                 </div>
 
-                <div className="relative h-64 rounded-xl bg-black border border-slate-700 overflow-hidden flex items-center justify-center">
+                <div className="relative h-64 rounded-xl bg-slate-100 dark:bg-black border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center">
                   <video
                     ref={setVideoRefDoc}
                     className={cn("w-full h-full object-cover", !isCameraStreamingDoc && "hidden")}
@@ -1855,8 +1855,8 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                   />
                   {!isCameraStreamingDoc && !cameraErrorDoc && (
                     <div className="text-center p-4 space-y-2">
-                      <Camera className="h-10 w-10 mx-auto text-slate-600" />
-                      <p className="text-xs text-slate-400">Webcam scanner idle.</p>
+                      <Camera className="h-10 w-10 mx-auto text-slate-400 dark:text-slate-600" />
+                      <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Webcam scanner idle.</p>
                       <div className="flex gap-2 justify-center pt-1">
                         <Button size="sm" onClick={startCameraDoc} className="bg-signal-blue text-white text-xs">
                           Start In-Page Live Stream
@@ -1869,17 +1869,17 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                   )}
 
                   {cameraErrorDoc && (
-                    <div className="p-4 bg-rose-950/80 border border-rose-600/40 rounded-lg text-center space-y-2 m-2">
-                      <AlertOctagon className="h-7 w-7 text-rose-400 mx-auto" />
-                      <div className="text-xs font-semibold text-rose-200">{cameraErrorDoc}</div>
+                    <div className="p-4 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-600/40 rounded-lg text-center space-y-2 m-2">
+                      <AlertOctagon className="h-7 w-7 text-rose-600 dark:text-rose-400 mx-auto" />
+                      <div className="text-xs font-semibold text-rose-800 dark:text-rose-200">{cameraErrorDoc}</div>
                       <div className="flex justify-center gap-2 pt-1">
                         <Button size="sm" onClick={startCameraDoc} className="bg-rose-600 hover:bg-rose-500 text-white text-xs h-7">
                           <RefreshCw className="h-3 w-3 mr-1" /> Retry Camera
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => setCameraModalOpen(true)} className="text-xs h-7 border-slate-600 text-slate-200">
+                        <Button size="sm" variant="outline" onClick={() => setCameraModalOpen(true)} className="text-xs h-7 border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200">
                           AI Camera Hub
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => realFileInputRef.current?.click()} className="text-xs h-7 border-slate-600 text-slate-200">
+                        <Button size="sm" variant="outline" onClick={() => realFileInputRef.current?.click()} className="text-xs h-7 border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200">
                           Upload File
                         </Button>
                       </div>
@@ -1922,31 +1922,31 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
               </div>
 
               {/* Ingested Authentic Document Preview */}
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/90 space-y-3">
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-white flex items-center gap-1.5">
-                    <Eye className="h-4 w-4 text-emerald-400" /> Current Ingested Document
+                  <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Current Ingested Document
                   </span>
                   <Badge variant="pass" className="text-[10px]">
                     {docDetectionBadge.name}
                   </Badge>
                 </div>
 
-                <div className="relative h-64 rounded-xl bg-black border border-slate-700 overflow-hidden flex items-center justify-center p-1">
+                <div className="relative h-64 rounded-xl bg-slate-100 dark:bg-black border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center p-1">
                   {effectiveDocImage ? (
                     <img src={effectiveDocImage} alt="Captured Document" className="max-h-full max-w-full object-contain rounded-lg" />
                   ) : (
                     <div className="text-center p-4 space-y-1">
-                      <Scan className="h-8 w-8 mx-auto text-slate-600 mb-1" />
-                      <span className="text-slate-400 text-xs font-semibold block">Awaiting Document Ingestion</span>
-                      <span className="text-slate-500 text-[11px] block">Capture live camera frame or upload document file</span>
+                      <Scan className="h-8 w-8 mx-auto text-slate-400 dark:text-slate-600 mb-1" />
+                      <span className="text-slate-800 dark:text-slate-400 text-xs font-semibold block">Awaiting Document Ingestion</span>
+                      <span className="text-slate-600 dark:text-slate-500 text-[11px] block">Capture live camera frame or upload document file</span>
                     </div>
                   )}
                 </div>
 
                 <div className="flex items-center justify-between gap-2">
-                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold">
-                    <Upload className="h-3.5 w-3.5" />
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-white text-xs font-semibold shadow-xs">
+                    <Upload className="h-3.5 w-3.5 text-signal-blue" />
                     <span>Upload Real Document File</span>
                     <input
                       type="file"
@@ -2058,11 +2058,11 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
           </CardHeader>
           <CardContent className="space-y-4 text-xs">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative h-72 rounded-xl bg-black border border-slate-700 overflow-hidden flex items-center justify-center">
+              <div className="relative h-72 rounded-xl bg-slate-100 dark:bg-black border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center">
                 {effectiveDocImage ? (
                   <img src={effectiveDocImage} alt="Document" className="max-h-full max-w-full object-contain rounded" />
                 ) : (
-                  <span className="text-slate-500 text-xs">Awaiting Document Ingestion</span>
+                  <span className="text-slate-600 dark:text-slate-500 text-xs font-medium">Awaiting Document Ingestion</span>
                 )}
 
                 {showHeatmap && scenario.heatmap.photo && (
@@ -2144,22 +2144,22 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
           <CardContent className="space-y-4 text-xs">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Document Photo */}
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/90 space-y-2 text-center">
-                <span className="text-xs font-semibold text-slate-300">Document Portrait Reference</span>
-                <div className="h-64 rounded-xl bg-black border border-slate-700 overflow-hidden flex items-center justify-center">
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 space-y-2 text-center">
+                <span className="text-xs font-semibold text-slate-900 dark:text-slate-300">Document Portrait Reference</span>
+                <div className="h-64 rounded-xl bg-slate-100 dark:bg-black border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center">
                   {effectiveDocImage ? (
                     <img src={effectiveDocImage} alt="Doc Portrait" className="h-full object-contain" />
                   ) : (
-                    <span className="text-slate-500 text-xs">Awaiting Document Ingestion</span>
+                    <span className="text-slate-600 dark:text-slate-500 text-xs font-medium">Awaiting Document Ingestion</span>
                   )}
                 </div>
-                <div className="text-[11px] text-slate-400 font-mono">Reference Resolution: 600 DPI ICAO Crop</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">Reference Resolution: 600 DPI ICAO Crop</div>
               </div>
 
               {/* Live Webcam Face Stream */}
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/90 space-y-2 text-center">
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 space-y-2 text-center">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-300">Live Camera Traveler Feed</span>
+                  <span className="text-xs font-semibold text-slate-900 dark:text-slate-300">Live Camera Traveler Feed</span>
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"
@@ -2175,7 +2175,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                     </Badge>
                   </div>
                 </div>
-                <div className="relative h-64 rounded-xl bg-black border border-slate-700 overflow-hidden flex items-center justify-center">
+                <div className="relative h-64 rounded-xl bg-slate-100 dark:bg-black border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center">
                   <video
                     ref={setVideoRefFace}
                     className={cn("w-full h-full object-cover", !isCameraStreamingFace && "hidden")}
@@ -2184,20 +2184,20 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                     muted
                   />
                   {!isCameraStreamingFace && (capturedFaceUrl || effectiveFaceImage) ? (
-                    <div className="relative w-full h-full flex items-center justify-center bg-black/80">
+                    <div className="relative w-full h-full flex items-center justify-center bg-slate-100 dark:bg-black/80">
                       <img
                         src={capturedFaceUrl || effectiveFaceImage || ""}
                         alt="Captured Biometric Portrait"
                         className="h-full w-full object-contain"
                       />
-                      <div className="absolute top-2 left-2 bg-black/70 px-2 py-0.5 rounded text-[10px] font-mono text-emerald-400 border border-emerald-500/30">
+                      <div className="absolute top-2 left-2 bg-white/90 dark:bg-black/70 px-2 py-0.5 rounded text-[10px] font-mono text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 shadow-xs">
                         {capturedFaceUrl ? "LIVE CAPTURED FEED" : "AUTHENTIC BIOMETRIC CAPTURE"}
                       </div>
                       <div className="absolute bottom-2 right-2 flex gap-1 z-10">
                         <Button
                           size="sm"
                           onClick={() => setCapturedFaceUrl(null)}
-                          className="bg-rose-600/80 hover:bg-rose-600 text-white text-xs h-7"
+                          className="bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-600/80 dark:hover:bg-rose-600 dark:text-white text-xs h-7"
                         >
                           Clear
                         </Button>
@@ -2205,8 +2205,8 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                     </div>
                   ) : !isCameraStreamingFace && !cameraErrorFace ? (
                     <div className="text-center p-4 space-y-2">
-                      <User className="h-10 w-10 mx-auto text-slate-600" />
-                      <p className="text-xs text-slate-400">Live facial camera feed not started.</p>
+                      <User className="h-10 w-10 mx-auto text-slate-400 dark:text-slate-600" />
+                      <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Live facial camera feed not started.</p>
                       <div className="flex justify-center gap-2 pt-1">
                         <Button size="sm" onClick={startCameraFace} className="bg-signal-blue text-white text-xs">
                           Start Live Facial Camera
@@ -2214,8 +2214,8 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                         <Button size="sm" variant="outline" onClick={() => setFaceCameraModalOpen(true)} className="border-signal-cyan/40 text-signal-cyan text-xs">
                           AI Biometric Hub
                         </Button>
-                        <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs">
-                          <Upload className="h-3 w-3" />
+                        <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 text-xs font-semibold shadow-xs">
+                          <Upload className="h-3 w-3 text-signal-blue" />
                           <span>Upload Photo</span>
                           <input type="file" accept="image/*" onChange={handleFaceFileUpload} className="hidden" />
                         </label>
@@ -2224,14 +2224,14 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                   ) : null}
 
                   {cameraErrorFace && (
-                    <div className="p-4 bg-rose-950/80 border border-rose-600/40 rounded-lg text-center space-y-2 m-2">
-                      <AlertOctagon className="h-7 w-7 text-rose-400 mx-auto" />
-                      <div className="text-xs font-semibold text-rose-200">{cameraErrorFace}</div>
+                    <div className="p-4 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-600/40 rounded-lg text-center space-y-2 m-2">
+                      <AlertOctagon className="h-7 w-7 text-rose-600 dark:text-rose-400 mx-auto" />
+                      <div className="text-xs font-semibold text-rose-800 dark:text-rose-200">{cameraErrorFace}</div>
                       <div className="flex justify-center gap-2 pt-1">
                         <Button size="sm" onClick={startCameraFace} className="bg-rose-600 hover:bg-rose-500 text-white text-xs h-7">
                           <RefreshCw className="h-3 w-3 mr-1" /> Retry Camera
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => setFaceCameraModalOpen(true)} className="text-xs h-7 border-slate-600 text-slate-200">
+                        <Button size="sm" variant="outline" onClick={() => setFaceCameraModalOpen(true)} className="text-xs h-7 border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200">
                           AI Biometric Hub
                         </Button>
                       </div>
@@ -2648,14 +2648,14 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                         <button
                           type="button"
                           onClick={isCameraStreamingDoc ? stopCameraDoc : startCameraDoc}
-                          className="text-signal-blue hover:text-white text-[9px] flex items-center gap-1"
+                          className="text-signal-blue hover:text-signal-blue/80 dark:hover:text-white text-[9px] font-semibold flex items-center gap-1"
                         >
                           <Camera className="h-2.5 w-2.5" />
                           {isCameraStreamingDoc ? "Stop" : "Live Cam"}
                         </button>
                       </div>
                     </div>
-                    <div className="relative h-40 rounded-lg bg-black border border-slate-800 overflow-hidden flex items-center justify-center">
+                    <div className="relative h-44 rounded-xl bg-slate-100/90 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 overflow-hidden flex items-center justify-center shadow-xs">
                       <video
                         ref={setVideoRefDoc}
                         className={cn("w-full h-full object-cover", !isCameraStreamingDoc && "hidden")}
@@ -2667,24 +2667,25 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                         <button
                           type="button"
                           onClick={captureDocSnapshot}
-                          className="absolute bottom-1 right-1 bg-emerald-600 text-white text-[9px] px-1.5 py-0.5 rounded shadow z-10"
+                          className="absolute bottom-2 right-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded shadow z-10 flex items-center gap-1"
                         >
-                          Capture
+                          <Camera className="h-3 w-3" />
+                          <span>Capture Frame</span>
                         </button>
                       ) : effectiveDocImage ? (
-                        <div className="relative w-full h-full flex items-center justify-center bg-black/80">
+                        <div className="relative w-full h-full flex items-center justify-center bg-slate-100 dark:bg-black/90 p-1">
                           <img
                             src={effectiveDocImage}
                             alt="Ingested Travel Document"
-                            className="max-h-full max-w-full object-contain"
+                            className="max-h-full max-w-full object-contain rounded"
                             onError={() => setDocImageLoadFailed(true)}
                           />
-                          <div className="absolute top-1 left-1 bg-black/70 px-1 py-0.5 rounded text-[8px] font-mono text-emerald-400 border border-emerald-500/30">
+                          <div className="absolute top-1.5 left-1.5 bg-white/95 dark:bg-black/80 px-2 py-0.5 rounded text-[8px] font-mono font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 shadow-xs">
                             AUTHENTIC CREDENTIAL
                           </div>
-                          <div className="absolute bottom-1 right-1 flex gap-1 z-10">
-                            <label className="cursor-pointer bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 text-[8px] font-semibold px-1.5 py-0.5 rounded shadow inline-flex items-center gap-0.5">
-                              <Upload className="h-2.5 w-2.5" />
+                          <div className="absolute bottom-1.5 right-1.5 flex gap-1 z-10">
+                            <label className="cursor-pointer bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 dark:bg-slate-900/90 dark:hover:bg-slate-800 dark:text-slate-100 dark:border-slate-700 text-[8px] font-bold px-2 py-1 rounded shadow-xs inline-flex items-center gap-1 transition-colors">
+                              <Upload className="h-2.5 w-2.5 text-signal-blue" />
                               <span>Upload</span>
                               <input
                                 type="file"
@@ -2696,9 +2697,9 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                             <button
                               type="button"
                               onClick={startCameraDoc}
-                              className="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 text-[8px] font-semibold px-1.5 py-0.5 rounded shadow flex items-center gap-0.5"
+                              className="bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 dark:bg-slate-900/90 dark:hover:bg-slate-800 dark:text-slate-100 dark:border-slate-700 text-[8px] font-bold px-2 py-1 rounded shadow-xs flex items-center gap-1 transition-colors"
                             >
-                              <Camera className="h-2.5 w-2.5" />
+                              <Camera className="h-2.5 w-2.5 text-signal-blue" />
                               <span>Cam</span>
                             </button>
                             <button
@@ -2707,7 +2708,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                                 setUploadedFileUrl(null);
                                 setDocImageLoadFailed(false);
                               }}
-                              className="bg-rose-600/80 hover:bg-rose-600 text-white text-[8px] font-semibold px-1.5 py-0.5 rounded shadow"
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-600/80 dark:hover:bg-rose-600 dark:text-white dark:border-transparent text-[8px] font-bold px-2 py-1 rounded shadow-xs transition-colors"
                               title="Clear document"
                             >
                               Clear
@@ -2715,14 +2716,18 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                           </div>
                         </div>
                       ) : (
-                        <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center p-3 text-center">
-                          <Scan className="h-6 w-6 text-slate-500 mb-1" />
-                          <span className="text-slate-300 text-[10px] font-semibold uppercase tracking-wider block">Credential Ingestion Standby</span>
-                          <span className="text-slate-500 text-[9px] block mb-2">
-                            {docImageLoadFailed ? "Stored image unavailable — upload authentic file or scan live" : "Awaiting authentic travel document"}
+                        <div className="w-full h-full bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-3 text-center">
+                          <div className="h-9 w-9 rounded-full bg-signal-blue/10 text-signal-blue flex items-center justify-center mb-1.5 shadow-xs">
+                            <Scan className="h-5 w-5" />
+                          </div>
+                          <span className="text-slate-900 dark:text-slate-100 text-[11px] font-bold uppercase tracking-wider block mb-0.5">
+                            Credential Ingestion Standby
                           </span>
-                          <div className="flex gap-1.5 z-10">
-                            <label className="cursor-pointer bg-signal-blue hover:bg-signal-blue/90 text-white text-[9px] font-semibold px-2 py-1 rounded transition-colors inline-flex items-center gap-1">
+                          <span className="text-slate-600 dark:text-slate-400 text-[9px] block mb-2.5 font-medium max-w-[200px]">
+                            {docImageLoadFailed ? "Stored image offline — upload authentic file or scan live" : "Awaiting authentic travel document"}
+                          </span>
+                          <div className="flex gap-2 z-10">
+                            <label className="cursor-pointer bg-signal-blue hover:bg-signal-blue/90 text-white text-[9px] font-bold px-2.5 py-1 rounded shadow-xs transition-colors inline-flex items-center gap-1">
                               <Upload className="h-3 w-3" />
                               <span>Upload</span>
                               <input
@@ -2735,20 +2740,20 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                             <button
                               type="button"
                               onClick={startCameraDoc}
-                              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[9px] font-semibold px-2 py-1 rounded transition-colors flex items-center gap-1"
+                              className="bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 dark:border-slate-700 text-[9px] font-bold px-2.5 py-1 rounded shadow-xs transition-colors flex items-center gap-1"
                             >
-                              <Camera className="h-3 w-3" />
+                              <Camera className="h-3 w-3 text-signal-blue" />
                               <span>Live Cam</span>
                             </button>
                           </div>
                           {cameraErrorDoc && (
-                            <div className="p-1.5 my-1 bg-rose-950/90 border border-rose-600/50 rounded text-center space-y-1 z-20">
-                              <div className="text-[9px] text-rose-300 font-medium leading-tight">{cameraErrorDoc}</div>
+                            <div className="p-1.5 my-1.5 bg-rose-50 dark:bg-rose-950/90 border border-rose-200 dark:border-rose-600/50 rounded-lg text-center space-y-1 z-20 max-w-[220px]">
+                              <div className="text-[9px] text-rose-700 dark:text-rose-300 font-semibold leading-tight">{cameraErrorDoc}</div>
                               <div className="flex justify-center gap-1">
-                                <button type="button" onClick={startCameraDoc} className="bg-rose-600 hover:bg-rose-500 text-white text-[8px] px-1.5 py-0.5 rounded font-semibold">
+                                <button type="button" onClick={startCameraDoc} className="bg-rose-600 hover:bg-rose-500 text-white text-[8px] px-1.5 py-0.5 rounded font-bold">
                                   Retry Camera
                                 </button>
-                                <label className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[8px] px-1.5 py-0.5 rounded font-semibold">
+                                <label className="cursor-pointer bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 text-[8px] px-1.5 py-0.5 rounded font-semibold">
                                   <span>Select File</span>
                                   <input type="file" accept="image/*,application/pdf" onChange={handleRealFileUpload} className="hidden" />
                                 </label>
@@ -2792,14 +2797,14 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                         <button
                           type="button"
                           onClick={isCameraStreamingFace ? stopCameraFace : startCameraFace}
-                          className="text-signal-blue hover:text-white text-[9px] flex items-center gap-1"
+                          className="text-signal-blue hover:text-signal-blue/80 dark:hover:text-white text-[9px] font-semibold flex items-center gap-1"
                         >
                           <Camera className="h-2.5 w-2.5" />
                           {isCameraStreamingFace ? "Stop" : "Live Cam"}
                         </button>
                       </div>
                     </div>
-                    <div className="relative h-40 rounded-lg bg-black border border-slate-800 overflow-hidden flex items-center justify-center">
+                    <div className="relative h-44 rounded-xl bg-slate-100/90 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 overflow-hidden flex items-center justify-center shadow-xs">
                       <video
                         ref={setVideoRefFace}
                         className={cn("w-full h-full object-cover", !isCameraStreamingFace && "hidden")}
@@ -2815,24 +2820,25 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                           <button
                             type="button"
                             onClick={captureFaceSnapshot}
-                            className="absolute bottom-1 right-1 bg-emerald-600 text-white text-[9px] px-1.5 py-0.5 rounded shadow z-10"
+                            className="absolute bottom-2 right-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded shadow z-10 flex items-center gap-1"
                           >
-                            Capture
+                            <Camera className="h-3 w-3" />
+                            <span>Capture Selfie</span>
                           </button>
                         </>
                       ) : (capturedFaceUrl || effectiveFaceImage) ? (
-                        <div className="w-full h-full bg-black/80 flex items-center justify-center relative">
+                        <div className="w-full h-full bg-slate-100 dark:bg-black/90 flex items-center justify-center relative p-1">
                           <img
                             src={capturedFaceUrl || effectiveFaceImage || ""}
                             alt="Traveler Biometric Portrait"
-                            className="h-full w-full object-contain"
+                            className="h-full w-full object-contain rounded"
                           />
-                          <div className="absolute top-1 left-1 bg-black/70 px-1 py-0.5 rounded text-[8px] font-mono text-emerald-400 border border-emerald-500/30">
+                          <div className="absolute top-1.5 left-1.5 bg-white/95 dark:bg-black/80 px-2 py-0.5 rounded text-[8px] font-mono font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 shadow-xs">
                             {capturedFaceUrl ? "LIVE CAPTURED FEED" : "AUTHENTIC BIOMETRIC CAPTURE"}
                           </div>
-                          <div className="absolute bottom-6 right-1 flex gap-1 z-10">
-                            <label className="cursor-pointer bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 text-[8px] font-semibold px-1.5 py-0.5 rounded shadow inline-flex items-center gap-0.5">
-                              <Upload className="h-2.5 w-2.5" />
+                          <div className="absolute bottom-6 right-1.5 flex gap-1 z-10">
+                            <label className="cursor-pointer bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 dark:bg-slate-900/90 dark:hover:bg-slate-800 dark:text-slate-100 dark:border-slate-700 text-[8px] font-bold px-2 py-1 rounded shadow-xs inline-flex items-center gap-1 transition-colors">
+                              <Upload className="h-2.5 w-2.5 text-signal-blue" />
                               <span>Upload</span>
                               <input
                                 type="file"
@@ -2844,16 +2850,16 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                             <button
                               type="button"
                               onClick={startCameraFace}
-                              className="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 text-[8px] font-semibold px-1.5 py-0.5 rounded shadow flex items-center gap-0.5"
+                              className="bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 dark:bg-slate-900/90 dark:hover:bg-slate-800 dark:text-slate-100 dark:border-slate-700 text-[8px] font-bold px-2 py-1 rounded shadow-xs flex items-center gap-1 transition-colors"
                             >
-                              <Camera className="h-2.5 w-2.5" />
+                              <Camera className="h-2.5 w-2.5 text-signal-blue" />
                               <span>Cam</span>
                             </button>
                             {capturedFaceUrl && (
                               <button
                                 type="button"
                                 onClick={() => setCapturedFaceUrl(null)}
-                                className="bg-rose-600/80 hover:bg-rose-600 text-white text-[8px] font-semibold px-1.5 py-0.5 rounded shadow"
+                                className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-600/80 dark:hover:bg-rose-600 dark:text-white dark:border-transparent text-[8px] font-bold px-2 py-1 rounded shadow-xs transition-colors"
                                 title="Clear portrait"
                               >
                                 Clear
@@ -2862,21 +2868,27 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                           </div>
                         </div>
                       ) : (
-                        <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center p-3 text-center">
-                          <User className="h-6 w-6 text-slate-500 mb-1" />
-                          <span className="text-slate-300 text-[10px] font-semibold uppercase tracking-wider block">Biometric Capture Standby</span>
-                          <span className="text-slate-500 text-[9px] block mb-2">Live camera feed or portrait</span>
-                          <div className="flex gap-1.5 z-10">
+                        <div className="w-full h-full bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-3 text-center">
+                          <div className="h-9 w-9 rounded-full bg-signal-blue/10 text-signal-blue flex items-center justify-center mb-1.5 shadow-xs">
+                            <User className="h-5 w-5" />
+                          </div>
+                          <span className="text-slate-900 dark:text-slate-100 text-[11px] font-bold uppercase tracking-wider block mb-0.5">
+                            Biometric Capture Standby
+                          </span>
+                          <span className="text-slate-600 dark:text-slate-400 text-[9px] block mb-2.5 font-medium max-w-[200px]">
+                            Live camera feed or passenger portrait
+                          </span>
+                          <div className="flex gap-2 z-10">
                             <button
                               type="button"
                               onClick={startCameraFace}
-                              className="bg-signal-blue hover:bg-signal-blue/90 text-white text-[9px] font-semibold px-2 py-1 rounded transition-colors flex items-center gap-1"
+                              className="bg-signal-blue hover:bg-signal-blue/90 text-white text-[9px] font-bold px-2.5 py-1 rounded shadow-xs transition-colors flex items-center gap-1"
                             >
                               <Camera className="h-3 w-3" />
                               <span>Live WebCam</span>
                             </button>
-                            <label className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[9px] font-semibold px-2 py-1 rounded transition-colors inline-flex items-center gap-1">
-                              <Upload className="h-3 w-3" />
+                            <label className="cursor-pointer bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 dark:border-slate-700 text-[9px] font-bold px-2.5 py-1 rounded shadow-xs transition-colors inline-flex items-center gap-1">
+                              <Upload className="h-3 w-3 text-signal-blue" />
                               <span>Upload</span>
                               <input
                                 type="file"
@@ -2887,13 +2899,13 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                             </label>
                           </div>
                           {cameraErrorFace && (
-                            <div className="p-1.5 my-1 bg-rose-950/90 border border-rose-600/50 rounded text-center space-y-1 z-20">
-                              <div className="text-[9px] text-rose-300 font-medium leading-tight">{cameraErrorFace}</div>
+                            <div className="p-1.5 my-1.5 bg-rose-50 dark:bg-rose-950/90 border border-rose-200 dark:border-rose-600/50 rounded-lg text-center space-y-1 z-20 max-w-[220px]">
+                              <div className="text-[9px] text-rose-700 dark:text-rose-300 font-semibold leading-tight">{cameraErrorFace}</div>
                               <div className="flex justify-center gap-1">
-                                <button type="button" onClick={startCameraFace} className="bg-rose-600 hover:bg-rose-500 text-white text-[8px] px-1.5 py-0.5 rounded font-semibold">
+                                <button type="button" onClick={startCameraFace} className="bg-rose-600 hover:bg-rose-500 text-white text-[8px] px-1.5 py-0.5 rounded font-bold">
                                   Retry WebCam
                                 </button>
-                                <label className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[8px] px-1.5 py-0.5 rounded font-semibold">
+                                <label className="cursor-pointer bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 text-[8px] px-1.5 py-0.5 rounded font-semibold">
                                   <span>Select Portrait</span>
                                   <input type="file" accept="image/*" onChange={handleFaceFileUpload} className="hidden" />
                                 </label>
@@ -2902,8 +2914,8 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                           )}
                         </div>
                       )}
-                      <div className="absolute bottom-1 inset-x-1 text-center text-[9px] font-mono text-slate-300 bg-slate-950/80 rounded py-0.5 border border-slate-800 pointer-events-none">
-                        Match: <strong className={effectiveFace.similarity > 75 ? "text-emerald-400" : "text-rose-400"}>{effectiveFace.similarity}%</strong>
+                      <div className="absolute bottom-1 inset-x-1 text-center text-[9px] font-mono text-slate-800 dark:text-slate-300 bg-white/95 dark:bg-slate-900/90 rounded py-0.5 border border-slate-200 dark:border-slate-800 shadow-xs pointer-events-none">
+                        Match: <strong className={effectiveFace.similarity > 75 ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-rose-600 dark:text-rose-400 font-bold"}>{effectiveFace.similarity}%</strong>
                       </div>
                     </div>
                   </div>

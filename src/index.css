@@ -302,6 +302,44 @@ html[data-theme="light"] .bg-slate-800\/30:not(button):not([role="button"]):not(
   background-color: #f1f5f9 !important;
 }
 
+/* Light mode button contrast safety: ensure dark slate buttons become crisp light buttons in light mode */
+html.light button.bg-slate-800:not(.terminal-console *):not([data-terminal="true"] *),
+html[data-theme="light"] button.bg-slate-800:not(.terminal-console *):not([data-terminal="true"] *),
+html.light label.bg-slate-800:not(.terminal-console *):not([data-terminal="true"] *),
+html[data-theme="light"] label.bg-slate-800:not(.terminal-console *):not([data-terminal="true"] *),
+html.light button.bg-slate-900:not(.terminal-console *):not([data-terminal="true"] *),
+html[data-theme="light"] button.bg-slate-900:not(.terminal-console *):not([data-terminal="true"] *),
+html.light label.bg-slate-900:not(.terminal-console *):not([data-terminal="true"] *),
+html[data-theme="light"] label.bg-slate-900:not(.terminal-console *):not([data-terminal="true"] *) {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light button.bg-slate-800:hover:not(.terminal-console *):not([data-terminal="true"] *),
+html[data-theme="light"] button.bg-slate-800:hover:not(.terminal-console *):not([data-terminal="true"] *),
+html.light label.bg-slate-800:hover:not(.terminal-console *):not([data-terminal="true"] *),
+html[data-theme="light"] label.bg-slate-800:hover:not(.terminal-console *):not([data-terminal="true"] *),
+html.light button.bg-slate-900:hover:not(.terminal-console *):not([data-terminal="true"] *),
+html[data-theme="light"] button.bg-slate-900:hover:not(.terminal-console *):not([data-terminal="true"] *),
+html.light label.bg-slate-900:hover:not(.terminal-console *):not([data-terminal="true"] *),
+html[data-theme="light"] label.bg-slate-900:hover:not(.terminal-console *):not([data-terminal="true"] *) {
+  background-color: #f1f5f9 !important;
+  color: #020617 !important;
+  border-color: #94a3b8 !important;
+}
+
+html.light button.bg-slate-800 *:not(.text-signal-blue):not(.text-signal-cyan):not(.text-emerald-500):not(.text-emerald-400),
+html[data-theme="light"] button.bg-slate-800 *:not(.text-signal-blue):not(.text-signal-cyan):not(.text-emerald-500):not(.text-emerald-400),
+html.light label.bg-slate-800 *:not(.text-signal-blue):not(.text-signal-cyan):not(.text-emerald-500):not(.text-emerald-400),
+html[data-theme="light"] label.bg-slate-800 *:not(.text-signal-blue):not(.text-signal-cyan):not(.text-emerald-500):not(.text-emerald-400),
+html.light button.bg-slate-900 *:not(.text-signal-blue):not(.text-signal-cyan):not(.text-emerald-500):not(.text-emerald-400),
+html[data-theme="light"] button.bg-slate-900 *:not(.text-signal-blue):not(.text-signal-cyan):not(.text-emerald-500):not(.text-emerald-400),
+html.light label.bg-slate-900 *:not(.text-signal-blue):not(.text-signal-cyan):not(.text-emerald-500):not(.text-emerald-400),
+html[data-theme="light"] label.bg-slate-900 *:not(.text-signal-blue):not(.text-signal-cyan):not(.text-emerald-500):not(.text-emerald-400) {
+  color: #0f172a !important;
+}
+
 html.light .border-slate-800:not(.terminal-console):not([data-terminal="true"]),
 html[data-theme="light"] .border-slate-800:not(.terminal-console):not([data-terminal="true"]),
 html.light .border-slate-700:not(.terminal-console):not([data-terminal="true"]),
