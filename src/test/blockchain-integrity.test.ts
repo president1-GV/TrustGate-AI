@@ -1,6 +1,6 @@
 /**
  * TRUSTGATE AI — Blockchain Evidence Integrity & Provenance Test Suite
- * SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System
+ * AI-Based Fake Identity & Document Screening System
  * 
  * Tests:
  * 1. RFC 8785 JSON Canonicalization Scheme (JCS)

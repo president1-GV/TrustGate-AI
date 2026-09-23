@@ -1,6 +1,6 @@
 /**
  * TRUSTGATE AI — Blockchain Provenance & Evidence Integrity Subsystem
- * SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System
+ * AI-Based Fake Identity & Document Screening System
  */
 
 export * from "./types";

@@ -1,6 +1,6 @@
 /**
  * TRUSTGATE AI — Blockchain Provenance & Evidence Integrity Types
- * SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System
+ * AI-Based Fake Identity & Document Screening System
  * 
  * Strict Zero-PII / Zero-Biometrics Guarantee:
  * Manifests contain ONLY cryptographic hashes, opaque institutional IDs,

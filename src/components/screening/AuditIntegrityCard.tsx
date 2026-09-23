@@ -1,6 +1,6 @@
 /**
  * TRUSTGATE AI — AuditIntegrityCard Component
- * SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System
+ * AI-Based Fake Identity & Document Screening System
  * 
  * Provides an authoritative, tamper-evident inspection card showing:
  * - Permissioned Blockchain Block Sequence & Transaction ID
@@ -95,9 +95,6 @@ export function AuditIntegrityCard({
             <div>
               <CardTitle className="text-base font-semibold tracking-wide text-slate-100 flex items-center gap-2">
                 Evidence Integrity & Blockchain Provenance
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800/40">
-                  SIH-26188
-                </span>
               </CardTitle>
               <CardDescription className="text-xs text-slate-400">
                 Immutable border evidence anchoring & cryptographic audit trail (Tokenless Consortium Ledger)
