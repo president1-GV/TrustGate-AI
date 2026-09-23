@@ -43,12 +43,7 @@ import { AutomatedPipelineModal } from "@/components/screening/AutomatedPipeline
 import { BorderDossierReportModal } from "@/components/screening/BorderDossierReportModal";
 import { AuditIntegrityCard } from "@/components/screening/AuditIntegrityCard";
 import type { FullPipelineResult } from "@/ai/types";
-import {
-  resolveCleanDocumentUrl,
-  getPassportSpecimenSvg,
-  getVisaSpecimenSvg,
-  getBiometricPortraitSpecimenSvg,
-} from "@/lib/documentSpecimen";
+import { resolveCleanDocumentUrl } from "@/lib/documentSpecimen";
 
 interface FieldItem {
   name: string;
@@ -427,63 +422,54 @@ export function SihScreeningDashboard() {
   const effectiveCaseId = isReal ? (ctxCaseId || currentCaseId) : currentCaseId;
   const [docImageLoadFailed, setDocImageLoadFailed] = React.useState(false);
 
-  // Compute clean, fail-safe document image URL or authentic border specimen
+  // Compute authentic document image URL (NO fake Canva/simulation SVGs allowed)
   const effectiveDocImage = React.useMemo(() => {
-    // 1. Live document image uploaded or captured in this session
-    if (!docImageLoadFailed) {
-      if (ctxDocImage) {
-        const cleanCtx = resolveCleanDocumentUrl(ctxDocImage);
-        if (cleanCtx) return cleanCtx;
-      }
-      if (uploadedFileUrl) {
-        const cleanUp = resolveCleanDocumentUrl(uploadedFileUrl);
-        if (cleanUp) return cleanUp;
-      }
-      // 2. Active database case document
-      if (activeRealCaseBundle) {
-        const doc = activeRealCaseBundle.documents?.[0];
-        const resolved = resolveCleanDocumentUrl(doc?.storage_url, doc?.storage_key);
-        if (resolved) return resolved;
-        const subImg = doc?.images?.[0];
-        const subResolved = resolveCleanDocumentUrl(subImg?.storage_url, subImg?.storage_key);
-        if (subResolved) return subResolved;
-      }
+    // 1. Live document image uploaded or captured in this session (highest priority)
+    if (uploadedFileUrl) {
+      return uploadedFileUrl;
+    }
+    if (ctxDocImage) {
+      const cleanCtx = resolveCleanDocumentUrl(ctxDocImage);
+      if (cleanCtx) return cleanCtx;
     }
 
-    // 3. Authentic specimen matching current case metadata
-    const activeCode = effectiveCaseId || currentCaseId || "TG-IND-2026-0001";
-    const name = activeRealCaseBundle?.documents?.[0]?.ocr?.fields?.find(
-      (f) => f.field_name?.toUpperCase() === "NAME" || f.field_name?.toUpperCase() === "FULL_NAME"
-    )?.field_value;
-    const docNo = activeRealCaseBundle?.documents?.[0]?.ocr?.fields?.find(
-      (f) => f.field_name?.toUpperCase().includes("NUMBER")
-    )?.field_value;
-    const isTampered = (activeRealCaseBundle?.row?.risk_score ?? 0) > 60;
-
-    if (docType === "visa") {
-      return getVisaSpecimenSvg(activeCode, name ?? undefined, docNo ?? undefined);
+    // 2. Active database case document (only authentic stored images, skip if failed)
+    if (activeRealCaseBundle && !docImageLoadFailed) {
+      const doc = activeRealCaseBundle.documents?.[0];
+      const resolved = resolveCleanDocumentUrl(doc?.storage_url, doc?.storage_key);
+      if (resolved) return resolved;
+      const subImg = doc?.images?.[0];
+      const subResolved = resolveCleanDocumentUrl(subImg?.storage_url, subImg?.storage_key);
+      if (subResolved) return subResolved;
     }
-    return getPassportSpecimenSvg(activeCode, name ?? undefined, docNo ?? undefined, "IND", isTampered);
+
+    // Absolutely NO fake simulated Canva/vector SVGs - return null so Standby UI is displayed
+    return null;
   }, [
     docImageLoadFailed,
     ctxDocImage,
     uploadedFileUrl,
     activeRealCaseBundle,
-    effectiveCaseId,
-    currentCaseId,
-    docType,
   ]);
 
-  // Compute clean face image URL or authentic ICAO biometric specimen
+  // Compute authentic traveler face portrait URL (NO fake Canva/simulation SVGs allowed)
   const effectiveFaceImage = React.useMemo(() => {
+    // 1. Live camera selfie captured or portrait uploaded in this session
     if (capturedFaceUrl) {
-      const clean = resolveCleanDocumentUrl(capturedFaceUrl);
+      return capturedFaceUrl;
+    }
+
+    // 2. Real biometric image from active database case bundle if present
+    const doc = activeRealCaseBundle?.documents?.[0];
+    const faceImg = (doc?.face as any)?.portrait_url || (doc?.face as any)?.face_crop_url;
+    if (faceImg) {
+      const clean = resolveCleanDocumentUrl(faceImg);
       if (clean) return clean;
     }
-    const faceSim = activeRealCaseBundle?.documents?.[0]?.face?.similarity ?? 94;
-    const isMatch = (faceSim > 100 ? Math.round(faceSim / 100) : faceSim) >= 70;
-    return getBiometricPortraitSpecimenSvg(currentCaseId, faceSim > 100 ? Math.round(faceSim / 100) : faceSim, isMatch);
-  }, [capturedFaceUrl, activeRealCaseBundle, currentCaseId]);
+
+    // Absolutely NO fake simulated Canva/vector SVGs - return null so Standby UI is displayed
+    return null;
+  }, [capturedFaceUrl, activeRealCaseBundle]);
 
   // Real Camera Refs & Hardened State
   const videoRefDoc = React.useRef<HTMLVideoElement>(null);
@@ -2197,7 +2183,27 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                     playsInline
                     muted
                   />
-                  {!isCameraStreamingFace && !cameraErrorFace && (
+                  {!isCameraStreamingFace && (capturedFaceUrl || effectiveFaceImage) ? (
+                    <div className="relative w-full h-full flex items-center justify-center bg-black/80">
+                      <img
+                        src={capturedFaceUrl || effectiveFaceImage || ""}
+                        alt="Captured Biometric Portrait"
+                        className="h-full w-full object-contain"
+                      />
+                      <div className="absolute top-2 left-2 bg-black/70 px-2 py-0.5 rounded text-[10px] font-mono text-emerald-400 border border-emerald-500/30">
+                        {capturedFaceUrl ? "LIVE CAPTURED FEED" : "AUTHENTIC BIOMETRIC CAPTURE"}
+                      </div>
+                      <div className="absolute bottom-2 right-2 flex gap-1 z-10">
+                        <Button
+                          size="sm"
+                          onClick={() => setCapturedFaceUrl(null)}
+                          className="bg-rose-600/80 hover:bg-rose-600 text-white text-xs h-7"
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                  ) : !isCameraStreamingFace && !cameraErrorFace ? (
                     <div className="text-center p-4 space-y-2">
                       <User className="h-10 w-10 mx-auto text-slate-600" />
                       <p className="text-xs text-slate-400">Live facial camera feed not started.</p>
@@ -2208,9 +2214,14 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                         <Button size="sm" variant="outline" onClick={() => setFaceCameraModalOpen(true)} className="border-signal-cyan/40 text-signal-cyan text-xs">
                           AI Biometric Hub
                         </Button>
+                        <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs">
+                          <Upload className="h-3 w-3" />
+                          <span>Upload Photo</span>
+                          <input type="file" accept="image/*" onChange={handleFaceFileUpload} className="hidden" />
+                        </label>
                       </div>
                     </div>
-                  )}
+                  ) : null}
 
                   {cameraErrorFace && (
                     <div className="p-4 bg-rose-950/80 border border-rose-600/40 rounded-lg text-center space-y-2 m-2">
@@ -2707,7 +2718,9 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                         <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center p-3 text-center">
                           <Scan className="h-6 w-6 text-slate-500 mb-1" />
                           <span className="text-slate-300 text-[10px] font-semibold uppercase tracking-wider block">Credential Ingestion Standby</span>
-                          <span className="text-slate-500 text-[9px] block mb-2">Awaiting authentic travel document</span>
+                          <span className="text-slate-500 text-[9px] block mb-2">
+                            {docImageLoadFailed ? "Stored image unavailable — upload authentic file or scan live" : "Awaiting authentic travel document"}
+                          </span>
                           <div className="flex gap-1.5 z-10">
                             <label className="cursor-pointer bg-signal-blue hover:bg-signal-blue/90 text-white text-[9px] font-semibold px-2 py-1 rounded transition-colors inline-flex items-center gap-1">
                               <Upload className="h-3 w-3" />
@@ -2810,12 +2823,12 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                       ) : (capturedFaceUrl || effectiveFaceImage) ? (
                         <div className="w-full h-full bg-black/80 flex items-center justify-center relative">
                           <img
-                            src={capturedFaceUrl || effectiveFaceImage}
+                            src={capturedFaceUrl || effectiveFaceImage || ""}
                             alt="Traveler Biometric Portrait"
                             className="h-full w-full object-contain"
                           />
                           <div className="absolute top-1 left-1 bg-black/70 px-1 py-0.5 rounded text-[8px] font-mono text-emerald-400 border border-emerald-500/30">
-                            {capturedFaceUrl ? "LIVE CAPTURED FEED" : "ICAO BIOMETRIC SPECIMEN"}
+                            {capturedFaceUrl ? "LIVE CAPTURED FEED" : "AUTHENTIC BIOMETRIC CAPTURE"}
                           </div>
                           <div className="absolute bottom-6 right-1 flex gap-1 z-10">
                             <label className="cursor-pointer bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 text-[8px] font-semibold px-1.5 py-0.5 rounded shadow inline-flex items-center gap-0.5">
