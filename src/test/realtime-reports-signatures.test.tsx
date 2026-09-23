@@ -164,4 +164,45 @@ describe("REAL-TIME LIVE DATABASE DIGITAL SIGNATURES & FORENSIC SPECIMEN SUITE",
     expect(screen.getAllByText(/DIGITALLY INGESTED/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/BIOMETRIC PORTRAIT/i).length).toBeGreaterThan(0);
   });
+
+  it("SPEC-003: ForensicSpecimenCard never displays an image from a previous screening or different case", async () => {
+    // Simulate leftover stale image from a previous upload
+    sessionStorage.setItem("tg_last_uploaded_specimen", "data:image/png;base64,STALE_LEFTOVER_IMAGE");
+    sessionStorage.setItem("tg_doc_img_DIFFERENT_CASE", "data:image/png;base64,OTHER_CASE_IMAGE");
+
+    render(
+      <ForensicSpecimenCard
+        caseCode="TG-FRESH-CASE-555"
+        fullName="VIKRAM SINGH"
+        documentNumber="V99887766"
+        countryCode="IND"
+      />
+    );
+
+    // It must NOT show the stale image from the previous upload
+    const img = screen.queryByAltText(/Ingested Travel Document Specimen/i);
+    expect(img).toBeNull();
+
+    // It must render the authentic vector specimen for this exact case
+    expect(screen.getAllByText(/VIKRAM SINGH/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/V99887766/i).length).toBeGreaterThan(0);
+  });
+
+  it("SPEC-004: ForensicSpecimenCard resolves case-specific image by caseId", async () => {
+    const caseIdDataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    sessionStorage.setItem("tg_doc_img_uuid-case-id-1234", caseIdDataUrl);
+
+    render(
+      <ForensicSpecimenCard
+        caseId="uuid-case-id-1234"
+        fullName="ROHIT VERMA"
+        documentNumber="R44556677"
+        countryCode="IND"
+      />
+    );
+
+    const img = screen.getByAltText(/Ingested Travel Document Specimen/i) as HTMLImageElement;
+    expect(img).toBeInTheDocument();
+    expect(img.src).toBe(caseIdDataUrl);
+  });
 });

@@ -1,4 +1,4 @@
-import { insforge, ensureAuthenticatedClient } from "./insforge";
+import { insforge, ensureAuthenticatedClient, uploadScreeningDocument } from "./insforge";
 import { sanitizeTextInput, requireAuthRole } from "./security";
 import {
   saveScreeningCaseOffline,
@@ -1644,12 +1644,32 @@ export async function autoCheckinCameraScan(params: {
   let caseId: string | null = null;
   if (params.userId) {
     try {
+      let storageUrl =
+        params.storageUrl && !params.storageUrl.startsWith("blob:") ? params.storageUrl : undefined;
+      let storageKey: string | undefined;
+      let storageBucket: string | undefined;
+
+      if (!storageUrl && typeof navigator !== "undefined" && navigator.onLine && params.file) {
+        try {
+          const up = await uploadScreeningDocument(params.file, caseCode);
+          if (up?.url) {
+            storageUrl = up.url;
+            storageKey = up.key;
+            storageBucket = up.bucket;
+          }
+        } catch (uErr) {
+          console.warn("[TrustGate Storage] autoCheckin upload notice:", uErr);
+        }
+      }
+
       caseId = await saveScreeningCase({
         userId: params.userId,
         caseCode,
         result: params.result,
         isDemo: false,
-        storageUrl: params.storageUrl,
+        storageUrl,
+        storageKey,
+        storageBucket,
         mime: params.mime || params.file.type,
         fileSizeBytes: params.fileSizeBytes || params.file.size,
         countryCode: params.result.mrz.nationality || undefined,

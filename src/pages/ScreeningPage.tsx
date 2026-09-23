@@ -531,6 +531,14 @@ export function ScreeningPage() {
     storage?: StorageUploadResult
   ) => {
     setCaptureSource("camera");
+    currentFileRef.current = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dUrl = reader.result as string;
+      currentDataUrlRef.current = dUrl;
+    };
+    reader.readAsDataURL(file);
+
     if (pipelineResult) {
       const runId = "run_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
       activeRunIdRef.current = runId;
@@ -569,12 +577,21 @@ export function ScreeningPage() {
         userId: user?.id,
         file,
         result: pipelineResult,
-        storageUrl: url,
+        storageUrl: storage?.url,
         mime: sInfo.mime,
         fileSizeBytes: sInfo.size,
       })
         .then((chk) => {
-          if (activeRunIdRef.current === runId) setCameraCheckin(chk);
+          if (activeRunIdRef.current === runId) {
+            setCameraCheckin(chk);
+            const dUrl = currentDataUrlRef.current;
+            if (dUrl) {
+              try {
+                sessionStorage.setItem("tg_doc_img_" + chk.caseCode, dUrl);
+                if (chk.caseId) sessionStorage.setItem("tg_doc_img_" + chk.caseId, dUrl);
+              } catch {}
+            }
+          }
         })
         .catch((chkErr) => console.warn("[TrustGate DB] Camera auto-checkin notice:", chkErr))
         .finally(() => {
@@ -630,9 +647,6 @@ export function ScreeningPage() {
       reader.onload = () => {
         const dUrl = reader.result as string;
         currentDataUrlRef.current = dUrl;
-        try {
-          sessionStorage.setItem("tg_last_uploaded_specimen", dUrl);
-        } catch {}
       };
       reader.readAsDataURL(file);
 
@@ -668,13 +682,20 @@ export function ScreeningPage() {
           userId: user?.id,
           file,
           result: r,
-          storageUrl: url,
+          storageUrl: undefined,
           mime: validation.detectedMime ?? file.type,
           fileSizeBytes: file.size,
         })
           .then((chk) => {
             if (activeRunIdRef.current === runId) {
               setCameraCheckin(chk);
+              const dUrl = currentDataUrlRef.current;
+              if (dUrl) {
+                try {
+                  sessionStorage.setItem("tg_doc_img_" + chk.caseCode, dUrl);
+                  if (chk.caseId) sessionStorage.setItem("tg_doc_img_" + chk.caseId, dUrl);
+                } catch {}
+              }
             }
           })
           .catch((chkErr) => {
@@ -846,9 +867,7 @@ export function ScreeningPage() {
     setError(null);
     try {
       const caseCode = genCaseCode();
-      const persistentDataUrl =
-        currentDataUrlRef.current ||
-        (typeof window !== "undefined" ? sessionStorage.getItem("tg_last_uploaded_specimen") : null);
+      const persistentDataUrl = currentDataUrlRef.current || null;
 
       if (persistentDataUrl) {
         try {
@@ -858,10 +877,11 @@ export function ScreeningPage() {
 
       let storageBucket = storageInfo?.bucket;
       let storageKey = storageInfo?.key;
-      let storageUrl = storageInfo?.url;
+      let storageUrl =
+        storageInfo?.url && !storageInfo.url.startsWith("blob:") ? storageInfo.url : undefined;
 
       // Attempt background cloud upload to InsForge storage if online
-      if (currentFileRef.current && navigator.onLine) {
+      if (currentFileRef.current && navigator.onLine && (!storageUrl || !storageKey)) {
         try {
           const uploaded = await uploadScreeningDocument(currentFileRef.current, caseCode);
           if (uploaded?.url) {
@@ -879,7 +899,9 @@ export function ScreeningPage() {
         caseCode,
         result,
         isDemo: false,
-        storageUrl: storageUrl || persistentDataUrl || undefined,
+        storageUrl:
+          storageUrl ||
+          (persistentDataUrl && persistentDataUrl.length < 2_000_000 ? persistentDataUrl : undefined),
         storageKey: storageKey,
         storageBucket: storageBucket,
         mime: storageInfo?.mime,

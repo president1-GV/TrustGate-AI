@@ -7,6 +7,7 @@ export interface ForensicSpecimenCardProps {
   secureDocUrl?: string | null;
   images?: Array<{ storage_url?: string | null }> | null;
   caseCode?: string;
+  caseId?: string;
   documentType?: string;
   documentHash?: string | null;
   countryCode?: string | null;
@@ -26,6 +27,7 @@ export function ForensicSpecimenCard({
   secureDocUrl,
   images,
   caseCode,
+  caseId,
   documentType = "Passport",
   documentHash,
   countryCode = "IND",
@@ -39,47 +41,58 @@ export function ForensicSpecimenCard({
   source = "SCREEN_UPLOAD",
   className,
 }: ForensicSpecimenCardProps) {
-  // Determine candidate image URLs in order of preference
+  // Determine candidate image URLs in strict order of case-specific preference
   const candidateUrls = React.useMemo(() => {
     const list: string[] = [];
 
-    // 1. Check sessionStorage for case-specific persisted specimen
+    // 1a. Check sessionStorage for caseCode-specific persisted specimen
     if (caseCode && typeof window !== "undefined") {
       try {
         const cached = sessionStorage.getItem("tg_doc_img_" + caseCode);
-        if (cached && !cached.startsWith("blob:")) list.push(cached);
+        if (cached && !cached.startsWith("blob:") && !list.includes(cached)) {
+          list.push(cached);
+        }
       } catch {}
     }
 
-    // 2. Check InsForge secure signed URL
-    if (secureDocUrl && !secureDocUrl.startsWith("blob:")) {
+    // 1b. Check sessionStorage for caseId-specific persisted specimen
+    if (caseId && typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem("tg_doc_img_" + caseId);
+        if (cached && !cached.startsWith("blob:") && !list.includes(cached)) {
+          list.push(cached);
+        }
+      } catch {}
+    }
+
+    // 2. Check InsForge secure signed/downloaded URL (fresh live blob URL from fetchSecureBlobUrl)
+    if (secureDocUrl && !list.includes(secureDocUrl)) {
       list.push(secureDocUrl);
     }
 
-    // 3. Check storage_url (prefer base64 or https)
-    if (storageUrl) {
+    // 3. Check storage_url (prefer base64 or https cloud storage; skip stale DB blob URLs)
+    if (storageUrl && !storageUrl.startsWith("blob:") && !list.includes(storageUrl)) {
       list.push(storageUrl);
     }
 
     // 4. Check images array
     if (images && images.length > 0) {
       for (const img of images) {
-        if (img.storage_url) list.push(img.storage_url);
+        if (img.storage_url && !img.storage_url.startsWith("blob:") && !list.includes(img.storage_url)) {
+          list.push(img.storage_url);
+        }
       }
     }
 
-    // 5. Check general last uploaded specimen from session
+    // Proactively purge any obsolete global fallback key from session
     if (typeof window !== "undefined") {
       try {
-        const lastUploaded = sessionStorage.getItem("tg_last_uploaded_specimen");
-        if (lastUploaded && !lastUploaded.startsWith("blob:") && !list.includes(lastUploaded)) {
-          list.push(lastUploaded);
-        }
+        sessionStorage.removeItem("tg_last_uploaded_specimen");
       } catch {}
     }
 
     return list;
-  }, [caseCode, secureDocUrl, storageUrl, images]);
+  }, [caseCode, caseId, secureDocUrl, storageUrl, images]);
 
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [allFailed, setAllFailed] = React.useState(false);

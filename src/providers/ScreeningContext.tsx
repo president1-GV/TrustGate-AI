@@ -323,10 +323,24 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
         setDocumentMimeType(prov.mimeType);
         setDocumentTimestamp(prov.timestamp);
 
-        // 6. Object URL for Preview
+        // 6. Object URL for Preview & Durable Base64 Cache
         const previewUrl = storage?.url || URL.createObjectURL(file);
         blobUrlRef.current = previewUrl;
         setDocumentImage(previewUrl);
+
+        try {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dUrl = reader.result as string;
+            if (dUrl) {
+              try {
+                sessionStorage.setItem("tg_doc_img_" + generatedCaseCode, dUrl);
+                sessionStorage.setItem("tg_doc_img_" + prov.documentId, dUrl);
+              } catch {}
+            }
+          };
+          reader.readAsDataURL(file);
+        } catch {}
 
         addAuditEvent(
           `Ingested ${source} (${prov.documentId}) · SHA-256: ${hash.substring(0, 16)}...`,
@@ -480,7 +494,7 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
             caseCode: generatedCaseCode,
             result: pipeRes,
             isDemo: false,
-            storageUrl: storageUrl || previewUrl,
+            storageUrl: storageUrl && !storageUrl.startsWith("blob:") ? storageUrl : undefined,
             storageKey,
             storageBucket,
             mime: validation.detectedMime ?? file.type,
@@ -489,6 +503,15 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
             imageHeight: storage?.height,
             countryCode: countryField?.fieldValue ?? undefined,
           });
+
+          if (savedCaseId) {
+            try {
+              const cached = sessionStorage.getItem("tg_doc_img_" + generatedCaseCode);
+              if (cached) {
+                sessionStorage.setItem("tg_doc_img_" + savedCaseId, cached);
+              }
+            } catch {}
+          }
 
           addAuditEvent(
             `Case #${generatedCaseCode} saved to live database (ID: ${savedCaseId})`,

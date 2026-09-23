@@ -60,7 +60,7 @@
     "provenanceValid": true,
     "crossContaminationDetected": false,
     "timingsMs": {
-      "total": 2,
+      "total": 1,
       "ocr": 45,
       "tampering": 30,
       "face": 25,

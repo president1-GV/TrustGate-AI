@@ -402,9 +402,11 @@ export function CaseDetailPage() {
           if (active) setSecureDocUrl(url);
         })
         .catch(() => {
-          if (active && doc.storage_url) setSecureDocUrl(doc.storage_url);
+          if (active && doc.storage_url && !doc.storage_url.startsWith("blob:")) {
+            setSecureDocUrl(doc.storage_url);
+          }
         });
-    } else if (doc?.storage_url) {
+    } else if (doc?.storage_url && !doc.storage_url.startsWith("blob:")) {
       setSecureDocUrl(doc.storage_url);
     }
     return () => {
@@ -1957,6 +1959,7 @@ export function CaseDetailPage() {
 
                 {/* 3. Authoritative Ingested Document Specimen & Acquisition Provenance */}
                 <ForensicSpecimenCard
+                  caseId={row.id}
                   caseCode={row.case_code}
                   storageUrl={doc?.storage_url}
                   secureDocUrl={secureDocUrl}

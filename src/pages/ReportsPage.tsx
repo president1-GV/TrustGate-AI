@@ -446,6 +446,7 @@ export function ReportsPage() {
 
                     {/* Authoritative Document Specimen & Ingestion Image */}
                     <ForensicSpecimenCard
+                      caseId={selectedReport.cases?.id}
                       caseCode={selectedReport.cases?.case_code}
                       storageUrl={repDoc?.storage_url}
                       images={repDoc?.images}
