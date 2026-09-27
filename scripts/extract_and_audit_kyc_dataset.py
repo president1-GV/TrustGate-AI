@@ -15,7 +15,7 @@ from pathlib import Path
 from PIL import Image
 
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
-ZIP_PATH = Path(r"C:\Users\VarunHarvard 1\OneDrive\Desktop\dataset for SIH26188 (addhar,pan,visa,passport,voter-id).zip")
+ZIP_PATH = Path(os.environ.get("KYC_DATASET_ZIP", str(WORKSPACE_ROOT / "ai" / "datasets" / "kyc_dataset.zip")))
 
 # Directory structure definitions
 DATASETS_DIR = WORKSPACE_ROOT / "ai" / "datasets"

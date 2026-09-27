@@ -53,20 +53,22 @@ runStep("Repository Secret Scan", () => {
     /eyJhbGciOi[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+/, // Raw JWTs
     /(?:admin|root|password|passwd|secret)\s*[:=]\s*["'][A-Za-z0-9!@#$%^&*]{8,}["']/i, // Plaintext credentials
     /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----/, // Private keys
+    /ik_[a-zA-Z0-9]{20,}/, // InsForge live API keys
   ];
 
   function scanDir(dir) {
+    if (!fs.existsSync(dir)) return;
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const ent of entries) {
       if (ent.isDirectory()) {
-        if (["node_modules", "dist", ".git", ".insforge", "brain"].includes(ent.name)) continue;
+        if (["node_modules", "dist", ".git", ".insforge", "brain", ".venv", "venv", "__pycache__", "downloads", "checkpoints", "kyc_uploaded", "kyc_huggingface", "merged", "raw_datasets"].includes(ent.name)) continue;
         scanDir(path.join(dir, ent.name));
       } else if (ent.isFile()) {
         const ext = path.extname(ent.name);
-        if ([".ts", ".tsx", ".js", ".jsx", ".json", ".sql", ".html"].includes(ext)) {
+        if ([".ts", ".tsx", ".js", ".jsx", ".json", ".sql", ".html", ".py"].includes(ext)) {
           const filePath = path.join(dir, ent.name);
-          // Skip example files, lockfiles, and tests that test patterns
-          if (filePath.includes(".example") || filePath.includes("package-lock") || filePath.includes("security.test.ts") || filePath.includes("security-check.cjs")) {
+          // Skip example files, lockfiles, scratch, and tests that test patterns
+          if (filePath.includes(".example") || filePath.includes("package-lock") || filePath.includes("security.test.ts") || filePath.includes("security-check.cjs") || filePath.includes("scratch")) {
             continue;
           }
           const content = fs.readFileSync(filePath, "utf-8");
@@ -81,6 +83,8 @@ runStep("Repository Secret Scan", () => {
   }
 
   scanDir(path.join(ROOT, "src"));
+  scanDir(path.join(ROOT, "scripts"));
+  scanDir(path.join(ROOT, "ai"));
 });
 
 // 4. Security Configuration Check

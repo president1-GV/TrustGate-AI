@@ -6,12 +6,21 @@ import { createClient } from '@insforge/sdk';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const BACKEND_URL = 'https://i8yy29ec.us-east.insforge.app';
-const ANON_KEY = 'anon_1c1ac97b969d1f89dcaa2fe5c5d971b282ef827ce8fec10ce27284935bf044e5';
-
-const DATA_FILE = 'C:\\Users\\VarunHarvard 1\\.gemini\\antigravity\\brain\\932142a7-6630-4922-9969-1c5148a6ddc1\\scratch\\prepared_data.json';
+const BACKEND_URL = process.env.INSFORGE_URL || process.env.VITE_INSFORGE_URL || '';
+const ANON_KEY = process.env.INSFORGE_ANON_KEY || process.env.VITE_INSFORGE_ANON_KEY || '';
+const DATA_FILE = process.env.DATA_FILE || path.resolve(__dirname, '../scratch/prepared_data.json');
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@trustgate.ai';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 
 async function migrate() {
+  if (!BACKEND_URL || !ANON_KEY || !ADMIN_PASSWORD) {
+    console.error('Error: INSFORGE_URL, INSFORGE_ANON_KEY, and ADMIN_PASSWORD environment variables are required.');
+    process.exit(1);
+  }
+  if (!fs.existsSync(DATA_FILE)) {
+    console.error('Data file not found:', DATA_FILE);
+    process.exit(1);
+  }
   console.log('Reading prepared data from:', DATA_FILE);
   const raw = fs.readFileSync(DATA_FILE, 'utf8');
   const data = JSON.parse(raw);
@@ -19,10 +28,10 @@ async function migrate() {
   const client = createClient({ baseUrl: BACKEND_URL, anonKey: ANON_KEY });
 
   // Sign in as admin to have full RLS clearance
-  console.log('Signing in as admin@trustgate.ai...');
+  console.log(`Signing in as ${ADMIN_EMAIL}...`);
   const { data: auth, error: authErr } = await client.auth.signInWithPassword({
-    email: 'admin@trustgate.ai',
-    password: 'TrustGate@SIH2026'
+    email: ADMIN_EMAIL,
+    password: ADMIN_PASSWORD
   });
   if (authErr) {
     console.error('Auth error:', authErr);

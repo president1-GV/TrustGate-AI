@@ -3,10 +3,10 @@ const { spawn } = require("child_process");
 const proc = spawn("npx", ["-y", "@insforge/mcp@latest"], {
   env: {
     ...process.env,
-    API_KEY: "ik_4162301826fa9e54e295bb36793528ef",
-    API_BASE_URL: "https://heicn84u.us-east.insforge.app",
-    INSFORGE_API_KEY: "ik_4162301826fa9e54e295bb36793528ef",
-    INSFORGE_URL: "https://heicn84u.us-east.insforge.app"
+    API_KEY: process.env.INSFORGE_API_KEY || "",
+    API_BASE_URL: process.env.INSFORGE_URL || "",
+    INSFORGE_API_KEY: process.env.INSFORGE_API_KEY || "",
+    INSFORGE_URL: process.env.INSFORGE_URL || ""
   },
   stdio: ["pipe", "pipe", "pipe"],
   shell: true

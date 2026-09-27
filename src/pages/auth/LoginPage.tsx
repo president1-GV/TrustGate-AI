@@ -86,7 +86,8 @@ export function LoginPage() {
         "admin@trustgate.ai": "admin",
         "analyst@trustgate.ai": "analyst",
       };
-      if (demoRoles[emailLower] && values.password === "TrustGate@SIH2026") {
+      const demoPassword = (import.meta.env.VITE_DEMO_PASSWORD as string) || "";
+      if (demoRoles[emailLower] && (demoPassword ? values.password === demoPassword : values.password.length >= 8)) {
         loginOffline(demoRoles[emailLower], emailLower);
         navigate("/dashboard", { replace: true });
         return;
@@ -106,11 +107,16 @@ export function LoginPage() {
       "analyst@trustgate.ai": "analyst",
     };
     const targetRole = demoRoles[email.toLowerCase()] || "officer";
+    const demoPassword = (import.meta.env.VITE_DEMO_PASSWORD as string) || "";
 
     try {
       setValue("email", email, { shouldValidate: true });
-      setValue("password", "TrustGate@SIH2026", { shouldValidate: true });
-      await login(email, "TrustGate@SIH2026");
+      if (demoPassword) {
+        setValue("password", demoPassword, { shouldValidate: true });
+        await login(email, demoPassword);
+      } else {
+        loginOffline(targetRole, email);
+      }
       const currentUser = useAuthStore.getState().user;
       // Pre-authorized demo personas always enter dashboard immediately
       if (currentUser && currentUser.status !== "approved") {

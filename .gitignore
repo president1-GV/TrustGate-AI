@@ -13,7 +13,7 @@
 .trae
 .windsurf
 
-# Dependencies and build
+# Dependencies and build artifacts
 node_modules
 dist
 .vite
@@ -21,29 +21,55 @@ dist
 venv
 __pycache__
 *.pyc
+*.tsbuildinfo
+*.local
+
+# Model checkpoints & weights containing proprietary/large artifacts
 midv_llm_engine/raw_datasets/
 ai/downloads/
 ai/checkpoints/
+*.onnx
+*.bin
+*.pt
+*.pth
+*.safetensors
+
+# Local datasets and biometric exports
 ai/datasets/kyc_uploaded/
 ai/datasets/kyc_huggingface/
 ai/datasets/merged/
-*.local
-*.tsbuildinfo
+datasets/
+data/
+*.dump
+*.sql.gz
+biometric_exports/
 
-# Secrets & temporary files
+# Secrets, private keys & sensitive credentials
 .env
-.env.local
-.env*.local
-.env.integration
+.env.*
+!.env.example
+!.env.integration.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.*
+secrets.*
 cli_secrets.txt
 cli_dbtables.txt
+
+# Local machine logs & scratch directories
+logs/
+*.log
 npm_install_log.txt
 scratch/
+local/
+private/
 
 # Nested duplicate folder
 TrustGate AI Billion/
 
-# OS / editor
+# OS & Editor
 .DS_Store
 Thumbs.db
 .vscode

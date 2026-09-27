@@ -1,0 +1,39 @@
+name: TRUSTGATE AI — Secure CI & Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Principle of Least Privilege: workflows only need read access to repository contents
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-and-build:
+    name: Security Hardening & Release Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Pinned Dependencies
+        run: npm ci
+
+      - name: Automated Security Check & Verification Suite
+        run: node scripts/security-check.cjs

@@ -950,7 +950,7 @@ export async function listCasesForDashboard(): Promise<DashboardSummary> {
     todayStart.setHours(0, 0, 0, 0);
     const todayIso = todayStart.toISOString();
 
-    let recentRes = await insforge.database.from("cases")
+    let recentRes: any = await insforge.database.from("cases")
       .select(CASE_BASE_SELECT)
       .order("created_at", { ascending: false })
       .limit(10);
@@ -1491,6 +1491,7 @@ export interface ReportRow {
   payload: any;
   created_at: string;
   cases?: {
+    id?: string;
     case_code: string;
     document_type: string;
     country_code?: string | null;

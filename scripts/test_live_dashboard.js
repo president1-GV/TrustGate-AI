@@ -1,13 +1,19 @@
 import { createClient } from '@insforge/sdk';
 
-const BACKEND_URL = 'https://i8yy29ec.us-east.insforge.app';
-const ANON_KEY = 'anon_1c1ac97b969d1f89dcaa2fe5c5d971b282ef827ce8fec10ce27284935bf044e5';
+const BACKEND_URL = process.env.INSFORGE_URL || process.env.VITE_INSFORGE_URL || '';
+const ANON_KEY = process.env.INSFORGE_ANON_KEY || process.env.VITE_INSFORGE_ANON_KEY || '';
+const TEST_EMAIL = process.env.TEST_EMAIL || 'officer@trustgate.ai';
+const TEST_PASSWORD = process.env.TEST_PASSWORD || '';
 
 async function test() {
+  if (!BACKEND_URL || !ANON_KEY || !TEST_PASSWORD) {
+    console.error('Error: INSFORGE_URL, INSFORGE_ANON_KEY, and TEST_PASSWORD environment variables are required.');
+    process.exit(1);
+  }
   const c = createClient({ baseUrl: BACKEND_URL, anonKey: ANON_KEY });
   const { data: auth, error: authErr } = await c.auth.signInWithPassword({
-    email: 'officer@trustgate.ai',
-    password: 'TrustGate@SIH2026'
+    email: TEST_EMAIL,
+    password: TEST_PASSWORD
   });
   if (authErr) {
     console.error('Auth error:', authErr);

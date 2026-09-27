@@ -38,13 +38,9 @@ if (typeof window !== "undefined" && window.localStorage) {
   } catch {}
 }
 
-let authInitPromise: Promise<string | null> | null = null;
-
 /**
  * Ensures that the InsForge SDK has a valid JWT session attached so that
- * PostgREST queries to /api/database/records/* succeed with 200 rather than 401.
- * If no session exists, automatically authenticates with the system credentials
- * and caches the token in localStorage.
+ * PostgREST queries succeed. Returns active token or null if unauthenticated.
  */
 export async function ensureAuthenticatedClient(): Promise<string | null> {
   try {
@@ -72,33 +68,8 @@ export async function ensureAuthenticatedClient(): Promise<string | null> {
     }
   }
 
-  // 3. Deduplicate in-flight authentication
-  if (authInitPromise) {
-    return authInitPromise;
-  }
-
-  authInitPromise = (async () => {
-    try {
-      const { data, error } = await insforge.auth.signInWithPassword({
-        email: "admin@trustgate.ai",
-        password: "TrustGate@SIH2026",
-      });
-      if (!error && data?.accessToken) {
-        if (typeof window !== "undefined" && window.localStorage) {
-          window.localStorage.setItem("tg_access_token", data.accessToken);
-        }
-        insforge.setAccessToken(data.accessToken);
-        return data.accessToken;
-      }
-    } catch (err) {
-      console.warn("[TrustGate] ensureAuthenticatedClient sign-in attempt:", err);
-    } finally {
-      authInitPromise = null;
-    }
-    return null;
-  })();
-
-  return authInitPromise;
+  // 3. No active session exists — caller must authenticate via user login
+  return null;
 }
 
 export type AppRole = "officer" | "supervisor" | "admin" | "analyst";

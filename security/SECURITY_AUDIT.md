@@ -31,9 +31,9 @@ TrustGate AI Billion is a high-security identity screening platform handling sen
 - **Affected Component:** `src/test/integration.test.ts`  
 - **Current State (pre-fix):**
   ```typescript
-  const ANON_KEY = "anon_27914c780a8b5aaa2eefe84c15f15c4bf1d4a95bbcdcac6ae7f6a0ae3469a89e";
+  const ANON_KEY = "anon_[REDACTED_HISTORICAL_TOKEN]";
   const DEMO_ACCOUNTS = {
-    admin: { email: "admin@trustgate.ai", password: "TrustGate@SIH2026", role: "admin" },
+    admin: { email: "admin@trustgate.ai", password: "[REDACTED_HISTORICAL_PASSWORD]", role: "admin" },
   ```
 - **Fix Applied:** Moved all credentials to environment variables (`INTEGRATION_BASE_URL`, `INTEGRATION_ANON_KEY`, `INTEGRATION_ADMIN_EMAIL`, `INTEGRATION_ADMIN_PASSWORD`, etc.). Added `.env.integration.example` file. Added `src/test/integration.test.ts` to `.gitignore` companion note.  
 - **Implementation Status:** ✅ FIXED  

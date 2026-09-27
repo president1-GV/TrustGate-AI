@@ -57,8 +57,8 @@ rey arene. JE 3a`;
     const mrz = await parseMrz(realAadhaarOcr, dummyCanvas);
 
     expect(mrz.present).toBe(false);
-    expect(mrz.rawLines.length).toBe(0);
-    expect(mrz.mismatches.length).toBe(0);
+    expect(mrz.rawLines?.length ?? 0).toBe(0);
+    expect(mrz.mismatches?.length ?? 0).toBe(0);
   });
 
   it("AADHAAR-02: Validates Aadhaar without requiring expiration date or ICAO MRZ", async () => {
@@ -96,7 +96,6 @@ rey arene. JE 3a`;
     const face: FaceResult = {
       detected: true,
       quality: 92,
-      confidence: 0.95,
       similarity: 90,
       livenessScore: 0.96,
     };
@@ -148,7 +147,6 @@ rey arene. JE 3a`;
     const face: FaceResult = {
       detected: true,
       quality: 88,
-      confidence: 0.92,
       similarity: 89,
       livenessScore: 0.94,
     };
@@ -187,7 +185,13 @@ rey arene. JE 3a`;
       tampering: { probability: 2, confidence: 0.98, severity: "NONE", regions: [] },
       face: { detected: true, quality: 90 },
       identity: { score: 95, perField: [] },
-      risk: { score: 14, level: "LOW", recommendedAction: "Proceed with clearance workflow." },
+      risk: {
+        score: 14,
+        level: "LOW",
+        recommendedAction: "Proceed with clearance workflow.",
+        engineVersion: "2.1.0",
+        factors: [],
+      },
       findings: [],
       modules: [],
       startedAt: Date.now() - 300,
