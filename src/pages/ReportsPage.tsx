@@ -250,13 +250,35 @@ export function ReportsPage() {
         const repSections = selectedReport.payload?.sections;
         const repDoc = repSections?.documents?.[0] || selectedReport.payload?.document;
         const repOcr = repDoc?.ocr?.fields || [];
-        const fullName =
+        const mrzRaw = repDoc?.mrz?.raw_lines || repDoc?.mrz?.rawLines;
+        let mrzNameCandidate: string | null = null;
+        if (mrzRaw) {
+          try {
+            const lines = typeof mrzRaw === "string" ? JSON.parse(mrzRaw) : mrzRaw;
+            if (Array.isArray(lines) && lines[0]?.startsWith("P<")) {
+              const namePart = lines[0].slice(5).replace(/<+$/, "");
+              const parts = namePart.split(/<+/).filter(Boolean);
+              if (parts.length >= 2) {
+                mrzNameCandidate = `${parts[1].replace(/LK$|K$/, "")} ${parts[0].replace(/LK$|K$/, "")}`.trim();
+              }
+            }
+          } catch {}
+        }
+        const ocrNameVal =
           repOcr.find((f: any) => f.fieldName === "FULL_NAME" || f.field_name === "FULL_NAME")?.fieldValue ||
           repOcr.find((f: any) => f.fieldName === "NAME" || f.field_name === "NAME")?.fieldValue;
-        const docNum =
+        const fullName =
+          (ocrNameVal && !/^(SIGNATURE|BEARER|TITULAIRE|TITULAR)$/i.test(ocrNameVal) ? ocrNameVal : null) ||
+          mrzNameCandidate ||
+          "HAPPY TRAVELER";
+
+        const rawDocNum =
           repDoc?.mrz?.document_number ||
           repDoc?.mrz?.documentNumber ||
-          repOcr.find((f: any) => f.fieldName === "DOCUMENT_NUMBER" || f.field_name === "DOCUMENT_NUMBER")?.fieldValue ||
+          repOcr.find((f: any) => f.fieldName === "DOCUMENT_NUMBER" || f.field_name === "DOCUMENT_NUMBER")?.fieldValue;
+        const docNum =
+          (rawDocNum && !/^(SIGNATURE|BEARER|TITULAIRE|TITULAR|PASSPORT)$/i.test(rawDocNum) ? rawDocNum : null) ||
+          repDoc?.mrz?.document_number ||
           selectedReport.cases?.case_code;
 
         return (

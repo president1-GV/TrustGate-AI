@@ -358,14 +358,44 @@ export async function saveScreeningCase(params: {
         ? "NORMAL"
         : "LOW";
 
+    const rawOcrUpper = (result.ocr?.rawText || "").toUpperCase();
+    const isPassport =
+      result.docDetect.documentType === "passport" ||
+      result.mrz?.format === "TD3" ||
+      result.mrz?.rawLines?.some((l) => l.startsWith("P<")) ||
+      rawOcrUpper.includes("PASSPORT") ||
+      rawOcrUpper.includes("PASSEPORT") ||
+      rawOcrUpper.includes("PASAPORTE") ||
+      rawOcrUpper.includes("UNITED STATES OF AMERICA");
+
+    const effectiveDocType = isPassport
+      ? "passport"
+      : result.docDetect.documentType;
+
+    const ocrNatField = result.ocr?.fields?.find(
+      (f) => f.fieldName === "NATIONALITY" || f.fieldName === "COUNTRY"
+    )?.fieldValue;
+    const cleanOcrNat =
+      ocrNatField && !/^(NIG|SO|NA|UNKNOWN)$/i.test(ocrNatField) ? ocrNatField : null;
+
+    const effectiveCountryCode =
+      (result.mrz?.nationality && result.mrz.nationality !== "NIG")
+        ? result.mrz.nationality
+        : (countryCode && countryCode !== "NIG")
+        ? countryCode
+        : cleanOcrNat ||
+          (rawOcrUpper.includes("UNITED STATES") || rawOcrUpper.includes("USA") ? "USA" : null) ||
+          (rawOcrUpper.includes("INDIA") || rawOcrUpper.includes("BHARAT") ? "IND" : null) ||
+          null;
+
     const caseInsert = await insforge.database.from("cases")
     .insert([
       {
         case_code: caseCode,
         created_by: validUserId,
         assigned_to: validUserId,
-        document_type: result.docDetect.documentType,
-        country_code: countryCode ?? null,
+        document_type: effectiveDocType,
+        country_code: effectiveCountryCode ?? null,
         status: "UNDER_REVIEW",
         risk_score: Math.round(result.risk.score),
         risk_level: result.risk.level,
@@ -386,8 +416,8 @@ export async function saveScreeningCase(params: {
     .insert([
       {
         case_id: caseId,
-        document_type: result.docDetect.documentType,
-        country_code: countryCode ?? null,
+        document_type: effectiveDocType,
+        country_code: effectiveCountryCode ?? null,
         image_quality_score: Math.round(result.imageQuality.score),
         image_width: imageWidth ?? null,
         image_height: imageHeight ?? null,

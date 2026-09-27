@@ -282,7 +282,54 @@ describe("Autonomous Document & Passport Credential Detector", () => {
     expect(detected.documentTitle).toBe("Awaiting Credential Capture");
   });
 
-  it("AUTODETECT-07: Unmatched non-credential image (e.g. desktop screenshot) yields matchedArchetypeId=null with zero fake data", () => {
+  it("AUTODETECT-08: Correctly detects US Passport (USA) with TD3 MRZ and rejects boilerplate SIGNATURE and NIG noise", () => {
+    const pipeResult = createMockPipelineResult({
+      docDetect: {
+        documentType: "passport",
+        confidence: 0.98,
+        boundingBox: { x: 50, y: 50, w: 900, h: 1300 },
+      },
+      mrz: {
+        present: true,
+        format: "TD3",
+        nationality: "USA",
+        documentNumber: "340007237",
+        dateOfBirth: "1967-07-04",
+        expiryDate: "2016-08-07",
+        sex: "F",
+        names: { primary: "TRAVELER", secondary: "HAPPY" },
+        checkDigitsValid: true,
+        compositeValid: true,
+        rawLines: [
+          "P<USATRAVELERLK<KHAPPY<KLLLKLLLLLLLLLLLLLLKL",
+          "3400072370USA6707046F1608078910000193<113538",
+        ],
+        mismatches: [],
+      },
+      ocr: {
+        provider: "tesseract.js",
+        rawText: "PASSPORT UNITED STATES OF AMERICA SIGNATURE OF BEARER TRAVELER HAPPY 04JUL1967",
+        overallConfidence: 0.92,
+        fields: [
+          { fieldName: "DOCUMENT_NUMBER", fieldValue: "340007237", confidence: 0.99, boundingBox: { x: 0, y: 0, w: 0, h: 0 }, source: "ocr" },
+          { fieldName: "NATIONALITY", fieldValue: "USA", confidence: 0.99, boundingBox: { x: 0, y: 0, w: 0, h: 0 }, source: "ocr" },
+          { fieldName: "FULL_NAME", fieldValue: "HAPPY TRAVELER", confidence: 0.95, boundingBox: { x: 0, y: 0, w: 0, h: 0 }, source: "ocr" },
+          { fieldName: "DATE_OF_BIRTH", fieldValue: "1967-07-04", confidence: 0.95, boundingBox: { x: 0, y: 0, w: 0, h: 0 }, source: "ocr" },
+        ],
+        executionMs: 140,
+      },
+    });
+
+    const detected = detectCredential(pipeResult, null, { width: 992, height: 1358 });
+
+    expect(detected.isDetected).toBe(true);
+    expect(detected.countryCode).toBe("USA");
+    expect(detected.countryName).toBe("United States of America");
+    expect(detected.documentType).toBe("passport");
+    expect(detected.standard).toBe("ICAO 9303 TD3");
+  });
+
+  it("AUTODETECT-09: Unmatched non-credential image (e.g. desktop screenshot) yields matchedArchetypeId=null with zero fake data", () => {
     const pipeResult = createMockPipelineResult({
       docDetect: {
         documentType: "unknown",

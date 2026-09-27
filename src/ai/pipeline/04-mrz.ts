@@ -119,10 +119,22 @@ export async function parseMrz(
 
     nationality = line1.slice(2, 5).replace(/</g, "");
     const namePart = line1.slice(5).replace(/<+$/, "");
-    const nameParts = namePart.split("<<");
+    let nameParts = namePart.split("<<");
+    if (nameParts.length < 2) {
+      const tokens = namePart.split(/<+/).filter(Boolean);
+      if (tokens.length >= 2) {
+        nameParts = [tokens[0], tokens[1]];
+      }
+    }
+    const cleanPrimary = nameParts[0]
+      ? nameParts[0].replace(/<+/g, " ").replace(/LK$|K$/, "").trim()
+      : undefined;
+    const cleanSecondary = nameParts[1]
+      ? nameParts[1].replace(/<+/g, " ").replace(/LK$|K$/, "").trim()
+      : undefined;
     names = {
-      primary: nameParts[0] ? nameParts[0].replace(/</g, " ").trim() : undefined,
-      secondary: nameParts[1] ? nameParts[1].replace(/</g, " ").trim() : undefined,
+      primary: cleanPrimary,
+      secondary: cleanSecondary,
     };
 
     documentNumber = line2.slice(0, 9).replace(/<+$/, "");

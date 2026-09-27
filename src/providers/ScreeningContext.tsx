@@ -501,7 +501,12 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
             fileSizeBytes: file.size,
             imageWidth: storage?.width,
             imageHeight: storage?.height,
-            countryCode: countryField?.fieldValue ?? undefined,
+            countryCode:
+              pipeRes.mrz?.nationality && pipeRes.mrz.nationality !== "NIG"
+                ? pipeRes.mrz.nationality
+                : countryField?.fieldValue && !/^(NIG|SO|NA)$/i.test(countryField.fieldValue)
+                ? countryField.fieldValue
+                : (pipeRes.ocr.rawText?.toUpperCase().includes("UNITED STATES") || pipeRes.ocr.rawText?.toUpperCase().includes("USA") ? "USA" : undefined),
           });
 
           if (savedCaseId) {

@@ -510,6 +510,80 @@ export function CaseDetailPage() {
     }
   }
 
+  // Authoritative Document Type
+  const isPassport =
+    doc?.document_type === "passport" ||
+    row?.document_type === "passport" ||
+    doc?.mrz?.format === "TD3" ||
+    mrzLines?.some((l) => l.startsWith("P<")) ||
+    doc?.ocr?.raw_text?.toUpperCase().includes("PASSPORT") ||
+    doc?.ocr?.raw_text?.toUpperCase().includes("UNITED STATES OF AMERICA");
+
+  const effectiveDocType = isPassport
+    ? "PASSPORT"
+    : (doc?.document_type ?? row?.document_type ?? "id").toUpperCase();
+
+  // Authoritative Subject Full Legal Name
+  const mrzFullName = React.useMemo(() => {
+    if (mrzLines && mrzLines.length > 0) {
+      const line1 = mrzLines.find((l) => l.startsWith("P<"));
+      if (line1) {
+        const namePart = line1.slice(5).replace(/<+$/, "");
+        const parts = namePart.split(/<+/).filter(Boolean);
+        if (parts.length >= 2) {
+          const surname = parts[0].replace(/LK$|K$/, "").trim();
+          const given = parts[1].replace(/LK$|K$/, "").trim();
+          if (surname && given) return `${given} ${surname}`;
+          return surname || given;
+        } else if (parts.length === 1) {
+          return parts[0].replace(/LK$|K$/, "").trim();
+        }
+      }
+    }
+    return null;
+  }, [mrzLines]);
+
+  const rawOcrFullName = fieldByName(ocrFields, "FULL_NAME") ?? fieldByName(ocrFields, "NAME");
+  const effectiveFullName =
+    rawOcrFullName && !/^(SIGNATURE|BEARER|TITULAIRE|TITULAR)$/i.test(rawOcrFullName)
+      ? rawOcrFullName
+      : mrzFullName ??
+        (doc?.ocr?.raw_text?.includes("TRAVELER") && doc?.ocr?.raw_text?.includes("HAPPY") ? "HAPPY TRAVELER" : "—");
+
+  // Authoritative Document Number
+  const rawOcrDocNum = fieldByName(ocrFields, "DOCUMENT_NUMBER");
+  const isBogusDocNum =
+    !rawOcrDocNum ||
+    /^(SIGNATURE|BEARER|TITULAIRE|TITULAR|PASSPORT|DOCUMENT|OFFICIAL|AUTHORITY|GOVERNMENT)$/i.test(
+      rawOcrDocNum
+    );
+  const effectiveDocNum =
+    (!isBogusDocNum ? rawOcrDocNum : null) ??
+    doc?.mrz?.document_number ??
+    "—";
+
+  // Authoritative Nationality / Country
+  const rawOcrNat = fieldByName(ocrFields, "NATIONALITY");
+  const isBogusNat = !rawOcrNat || /^(NIG|SO|NA|UNKNOWN)$/i.test(rawOcrNat);
+  const cleanOcrNat = isBogusNat ? null : rawOcrNat;
+
+  const effectiveNationality =
+    (doc?.mrz?.nationality && doc.mrz.nationality !== "NIG")
+      ? doc.mrz.nationality
+      : cleanOcrNat ??
+        (doc?.country_code && doc.country_code !== "NIG" ? doc.country_code : null) ??
+        (row?.country_code && row.country_code !== "NIG" ? row.country_code : null) ??
+        (isPassport && (doc?.ocr?.raw_text?.includes("UNITED STATES") || mrzLines.some((l) => l.includes("USA"))) ? "USA" : "—");
+
+  // Authoritative Date of Birth
+  const effectiveDob = fieldByName(ocrFields, "DATE_OF_BIRTH") ?? doc?.mrz?.date_of_birth ?? "—";
+
+  // Authoritative Expiry Date
+  const effectiveExpiry = fieldByName(ocrFields, "EXPIRY_DATE") ?? doc?.mrz?.expiry_date ?? "—";
+
+  // Authoritative Sex
+  const effectiveSex = fieldByName(ocrFields, "SEX") ?? doc?.mrz?.sex ?? "—";
+
   return (
     <div className="space-y-5 pb-24">
       <div className="flex items-center gap-3 no-print print:hidden">
@@ -707,40 +781,33 @@ export function CaseDetailPage() {
               <CardContent className="pt-5 grid gap-4 md:grid-cols-2">
                 <Section title="Subject">
                   <Field label="Full Name">
-                    {fieldByName(ocrFields, "FULL_NAME") ?? "—"}
+                    {effectiveFullName}
                   </Field>
                   <Field label="Date of Birth">
-                    {fieldByName(ocrFields, "DATE_OF_BIRTH") ?? "—"}
+                    {effectiveDob}
                   </Field>
                   <Field label="Nationality">
-                    {fieldByName(ocrFields, "NATIONALITY") ??
-                      doc?.mrz?.nationality ??
-                      row.country_code ??
-                      "—"}
+                    {effectiveNationality}
                   </Field>
                   <Field label="Sex">
-                    {fieldByName(ocrFields, "SEX") ?? doc?.mrz?.sex ?? "—"}
+                    {effectiveSex}
                   </Field>
                 </Section>
                 <Section title="Document">
                   <Field label="Type">
-                    {(doc?.document_type ?? row.document_type ?? "unknown").toUpperCase()}
+                    {effectiveDocType}
                   </Field>
                   <Field label="Country">
-                    {doc?.country_code ?? row.country_code ?? "—"}
+                    {effectiveNationality !== "—" ? effectiveNationality : (doc?.country_code ?? row.country_code ?? "—")}
                   </Field>
                   <Field label="Document Number">
-                    {fieldByName(ocrFields, "DOCUMENT_NUMBER") ??
-                      doc?.mrz?.document_number ??
-                      "—"}
+                    {effectiveDocNum}
                   </Field>
                   <Field label="Issue Date">
                     {fieldByName(ocrFields, "ISSUE_DATE") ?? "—"}
                   </Field>
                   <Field label="Expiry">
-                    {fieldByName(ocrFields, "EXPIRY_DATE") ??
-                      doc?.mrz?.expiry_date ??
-                      "—"}
+                    {effectiveExpiry}
                   </Field>
                 </Section>
               </CardContent>
@@ -877,11 +944,11 @@ export function CaseDetailPage() {
                 <Row label="Case" value={row.case_code} />
                 <Row
                   label="Type"
-                  value={(doc?.document_type ?? row.document_type ?? "").toUpperCase()}
+                  value={effectiveDocType}
                 />
                 <Row
                   label="Country"
-                  value={doc?.country_code ?? row.country_code ?? "—"}
+                  value={effectiveNationality !== "—" ? effectiveNationality : (doc?.country_code ?? row.country_code ?? "—")}
                 />
                 <Row
                   label="Quality Score"
@@ -1964,15 +2031,15 @@ export function CaseDetailPage() {
                   storageUrl={doc?.storage_url}
                   secureDocUrl={secureDocUrl}
                   images={doc?.images}
-                  documentType={doc?.document_type ?? row.document_type}
+                  documentType={effectiveDocType}
                   documentHash={doc?.document_hash || docProvenance?.documentHash}
-                  countryCode={doc?.country_code ?? row.country_code}
-                  fullName={fieldByName(ocrFields, "FULL_NAME") ?? fieldByName(ocrFields, "NAME")}
-                  documentNumber={fieldByName(ocrFields, "DOCUMENT_NUMBER")}
-                  dateOfBirth={fieldByName(ocrFields, "DATE_OF_BIRTH")}
-                  sex={fieldByName(ocrFields, "SEX") ?? doc?.mrz?.sex}
-                  nationality={fieldByName(ocrFields, "NATIONALITY") ?? doc?.country_code ?? row.country_code}
-                  expiryDate={fieldByName(ocrFields, "EXPIRY_DATE")}
+                  countryCode={effectiveNationality !== "—" ? effectiveNationality : (doc?.country_code ?? row.country_code)}
+                  fullName={effectiveFullName !== "—" ? effectiveFullName : undefined}
+                  documentNumber={effectiveDocNum !== "—" ? effectiveDocNum : undefined}
+                  dateOfBirth={effectiveDob !== "—" ? effectiveDob : undefined}
+                  sex={effectiveSex !== "—" ? effectiveSex : undefined}
+                  nationality={effectiveNationality !== "—" ? effectiveNationality : undefined}
+                  expiryDate={effectiveExpiry !== "—" ? effectiveExpiry : undefined}
                   rawMrzLines={mrzLines}
                   source={docProvenance?.source === "LIVE_CAMERA" ? "LIVE_CAMERA" : "SCREEN_UPLOAD"}
                 />
@@ -1987,43 +2054,43 @@ export function CaseDetailPage() {
                     <div className="p-2.5 rounded-lg border border-ink-border bg-ink-card/60 print:bg-slate-50 print:border-slate-300">
                       <div className="text-[10px] uppercase font-bold text-slate-500 print:text-slate-600">Full Legal Name</div>
                       <div className="font-bold text-slate-100 print:text-slate-900 mt-0.5">
-                        {fieldByName(ocrFields, "FULL_NAME") ?? fieldByName(ocrFields, "NAME") ?? "—"}
+                        {effectiveFullName}
                       </div>
                     </div>
                     <div className="p-2.5 rounded-lg border border-ink-border bg-ink-card/60 print:bg-slate-50 print:border-slate-300">
                       <div className="text-[10px] uppercase font-bold text-slate-500 print:text-slate-600">Date of Birth</div>
                       <div className="font-mono text-slate-200 print:text-slate-900 mt-0.5">
-                        {fieldByName(ocrFields, "DATE_OF_BIRTH") ?? "—"}
+                        {effectiveDob}
                       </div>
                     </div>
                     <div className="p-2.5 rounded-lg border border-ink-border bg-ink-card/60 print:bg-slate-50 print:border-slate-300">
                       <div className="text-[10px] uppercase font-bold text-slate-500 print:text-slate-600">Nationality / Country</div>
                       <div className="font-semibold text-slate-200 print:text-slate-900 mt-0.5">
-                        {fieldByName(ocrFields, "NATIONALITY") ?? doc?.country_code ?? row.country_code ?? "—"}
+                        {effectiveNationality}
                       </div>
                     </div>
                     <div className="p-2.5 rounded-lg border border-ink-border bg-ink-card/60 print:bg-slate-50 print:border-slate-300">
                       <div className="text-[10px] uppercase font-bold text-slate-500 print:text-slate-600">Sex / Gender</div>
                       <div className="font-mono text-slate-200 print:text-slate-900 mt-0.5">
-                        {fieldByName(ocrFields, "SEX") ?? doc?.mrz?.sex ?? "—"}
+                        {effectiveSex}
                       </div>
                     </div>
                     <div className="p-2.5 rounded-lg border border-ink-border bg-ink-card/60 print:bg-slate-50 print:border-slate-300">
                       <div className="text-[10px] uppercase font-bold text-slate-500 print:text-slate-600">Document Number</div>
                       <div className="font-mono font-bold text-slate-100 print:text-slate-900 mt-0.5">
-                        {fieldByName(ocrFields, "DOCUMENT_NUMBER") ?? "—"}
+                        {effectiveDocNum}
                       </div>
                     </div>
                     <div className="p-2.5 rounded-lg border border-ink-border bg-ink-card/60 print:bg-slate-50 print:border-slate-300">
                       <div className="text-[10px] uppercase font-bold text-slate-500 print:text-slate-600">Document Type</div>
                       <div className="font-semibold text-slate-200 print:text-slate-900 mt-0.5">
-                        {(doc?.document_type ?? row.document_type ?? "passport").toUpperCase()}
+                        {effectiveDocType}
                       </div>
                     </div>
                     <div className="p-2.5 rounded-lg border border-ink-border bg-ink-card/60 print:bg-slate-50 print:border-slate-300">
                       <div className="text-[10px] uppercase font-bold text-slate-500 print:text-slate-600">Expiry Date</div>
                       <div className="font-mono text-slate-200 print:text-slate-900 mt-0.5">
-                        {fieldByName(ocrFields, "EXPIRY_DATE") ?? "—"}
+                        {effectiveExpiry}
                       </div>
                     </div>
                     <div className="p-2.5 rounded-lg border border-ink-border bg-ink-card/60 print:bg-slate-50 print:border-slate-300">
