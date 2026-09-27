@@ -424,17 +424,8 @@ export function SihScreeningDashboard() {
 
   // Compute authentic document image URL (NO fake Canva/simulation SVGs allowed)
   const effectiveDocImage = React.useMemo(() => {
-    // 1. Live document image uploaded or captured in this session (highest priority)
-    if (uploadedFileUrl) {
-      return uploadedFileUrl;
-    }
-    if (ctxDocImage) {
-      const cleanCtx = resolveCleanDocumentUrl(ctxDocImage);
-      if (cleanCtx) return cleanCtx;
-    }
-
-    // 2. Active database case document (only authentic stored images, skip if failed)
-    if (activeRealCaseBundle && !docImageLoadFailed) {
+    // 1. If actively inspecting a specific historical database case selected by officer:
+    if (selectedDbCaseId && selectedDbCaseId !== "NEW_INGESTION" && activeRealCaseBundle && !docImageLoadFailed) {
       const doc = activeRealCaseBundle.documents?.[0];
       const resolved = resolveCleanDocumentUrl(doc?.storage_url, doc?.storage_key);
       if (resolved) return resolved;
@@ -443,9 +434,21 @@ export function SihScreeningDashboard() {
       if (subResolved) return subResolved;
     }
 
+    // 2. Current live screening document from ScreeningContext (Single Source of Truth)
+    if (ctxDocImage) {
+      const cleanCtx = resolveCleanDocumentUrl(ctxDocImage);
+      if (cleanCtx) return cleanCtx;
+    }
+
+    // 3. Live document image uploaded or captured in this session
+    if (uploadedFileUrl) {
+      return uploadedFileUrl;
+    }
+
     // Absolutely NO fake simulated Canva/vector SVGs - return null so Standby UI is displayed
     return null;
   }, [
+    selectedDbCaseId,
     docImageLoadFailed,
     ctxDocImage,
     uploadedFileUrl,
@@ -737,7 +740,7 @@ export function SihScreeningDashboard() {
             return;
           }
         }
-        if (loaded.length > 0 && !selectedDbCaseId) {
+        if (loaded.length > 0 && !selectedDbCaseId && !ctxDocImage) {
           const first = loaded[0];
           setSelectedDbCaseId(first.id);
           setCurrentCaseId(first.case_code);
@@ -747,11 +750,19 @@ export function SihScreeningDashboard() {
     } catch (err) {
       console.warn("[TrustGate] Error refreshing DB cases:", err);
     }
-  }, [loadCaseAndRunLlm, selectedDbCaseId]);
+  }, [loadCaseAndRunLlm, selectedDbCaseId, ctxDocImage]);
 
   React.useEffect(() => {
     refreshDbCases();
   }, [refreshDbCases]);
+
+  // Synchronize when current screening context document image changes
+  React.useEffect(() => {
+    if (ctxDocImage) {
+      setUploadedFileUrl(ctxDocImage);
+      setSelectedDbCaseId("NEW_INGESTION");
+    }
+  }, [ctxDocImage]);
 
   // Cleanup camera streams on unmount
   React.useEffect(() => {
@@ -1096,12 +1107,32 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
       };
     }
 
-    // 2. If real-time screening context pipeline result exists:
     if (ctxPipelineResult) {
       const pipeRisk = Math.round(ctxPipelineResult.risk?.score ?? 15);
-      const tamperProb = Math.round((ctxPipelineResult.tampering?.probability ?? 0.05) * 100);
-      const mrzFail = ctxPipelineResult.mrz?.compositeValid === false ? 80 : 5;
-      const faceRisk = ctxPipelineResult.face?.detected ? (100 - Math.round((ctxPipelineResult.face?.quality ?? 0.88) * 100)) : 40;
+      const rawTamper = ctxPipelineResult.tampering?.probability ?? 5;
+      const tamperProb = Math.round(rawTamper > 1 ? rawTamper : rawTamper * 100);
+
+      const docTypeLower = (ctxPipelineResult.docDetect?.documentType || "").toLowerCase();
+      const isAadhaarOrPan =
+        docTypeLower.includes("aadhaar") ||
+        docTypeLower.includes("pan") ||
+        (ctxPipelineResult.ocr?.fields || []).some(
+          (f) => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")
+        );
+
+      const mrzFail = isAadhaarOrPan
+        ? 5
+        : ctxPipelineResult.mrz?.present === false
+        ? 65
+        : ctxPipelineResult.mrz?.compositeValid === false
+        ? 80
+        : 5;
+
+      const rawFaceQ = ctxPipelineResult.face?.quality ?? 88;
+      const normFaceQ = rawFaceQ <= 1 ? rawFaceQ * 100 : rawFaceQ;
+      const faceRisk = ctxPipelineResult.face?.detected
+        ? Math.max(0, 100 - Math.round(normFaceQ))
+        : 35;
       const rulesRisk = ctxDbResult?.watchlistHit ? 85 : 5;
 
       return {
@@ -1304,8 +1335,8 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
       };
     }
     if (ctxPipelineResult) {
-      const tamperProb = ctxPipelineResult.tampering?.probability ?? 0;
-      const photoAnomaly = Math.round(tamperProb * 100);
+      const rawTamper = ctxPipelineResult.tampering?.probability ?? 0;
+      const photoAnomaly = Math.round(rawTamper > 1 ? rawTamper : rawTamper * 100);
       const findings = ctxPipelineResult.findings || [];
       const indicators = findings
         .filter((f) => f.title.toLowerCase().includes("tamper") || f.title.toLowerCase().includes("ela") || f.severity !== "PASS")

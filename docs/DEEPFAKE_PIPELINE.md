@@ -1,5 +1,5 @@
 # TRUSTGATE AI BILLION — BIOMETRIC DEEPFAKE & PRESENTATION ATTACK PIPELINE
-**Specification Standard**: SIH Problem Statement 26188 (AI-Based Fake Identity & Document Screening System)  
+**Specification Standard**: Border Gateway National Border Security Standard (AI-Based Fake Identity & Document Screening System)  
 **Component**: `DeepfakePresentationAttackDetector` (`ai/deepfake_detection/detector.py`)  
 **Model Version**: `2.1.0-production`  
 **Security Standard**: ISO/IEC 30107-3 (Biometric Presentation Attack Detection)

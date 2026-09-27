@@ -1,5 +1,5 @@
 # TRUSTGATE AI — AI MODEL PROVENANCE & WEIGHT INTEGRITY SPECIFICATION
-**SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System**  
+**Border Gateway National Border Security Standard: AI-Based Fake Identity & Document Screening System**  
 **Document Reference:** TG-SPEC-2026-09-MOD  
 **Classification:** TECHNICAL STANDARD — MODEL ACCOUNTABILITY & PROVENANCE  
 

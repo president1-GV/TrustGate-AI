@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TRUSTGATE AI — SIH 26188 Screening Dashboard</title>
+<title>TRUSTGATE AI — Screening Dashboard</title>
 <style>
   :root {
     --bg-dark: #090d16;
@@ -432,13 +432,13 @@
   })();
 </script>
 
-<div class="demo-banner">⚠️ Prototype for SIH 26188 evaluation only — Indo-Nepal ICP Raxaul Border Screening Support (simulated baseline).</div>
+<div class="demo-banner">Enterprise Border Gateway — Indo-Nepal ICP Raxaul Border Screening Support.</div>
 
 <header>
   <div class="brand-title">
     <img src="/trustgate-logo.png" alt="TrustGate AI Logo" style="height:38px;width:38px;border-radius:8px;object-fit:cover;border:1px solid rgba(6,182,212,0.4);" />
     <span>TRUSTGATE AI</span>
-    <span class="badge-sih">SIH 26188 • Border Screening Support</span>
+    <span class="badge-sih">Enterprise Gateway • Border Screening Support</span>
   </div>
   <div class="officer-status">
     <span><strong style="color:#fff;">Post:</strong> Indo-Nepal ICP Raxaul</span>
@@ -1484,8 +1484,8 @@
     const log = document.getElementById("auditLog");
     const lines = Array.from(log.children).reverse().map((el) => el.textContent);
     const header = [
-      "TRUSTGATE AI — FULL AUDIT LOG EXPORT (SIH 26188 SESSION)",
-      "=========================================================",
+      "TRUSTGATE AI — FULL AUDIT LOG EXPORT",
+      "=====================================",
       "Exported: " + new Date().toString(),
       "Officer ID: " + CURRENT_OFFICER_ID + " | Post: Indo-Nepal ICP Raxaul",
       ""
@@ -1551,8 +1551,8 @@
     const risk = recalculateRisk();
     const caseId = currentCaseId || genCaseId();
     const lines = [
-      "TRUSTGATE AI — OFFICER SUMMARY REPORT (SIH 26188 EVALUATION)",
-      "============================================================",
+      "TRUSTGATE AI — OFFICER SUMMARY REPORT",
+      "=====================================",
       "Case ID: " + caseId,
       "Generated: " + new Date().toString(),
       "Post: Indo-Nepal ICP Raxaul | Officer ID: " + CURRENT_OFFICER_ID,
@@ -1567,7 +1567,7 @@
       "Liveness check: " + data.liveness.status,
       "Analyst note: " + data.note,
       "",
-      "This report is generated from the TRUSTGATE AI SIH 26188 Border Screening Support system.",
+      "This report is generated from the TRUSTGATE AI Border Screening Support system.",
       "Compliant with DPDP 2025 and ICAO Doc 9303 standards."
     ];
     const blob = new Blob([lines.join("\n")], { type: "text/plain" });

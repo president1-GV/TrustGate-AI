@@ -319,8 +319,15 @@ export function ScreeningPage() {
   const screeningCtx = useScreeningContext();
 
   // Synchronize with Single Source of Truth ScreeningContext if a document was ingested in the portal
+  const lastSyncedRunIdRef = React.useRef<string | null>(null);
+
   React.useEffect(() => {
-    if (screeningCtx.pipelineResult && !result) {
+    if (
+      screeningCtx.pipelineResult &&
+      screeningCtx.processingRunId &&
+      screeningCtx.processingRunId !== lastSyncedRunIdRef.current
+    ) {
+      lastSyncedRunIdRef.current = screeningCtx.processingRunId;
       setResult(screeningCtx.pipelineResult);
       if (screeningCtx.documentImage) {
         setStorageInfo({
@@ -344,7 +351,7 @@ export function ScreeningPage() {
         setCaptureSource(screeningCtx.captureSource === "LIVE_CAMERA" ? "camera" : "upload");
       }
     }
-  }, [screeningCtx.pipelineResult, result]);
+  }, [screeningCtx.pipelineResult, screeningCtx.processingRunId]);
 
   // Track blob URLs so we can revoke them when the component unmounts
   // or when a new file is loaded (prevents memory leaks for large files)
@@ -962,7 +969,7 @@ export function ScreeningPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link
-            to="/sih-screening"
+            to="/border-gateway"
             className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-signal-cyan/40 bg-signal-cyan/10 text-signal-cyan hover:bg-signal-cyan/20 transition-colors"
           >
             <ShieldAlert className="h-3.5 w-3.5" />

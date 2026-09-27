@@ -1,5 +1,5 @@
 # TrustGate AI — Model Training, Calibration & Optimization Report
-**Smart India Hackathon (SIH 26188)**  
+**Smart India Hackathon (TrustGate Border Gateway)**  
 **Document**: Model Calibration, Weights Management & Optimization Audit  
 **Date**: 2026-09-08  
 **Status**: ACTIVE PRODUCTION  

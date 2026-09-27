@@ -1,5 +1,5 @@
 # TrustGate AI — Security & Cybersecurity Audit
-**Smart India Hackathon (SIH 26188)**  
+**Smart India Hackathon (TrustGate Border Gateway)**  
 **Document**: Cybersecurity Architecture & Production Hardening Audit  
 **Status**: ACTIVE PRODUCTION  
 

@@ -1,5 +1,5 @@
 # TRUSTGATE AI — BLOCKCHAIN PRE-INTEGRATION FORENSIC AUDIT
-**SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System**  
+**Border Gateway National Border Security Standard: AI-Based Fake Identity & Document Screening System**  
 **Document Classification:** RESTRICTED / INSTITUTIONAL BORDER DEFENSE AUDIT  
 **Date:** September 2026  
 **Auditor:** Principal AI/ML & Cryptographic Systems Engineer  
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary & Audit Mandate
 
-This forensic audit establishes the rigorous technical baseline of **TRUSTGATE AI** prior to the integration of the enterprise blockchain-backed evidence integrity and provenance layer. Under Smart India Hackathon (SIH) Problem 26188, TRUSTGATE AI serves as an automated border and checkpoint screening platform deployed to detect fraudulent identity credentials (passports, visas, Aadhaar, PAN, voter cards) across high-throughput land and airport border checkpoints (e.g., SSB ICP Raxaul / Birgunj border).
+This forensic audit establishes the rigorous technical baseline of **TRUSTGATE AI** prior to the integration of the enterprise blockchain-backed evidence integrity and provenance layer. Under National Border Security Agency Problem Border Gateway Standard, TRUSTGATE AI serves as an automated border and checkpoint screening platform deployed to detect fraudulent identity credentials (passports, visas, Aadhaar, PAN, voter cards) across high-throughput land and airport border checkpoints (e.g., SSB ICP Raxaul / Birgunj border).
 
 ### Core Audit Principles & Invariants:
 1. **The Blockchain Is Not The AI Engine:** All optical character recognition, MRZ checkdigit validation, neural face anti-spoofing, Error Level Analysis (ELA) tampering detection, and Bayesian risk synthesis execute within the dedicated AI inference and frontend pipeline.

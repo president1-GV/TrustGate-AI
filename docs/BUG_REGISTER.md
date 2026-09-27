@@ -1,5 +1,5 @@
 # TrustGate AI — Production Bug Register & Root Cause Analysis
-**Smart India Hackathon (SIH 26188)**  
+**Smart India Hackathon (TrustGate Border Gateway)**  
 **Document**: Production Debugging Log & Resolution Catalog  
 **Status**: ALL RESOLVED & VERIFIED  
 

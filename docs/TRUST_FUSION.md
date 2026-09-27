@@ -1,5 +1,5 @@
 # TrustGate AI — Multi-Modal Bayesian Trust Fusion Engine
-**Smart India Hackathon (SIH 26188)**  
+**Smart India Hackathon (TrustGate Border Gateway)**  
 **Document**: Trust Fusion Mathematics & Decision Logic  
 **Status**: ACTIVE PRODUCTION  
 

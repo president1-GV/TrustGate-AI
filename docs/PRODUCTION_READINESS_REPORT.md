@@ -1,5 +1,5 @@
 # TrustGate AI — Production Readiness & Deployment Certification
-**Smart India Hackathon (SIH 26188)**  
+**Smart India Hackathon (TrustGate Border Gateway)**  
 **Document**: Production Readiness Certification  
 **Date**: 2026-09-08  
 **System Version**: 2.2.0-Production  

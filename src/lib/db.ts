@@ -290,6 +290,12 @@ const CASE_BASE_SELECT = `
   assigned:profiles!cases_assigned_to_fkey(id,display_name)
 `;
 
+const CASE_PLAIN_SELECT = `
+  id,case_code,created_by,created_at,updated_at,document_type,country_code,
+  status,risk_score,risk_level,processing_time_ms,review_status,priority,
+  is_demo,officer_decision,decision_timestamp,notes
+`;
+
 function toCaseRow(row: any): CaseRow {
   return {
     ...row,
@@ -685,6 +691,20 @@ export async function fetchCaseDetails(
         .maybeSingle();
     }
 
+    // 3. Resilient fallback to plain select if relational join failed
+    if (caseRes.error) {
+      caseRes = await insforge.database.from("cases")
+        .select(CASE_PLAIN_SELECT)
+        .eq("id", caseId)
+        .maybeSingle();
+      if (!caseRes.data && !caseRes.error) {
+        caseRes = await insforge.database.from("cases")
+          .select(CASE_PLAIN_SELECT)
+          .eq("case_code", caseId)
+          .maybeSingle();
+      }
+    }
+
     if (caseRes.error) throw caseRes.error;
     if (!caseRes.data) return fetchCaseDetailsOffline(caseId);
     const row = toCaseRow(caseRes.data);
@@ -840,7 +860,24 @@ export async function listCasesForManagement(filters: {
     if (filters.dateFrom) q = q.gte("created_at", filters.dateFrom);
     if (filters.dateTo) q = q.lte("created_at", filters.dateTo);
     q = q.order("created_at", { ascending: false }).limit(200);
-    const res = await q;
+    let res = await q;
+
+    // Resilient fallback: if joined query fails, try plain select
+    if (res.error) {
+      console.warn("[TrustGate] CASE_BASE_SELECT join failed, falling back to plain select:", res.error);
+      let qPlain: any = insforge.database.from("cases").select(CASE_PLAIN_SELECT);
+      if (filters.risk && filters.risk !== "ALL")
+        qPlain = qPlain.eq("risk_level", filters.risk);
+      if (filters.status && filters.status !== "ALL")
+        qPlain = qPlain.eq("status", filters.status);
+      if (filters.officer && filters.officer !== "ALL")
+        qPlain = qPlain.eq("created_by", filters.officer);
+      if (filters.dateFrom) qPlain = qPlain.gte("created_at", filters.dateFrom);
+      if (filters.dateTo) qPlain = qPlain.lte("created_at", filters.dateTo);
+      qPlain = qPlain.order("created_at", { ascending: false }).limit(200);
+      res = await qPlain;
+    }
+
     if (res.error) throw res.error;
     let rows: CaseRow[] = (res.data ?? []).map(toCaseRow);
     if (filters.search?.trim()) {
@@ -858,13 +895,21 @@ export async function listCasesForManagement(filters: {
         return hay.includes(s);
       });
     }
+
+    // If remote returned 0 rows, check offline cache as an additional safeguard
+    if (rows.length === 0) {
+      const offlineRows = await listCasesForManagementOffline(filters);
+      if (offlineRows.length > 0) return offlineRows;
+    }
+
     return rows;
   } catch (err) {
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      return listCasesForManagementOffline(filters);
+    console.warn("[TrustGate] Remote listCasesForManagement failed, falling back to local DB:", err);
+    try {
+      return await listCasesForManagementOffline(filters);
+    } catch {
+      return [];
     }
-    console.warn("[TrustGate] Remote listCasesForManagement failed:", err);
-    return [];
   }
 }
 
@@ -905,10 +950,16 @@ export async function listCasesForDashboard(): Promise<DashboardSummary> {
     todayStart.setHours(0, 0, 0, 0);
     const todayIso = todayStart.toISOString();
 
-    const recentRes = await insforge.database.from("cases")
+    let recentRes = await insforge.database.from("cases")
       .select(CASE_BASE_SELECT)
       .order("created_at", { ascending: false })
       .limit(10);
+    if (recentRes.error) {
+      recentRes = await insforge.database.from("cases")
+        .select(CASE_PLAIN_SELECT)
+        .order("created_at", { ascending: false })
+        .limit(10);
+    }
     if (recentRes.error) throw recentRes.error;
     let recentCases = (recentRes.data ?? []).map(toCaseRow);
     if (recentCases.length === 0 && all.length > 0) {

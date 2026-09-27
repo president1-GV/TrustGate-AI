@@ -125,6 +125,10 @@ export function detectCredential(
       rawText.includes("BHARAT") ||
       rawText.includes("GOVERNMENT OF INDIA") ||
       rawText.includes("AADHAAR") ||
+      rawText.includes("AADHAR") ||
+      rawText.includes("UIDAI") ||
+      rawText.includes("आधार") ||
+      rawText.includes("भारत सरकार") ||
       rawText.includes("INCOME TAX DEPARTMENT") ||
       rawText.includes("PASSPORT INDIA")
     ) {
@@ -220,8 +224,16 @@ export function detectCredential(
     if (!countryCode) countryCode = "IND";
   } else if (
     rawText.includes("AADHAAR") ||
-    rawText.includes("UNIQUE IDENTIFICATION AUTHORITY") ||
-    /\d{4}\s\d{4}\s\d{4}/.test(rawText)
+    rawText.includes("AADHAR") ||
+    rawText.includes("ADHAAR") ||
+    rawText.includes("UNIQUE IDENTIFICATION") ||
+    rawText.includes("UIDAI") ||
+    rawText.includes("MERA AADHAAR") ||
+    rawText.includes("MERI PEHCHAN") ||
+    rawText.includes("आधार") ||
+    rawText.includes("भारत सरकार") ||
+    /\b[2-9]\d{3}[\s\-]?[0-9]{4}[\s\-]?[0-9]{4}\b/.test(rawText) ||
+    /(?:X{4}|[xX]{4}|\*{4}|•{4})[\s\-]+(?:X{4}|[xX]{4}|\*{4}|•{4})[\s\-]+\d{4}/.test(rawText)
   ) {
     docType = "aadhaar";
     docTitle = "Unique Identification Authority of India (Aadhaar)";

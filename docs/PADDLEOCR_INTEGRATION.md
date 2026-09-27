@@ -1,5 +1,5 @@
 # TrustGate AI — Official PaddleOCR 3.7.0 Integration Architecture
-**Smart India Hackathon (SIH) Problem Statement 26188**  
+**National Border Security Agency National Border Security Standard**  
 **Document**: Technical Integration Guide & Architecture  
 **Author**: Principal AI/CV Engineer & Forensic Specialist  
 **Status**: ACTIVE PRODUCTION  

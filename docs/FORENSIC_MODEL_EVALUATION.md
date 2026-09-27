@@ -1,5 +1,5 @@
 # TrustGate AI — Forensic Model Evaluation & Metric Report
-**Smart India Hackathon (SIH 26188)**  
+**Smart India Hackathon (TrustGate Border Gateway)**  
 **Document**: Empirical Evaluation of Forensic Tampering & Deepfake Detection  
 **Date**: 2026-09-08  
 **Status**: AUDITED & VERIFIED  

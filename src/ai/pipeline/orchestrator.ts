@@ -83,7 +83,8 @@ function statusForStep03(ocr: OcrResult): PipelineStatus {
   if (ocr.overallConfidence < 0.6) return "FAIL";
   return "WARNING";
 }
-function statusForStep04(mrz: MrzResult): PipelineStatus {
+function statusForStep04(mrz: MrzResult, isNonMrzDoc?: boolean): PipelineStatus {
+  if (isNonMrzDoc) return "PASS";
   if (mrz.present && mrz.compositeValid) return "PASS";
   if (mrz.present && !mrz.compositeValid) return "WARNING";
   return "FAIL";
@@ -367,12 +368,19 @@ export async function runPipeline(
   // Upgrade document type if OCR reveals Indian Aadhaar
   const rawTextUpper = (ocr.rawText || "").toUpperCase();
   const isAadhaarDoc =
+    docDetect.documentType === "aadhaar" ||
     rawTextUpper.includes("AADHAAR") ||
-    rawTextUpper.includes("UNIQUE IDENTIFICATION AUTHORITY OF INDIA") ||
+    rawTextUpper.includes("AADHAR") ||
+    rawTextUpper.includes("ADHAAR") ||
+    rawTextUpper.includes("UNIQUE IDENTIFICATION") ||
     rawTextUpper.includes("UIDAI") ||
-    ocr.fields.some(f => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
-    (ocr.fields.some(f => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
-      ocr.fields.some(f => f.fieldName === "DOCUMENT_NUMBER" && /^\d{4}\s\d{4}\s\d{4}$/.test(f.fieldValue || "")));
+    rawTextUpper.includes("MERA AADHAAR") ||
+    rawTextUpper.includes("MERI PEHCHAN") ||
+    rawTextUpper.includes("आधार") ||
+    rawTextUpper.includes("भारत सरकार") ||
+    ocr.fields.some((f) => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
+    (ocr.fields.some((f) => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
+      ocr.fields.some((f) => f.fieldName === "DOCUMENT_NUMBER" && /\d{4}/.test(f.fieldValue || "")));
 
   if (isAadhaarDoc) {
     docDetect.documentType = "aadhaar";

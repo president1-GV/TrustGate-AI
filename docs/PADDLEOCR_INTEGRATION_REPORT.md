@@ -1,5 +1,5 @@
 # TrustGate AI — Official PaddleOCR 3.7.0 Integration Report
-**Smart India Hackathon (SIH 26188)**  
+**Smart India Hackathon (TrustGate Border Gateway)**  
 **Document**: Verification & Audit Report on PaddleOCR Integration  
 **Date**: 2026-09-08  
 **Status**: VERIFIED PRODUCTION READY  

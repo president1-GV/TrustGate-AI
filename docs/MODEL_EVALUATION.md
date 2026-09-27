@@ -1,5 +1,5 @@
 # TRUSTGATE AI BILLION — MODEL EVALUATION & BENCHMARKING REPORT
-**Problem Statement**: SIH 26188 (AI-Based Fake Identity & Document Screening System)  
+**Problem Statement**: TrustGate Border Gateway (AI-Based Fake Identity & Document Screening System)  
 **Evaluation Corpus**: Indian KYC Test Set (Strictly Disjoint 450 Test Specimens)  
 **Benchmark Scope**: Aadhaar, PAN, Indian Passport, Indian Visa, Voter ID (EPIC)  
 **Evaluation Script**: `ai/evaluation/evaluate_kyc_baseline.py`  

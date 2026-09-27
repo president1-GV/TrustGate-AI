@@ -1,5 +1,5 @@
 # TrustGate AI — Dataset Provenance & Benchmark Isolation Catalog
-**Smart India Hackathon (SIH 2024 / Problem Statement 26188)**  
+**Smart India Hackathon (Border Gateway 2024 / National Border Security Standard)**  
 **Document**: Dataset Registry & Anti-Contamination Catalog  
 **Status**: ACTIVE PRODUCTION  
 

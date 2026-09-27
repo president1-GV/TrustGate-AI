@@ -75,10 +75,13 @@ export async function detectDocument(
     documentType = "visa";
     confidence = 0.85;
   }
-  // Widescreen 16:9 capture or desktop screenshot (aspect ~1.77)
-  else if (aspect >= 1.74 && aspect <= 1.84) {
-    // A 16:9 frame is non-standard for physical credentials (TD3 is ~1.42, TD1 is ~1.586).
-    // Without confirmed MRZ or card boundaries, classify as unknown.
+  // Widescreen 16:9 capture or phone camera framing of document (aspect ~1.74 - 1.85)
+  else if (aspect >= 1.74 && aspect <= 1.85 && hasDocumentTextStructure) {
+    documentType = "id";
+    confidence = 0.78;
+  }
+  else if (aspect >= 1.74 && aspect <= 1.85) {
+    // Without document structure, classify as unknown desktop frame/screenshot
     documentType = "unknown";
     confidence = 0.35;
   }

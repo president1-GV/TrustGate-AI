@@ -1,5 +1,5 @@
 # KYC DATASET GOVERNANCE SPECIFICATION — TRUSTGATE AI
-**SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System**
+**Border Gateway National Border Security Standard: AI-Based Fake Identity & Document Screening System**
 **Effective Date**: September 22, 2026
 **Governance Classification**: RESTRICTED INTERNAL TRAINING & BENCHMARK ASSET
 
@@ -23,10 +23,10 @@
 ### Dataset 1: Uploaded Indian KYC Multi-Class Archive (Primary Training & Benchmark Asset)
 - **dataset_id**: `KYC-IND-3000-UPLOADED`
 - **dataset_name**: Indian KYC Document Extraction & Classification Dataset (3,000 Specimens)
-- **source**: Local Archive (`dataset for SIH26188 (addhar,pan,visa,passport,voter-id).zip`)
-- **URL**: Local developer path `C:\Users\VarunHarvard 1\OneDrive\Desktop\dataset for SIH26188 (addhar,pan,visa,passport,voter-id).zip`
-- **license**: Research / Evaluation under SIH 26188 Academic Sandbox
-- **creator**: SIH26188 Benchmark Contributor / Jwalit
+- **source**: Local Archive (`dataset for TrustGate Border Gateway (addhar,pan,visa,passport,voter-id).zip`)
+- **URL**: Local developer path `C:\Users\VarunHarvard 1\OneDrive\Desktop\dataset for TrustGate Border Gateway (addhar,pan,visa,passport,voter-id).zip`
+- **license**: Research / Evaluation under TrustGate Border Gateway Academic Sandbox
+- **creator**: TrustGate Border Gateway Benchmark Contributor / Jwalit
 - **version**: 1.0.0
 - **download_date**: 2026-09-08 / 2026-09-22
 - **image_count**: 3,000 unique JPEG/PNG images

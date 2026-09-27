@@ -1,5 +1,5 @@
 # TRUSTGATE AI — EVIDENCE MANIFEST SPECIFICATION
-**SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System**  
+**Border Gateway National Border Security Standard: AI-Based Fake Identity & Document Screening System**  
 **Document Reference:** TG-SPEC-2026-09-MAN  
 **Specification Version:** 1.0.0 (Normative)  
 **Schema URI:** `https://trustgate.gov.in/schemas/evidence-manifest-v1.json`

@@ -1,7 +1,7 @@
 # TrustGate AI Billion — Security Audit
 
 **Platform:** AI-Powered Identity & Document Security Screening  
-**SIH Problem:** 26188  
+**Border Gateway Problem:** Border Gateway Standard  
 **Audit Date:** September 2026  
 **Auditor:** Principal Application Security Engineer (Automated)  
 **Scope:** Full codebase, backend configuration, database policies, AI pipeline  
@@ -47,7 +47,7 @@ TrustGate AI Billion is a high-security identity screening platform handling sen
 - **Description:** `insforge.toml` configured `min_length = 6` with no complexity requirements and `require_email_verification = false`. Inappropriate for a government border-security platform.  
 - **Attack Scenario:** Brute-force or credential-stuffing attack against officer accounts is trivial with 6-character minimum and no lockout. No email verification means accounts can be created with arbitrary addresses.  
 - **Affected Component:** `insforge.toml`  
-- **Fix Applied:** Increased `min_length = 12`, enabled `require_number`, `require_uppercase`, `require_special_char`. Note: `require_email_verification` kept `false` for SIH demo usability; recommended to enable for production deployment.  
+- **Fix Applied:** Increased `min_length = 12`, enabled `require_number`, `require_uppercase`, `require_special_char`. Note: `require_email_verification` kept `false` for Border Gateway demo usability; recommended to enable for production deployment.  
 - **Implementation Status:** ✅ FIXED  
 - **Verification:** `insforge config apply` applied changes to live project.
 

@@ -1,6 +1,6 @@
 # TRUSTGATE AI BILLION — SECURITY AUDIT & THREAT REMEDIATION
 **Document Reference**: `SECURITY_AUDIT.md`  
-**Platform**: AI-Powered Identity & Document Security Screening (SIH 26188)  
+**Platform**: AI-Powered Identity & Document Security Screening (TrustGate Border Gateway)  
 **Security Level**: Critical National Infrastructure / Border Control  
 **Auditor**: Principal Application Security Engineer  
 

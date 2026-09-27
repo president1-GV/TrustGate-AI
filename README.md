@@ -3,7 +3,7 @@
 > **See Beyond the Document.**
 >
 > AI-assisted identity and document security screening for border operations.
-> Built for **SIH 2026 — Problem Statement 26188**.
+> Built as an enterprise-grade identity and document security gateway.
 
 ---
 
@@ -143,7 +143,7 @@ npm run dev
 
 ## Demo Mode
 
-TrustGate AI includes a built-in **SIH Demo Mode** on the Screening page with 7 pre-configured synthetic test cases:
+TrustGate AI includes a built-in **Border Gateway Demo Mode** on the Screening page with 7 pre-configured synthetic test cases:
 
 | Sample | Risk | Scenario |
 |---|---|---|
@@ -317,9 +317,9 @@ These interfaces are **architecturally defined** but **not connected** — no fa
 
 ---
 
-## SIH 26188 Alignment
+## Enterprise Screening Standard Alignment
 
-**Problem Statement:** AI-Based Fake Identity & Document Screening System
+**Specification:** AI-Based Fake Identity & Document Screening System
 
 | Requirement | TrustGate AI |
 |---|---|

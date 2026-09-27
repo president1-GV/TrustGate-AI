@@ -74,18 +74,19 @@ function enrichOcrFields(
   const conf = Math.max(0.85, baseConfidence);
 
   const isAadhaarDoc =
-    /Unique\s+Identification\s+Authority\s+of\s+India/i.test(rawText) ||
-    (/Government\s+of\s+India/i.test(rawText) && /Aadhaar|Aadhar|UID/i.test(rawText)) ||
-    /Aadhaar|Aadhar/i.test(rawText) ||
-    /UIDAI/i.test(rawText) ||
-    /\b[2-9]\d{3}\s\d{4}\s\d{4}\b/.test(rawText);
+    /Unique\s+Identification\s+Authority/i.test(rawText) ||
+    /Aadhaar|Aadhar|Adhaar|UIDAI|Mera\s+Aadhaar|Meri\s+Pehchan/i.test(rawText) ||
+    /आधार|भारत\s*सरकार/u.test(rawText) ||
+    (/Government\s+of\s+India|Govt\s+of\s+India/i.test(rawText) && (/Enrolment|VID|UID/i.test(rawText) || /\d{4}/.test(rawText))) ||
+    /\b[2-9]\d{3}[\s\-]?[0-9]{4}[\s\-]?[0-9]{4}\b/.test(rawText) ||
+    /(?:X{4}|[xX]{4}|\*{4}|•{4})[\s\-]+(?:X{4}|[xX]{4}|\*{4}|•{4})[\s\-]+\d{4}/.test(rawText);
 
   if (isAadhaarDoc) {
-    // 1. Aadhaar 12-digit Number
+    // 1. Aadhaar 12-digit Number or Masked Number
     let aadhaarNum: string | null = null;
-    const uidMatch = rawText.match(/(?:Your\s+Aadhaar\s+No\.?|Aadhaar\s+No\.?|UID\s*[:\-]?)\s*[:\-]?\s*([2-9]\d{3}\s?\d{4}\s?\d{4})/i);
+    const uidMatch = rawText.match(/(?:Your\s+Aadhaar\s+No\.?|Aadhaar\s+No\.?|UID\s*[:\-]?)\s*[:\-]?\s*([2-9]\d{3}[\s\-]?[0-9]{4}[\s\-]?[0-9]{4})/i);
     if (uidMatch) {
-      aadhaarNum = uidMatch[1].replace(/(\d{4})\s*(\d{4})\s*(\d{4})/, "$1 $2 $3");
+      aadhaarNum = uidMatch[1].replace(/[\s\-]/g, "").replace(/(\d{4})(\d{4})(\d{4})/, "$1 $2 $3");
     }
     if (!aadhaarNum) {
       const match12 = rawText.match(/\b([2-9]\d{3}\s\d{4}\s\d{4})\b/);
@@ -94,9 +95,21 @@ function enrichOcrFields(
       }
     }
     if (!aadhaarNum) {
+      const matchHyphen = rawText.match(/\b([2-9]\d{3}\-\d{4}\-\d{4})\b/);
+      if (matchHyphen) {
+        aadhaarNum = matchHyphen[1].replace(/-/g, " ");
+      }
+    }
+    if (!aadhaarNum) {
       const match12NoSpace = rawText.match(/\b([2-9]\d{11})\b/);
       if (match12NoSpace) {
         aadhaarNum = match12NoSpace[1].replace(/(\d{4})(\d{4})(\d{4})/, "$1 $2 $3");
+      }
+    }
+    if (!aadhaarNum) {
+      const maskedMatch = rawText.match(/((?:X{4}|[xX]{4}|\*{4}|•{4})[\s\-]+(?:X{4}|[xX]{4}|\*{4}|•{4})[\s\-]+\d{4})/);
+      if (maskedMatch) {
+        aadhaarNum = maskedMatch[1].replace(/[\-]/g, " ");
       }
     }
 

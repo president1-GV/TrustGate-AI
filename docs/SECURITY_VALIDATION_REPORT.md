@@ -1,5 +1,5 @@
 # TrustGate AI — Security & Penetration Validation Report
-**Smart India Hackathon (SIH 26188)**  
+**Smart India Hackathon (TrustGate Border Gateway)**  
 **Document**: Penetration Testing, Hash Verification & Data Integrity Report  
 **Date**: 2026-09-08  
 **Status**: PASSED ALL TESTS  

@@ -27,11 +27,17 @@ export async function identityConsistency(input: {
   const rawTextUpper = (ocr.rawText || "").toUpperCase();
   const isAadhaar =
     rawTextUpper.includes("AADHAAR") ||
-    rawTextUpper.includes("UNIQUE IDENTIFICATION AUTHORITY OF INDIA") ||
+    rawTextUpper.includes("AADHAR") ||
+    rawTextUpper.includes("ADHAAR") ||
+    rawTextUpper.includes("UNIQUE IDENTIFICATION") ||
     rawTextUpper.includes("UIDAI") ||
-    ocr.fields.some(f => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
-    (ocr.fields.some(f => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
-      ocr.fields.some(f => f.fieldName === "DOCUMENT_NUMBER" && /^\d{4}\s\d{4}\s\d{4}$/.test(f.fieldValue || "")));
+    rawTextUpper.includes("MERA AADHAAR") ||
+    rawTextUpper.includes("MERI PEHCHAN") ||
+    rawTextUpper.includes("आधार") ||
+    rawTextUpper.includes("भारत सरकार") ||
+    ocr.fields.some((f) => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
+    (ocr.fields.some((f) => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
+      ocr.fields.some((f) => f.fieldName === "DOCUMENT_NUMBER" && /\d{4}/.test(f.fieldValue || "")));
 
   if (!mrz.present) {
     if (!isAadhaar) {

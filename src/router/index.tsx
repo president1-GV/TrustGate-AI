@@ -134,12 +134,16 @@ export function AppRouter() {
           }
         />
         <Route
-          path="/sih-screening"
+          path="/border-gateway"
           element={
             <ProtectedRoute permission="cases:create">
               <SihScreeningPage />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/sih-screening"
+          element={<Navigate to="/border-gateway" replace />}
         />
         <Route
           path="/cases"

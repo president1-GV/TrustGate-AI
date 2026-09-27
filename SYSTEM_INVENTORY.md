@@ -74,7 +74,7 @@ Routes Tree:
 
 1. **`ScreeningContext` (`src/providers/ScreeningContext.tsx`)**:
    - **Scope**: Entire application.
-   - **Execution Modes**: `PRODUCTION` (strict real document mode), `DEMO` (synthetic SIH benchmark scenarios), `TRAINING`, `EVALUATION`.
+   - **Execution Modes**: `PRODUCTION` (strict real document mode), `DEMO` (synthetic Border Gateway benchmark scenarios), `TRAINING`, `EVALUATION`.
    - **State Fields**: `mode`, `caseId`, `documentId`, `processingRunId`, `documentHash`, `captureId`, `captureSource`, `documentImage`, `documentMimeType`, `documentTimestamp`, `pipelineStatus`, `stageResults`, `pipelineResult`, `databaseResult`, `midvResult`, `faceForensicsResult`, `compositeRisk`, `aiConfidence`, `finalDecision`, `auditEvents`.
    - **Concurrency Safety**: `activeRunIdRef` token check ensures stale asynchronous promises cannot overwrite current document state.
 

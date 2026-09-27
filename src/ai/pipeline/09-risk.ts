@@ -43,11 +43,17 @@ export async function computeRisk(input: {
   const isAadhaar =
     docDetect.documentType === "aadhaar" ||
     rawTextUpper.includes("AADHAAR") ||
-    rawTextUpper.includes("UNIQUE IDENTIFICATION AUTHORITY OF INDIA") ||
+    rawTextUpper.includes("AADHAR") ||
+    rawTextUpper.includes("ADHAAR") ||
+    rawTextUpper.includes("UNIQUE IDENTIFICATION") ||
     rawTextUpper.includes("UIDAI") ||
-    ocr.fields.some(f => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
-    (ocr.fields.some(f => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
-      ocr.fields.some(f => f.fieldName === "DOCUMENT_NUMBER" && /^\d{4}\s\d{4}\s\d{4}$/.test(f.fieldValue || "")));
+    rawTextUpper.includes("MERA AADHAAR") ||
+    rawTextUpper.includes("MERI PEHCHAN") ||
+    rawTextUpper.includes("आधार") ||
+    rawTextUpper.includes("भारत सरकार") ||
+    ocr.fields.some((f) => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
+    (ocr.fields.some((f) => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
+      ocr.fields.some((f) => f.fieldName === "DOCUMENT_NUMBER" && /\d{4}/.test(f.fieldValue || "")));
 
   const mrzValid = isAadhaar
     ? 100
@@ -105,7 +111,7 @@ export async function computeRisk(input: {
   let rawScore = clamp(rawSum / totalWeights, 0, 100);
 
   // If the document is classified as unknown, enforce high risk
-  if ((docDetect.documentType === "unknown" && !isAadhaar) || docDetect.confidence < 0.4) {
+  if ((docDetect.documentType === "unknown" && !isAadhaar) || (!isAadhaar && docDetect.confidence < 0.4)) {
     rawScore = Math.max(rawScore, 88);
   }
 

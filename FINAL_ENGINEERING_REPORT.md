@@ -1,7 +1,7 @@
 # TRUSTGATE AI BILLION — FINAL ENGINEERING REPORT & PRODUCTION CERTIFICATION
 **Document Reference**: `FINAL_ENGINEERING_REPORT.md`  
 **Project**: TRUSTGATE AI  
-**SIH Problem Statement**: 26188 — AI-Based Fake Identity & Document Screening System  
+**National Border Security Standard**: Border Gateway Standard — AI-Based Fake Identity & Document Screening System  
 **Date of Certification**: 2026-09-05T23:45:00Z  
 **Classification**: High-Assurance National Border Control Production Baseline  
 **Overall Status**: **PRODUCTION READY · FULLY CERTIFIED · ZERO MOCK DATA**  
@@ -118,7 +118,7 @@ When an officer uploads a document or captures a frame:
 
 ## 6. Official Production Sign-Off
 
-I hereby certify that **TRUSTGATE AI BILLION** meets all architectural, functional, security, forensic, and data integrity specifications for SIH Problem Statement 26188.
+I hereby certify that **TRUSTGATE AI BILLION** meets all architectural, functional, security, forensic, and data integrity specifications for Border Gateway National Border Security Standard.
 
 **Certified by**:
 Principal Systems Architect, Computer Vision, ML, Security, Backend & QA Systems  

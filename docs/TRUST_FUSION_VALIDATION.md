@@ -1,5 +1,5 @@
 # TrustGate AI — Trust Fusion Validation & Decision Audit
-**Smart India Hackathon (SIH 26188)**  
+**Smart India Hackathon (TrustGate Border Gateway)**  
 **Document**: Trust Fusion Engine Validation Audit  
 **Date**: 2026-09-08  
 **Status**: VERIFIED PRODUCTION READY  

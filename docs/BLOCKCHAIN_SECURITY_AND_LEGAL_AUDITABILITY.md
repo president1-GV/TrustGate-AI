@@ -1,5 +1,5 @@
 # TRUSTGATE AI — BLOCKCHAIN SECURITY & LEGAL AUDITABILITY
-**SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System**  
+**Border Gateway National Border Security Standard: AI-Based Fake Identity & Document Screening System**  
 **Document Reference:** TG-SEC-2026-09-AUD  
 **Classification:** LEGAL & REGULATORY COMPLIANCE ASSESSMENT  
 

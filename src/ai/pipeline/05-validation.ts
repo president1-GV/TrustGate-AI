@@ -28,14 +28,20 @@ export async function validateCase(input: {
   const isAadhaar =
     docType === "aadhaar" ||
     rawTextUpper.includes("AADHAAR") ||
-    rawTextUpper.includes("UNIQUE IDENTIFICATION AUTHORITY OF INDIA") ||
+    rawTextUpper.includes("AADHAR") ||
+    rawTextUpper.includes("ADHAAR") ||
+    rawTextUpper.includes("UNIQUE IDENTIFICATION") ||
     rawTextUpper.includes("UIDAI") ||
-    ocr.fields.some(f => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
-    (ocr.fields.some(f => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
-      ocr.fields.some(f => f.fieldName === "DOCUMENT_NUMBER" && /^\d{4}\s\d{4}\s\d{4}$/.test(f.fieldValue || "")));
+    rawTextUpper.includes("MERA AADHAAR") ||
+    rawTextUpper.includes("MERI PEHCHAN") ||
+    rawTextUpper.includes("आधार") ||
+    rawTextUpper.includes("भारत सरकार") ||
+    ocr.fields.some((f) => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
+    (ocr.fields.some((f) => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
+      ocr.fields.some((f) => f.fieldName === "DOCUMENT_NUMBER" && /\d{4}/.test(f.fieldValue || "")));
 
   const requiredFields = isAadhaar
-    ? ["FULL_NAME", "DATE_OF_BIRTH", "DOCUMENT_NUMBER", "NATIONALITY", "SEX"]
+    ? ["FULL_NAME", "DOCUMENT_NUMBER"]
     : [
         "FULL_NAME", "DATE_OF_BIRTH", "DOCUMENT_NUMBER",
         "EXPIRY_DATE", "NATIONALITY", "SEX", "ISSUE_DATE",

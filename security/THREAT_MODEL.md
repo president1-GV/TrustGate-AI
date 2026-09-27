@@ -147,9 +147,9 @@
 
 | Risk | Severity | Accepted / Mitigated |
 |---|---|---|
-| Application-level rate limiting | LOW | Accepted — handled by InsForge platform for auth; screening rate not a concern for SIH demo |
+| Application-level rate limiting | LOW | Accepted — handled by InsForge platform for auth; screening rate not a concern for Border Gateway demo |
 | PDF decompression bomb protection | LOW | Accepted — browser sandbox limits damage; 20 MB file size cap |
-| Email verification disabled | MEDIUM | Accepted for SIH demo convenience; MUST enable for production |
+| Email verification disabled | MEDIUM | Accepted for Border Gateway demo convenience; MUST enable for production |
 | Open version ranges (`^`) on npm deps | LOW | Accepted for prototype; pin in production CI |
 | First-user-admin race condition (concurrent signups) | LOW | Accepted — UPSERT-based trigger reduces window; not realistic in controlled deployment |
 

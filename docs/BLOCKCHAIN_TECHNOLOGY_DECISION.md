@@ -1,5 +1,5 @@
 # TRUSTGATE AI — BLOCKCHAIN TECHNOLOGY ARCHITECTURE DECISION
-**SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System**  
+**Border Gateway National Border Security Standard: AI-Based Fake Identity & Document Screening System**  
 **Document Reference:** TG-ADR-2026-09-BC  
 **Classification:** ARCHITECTURAL DECISION RECORD (ADR) — INSTITUTIONAL INTEGRITY  
 **Date:** September 2026
@@ -8,7 +8,7 @@
 
 ## 1. Context and Problem Statement
 
-Under SIH Problem 26188, TRUSTGATE AI is deployed at national border checkpoints and transit hubs (e.g., Land Ports Authority of India / SSB ICP Raxaul) to screen travel credentials and identity documents in real-time.
+Under Border Gateway Problem Border Gateway Standard, TRUSTGATE AI is deployed at national border checkpoints and transit hubs (e.g., Land Ports Authority of India / SSB ICP Raxaul) to screen travel credentials and identity documents in real-time.
 
 To prevent evidence tampering, rogue insider deletion, retro-fitted verdict manipulation, or dispute over AI model version accountability during border prosecutions, TRUSTGATE AI requires an immutable, verifiable, cryptographically signed audit anchor layer.
 

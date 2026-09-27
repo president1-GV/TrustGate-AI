@@ -1,5 +1,5 @@
 # TrustGate AI - Dataset Provenance & Isolation Registry
-**System**: Smart India Hackathon (SIH 2024 / Problem Statement 26188)  
+**System**: Smart India Hackathon (Border Gateway 2024 / National Border Security Standard)  
 **Security Standard**: Strict Benchmark Isolation & Zero Contamination Contract  
 **Last Updated**: 2026-09-08
 

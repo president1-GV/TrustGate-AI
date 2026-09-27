@@ -44,7 +44,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Screening", href: "/screening", icon: ScanLine, permission: "cases:create" },
-  { label: "Border Gateway Portal", href: "/sih-screening", icon: ShieldAlert, permission: "cases:create" },
+  { label: "Border Gateway Portal", href: "/border-gateway", icon: ShieldAlert, permission: "cases:create" },
   { label: "Cases", href: "/cases", icon: Files, permission: "cases:view_assigned" },
   { label: "Reports", href: "/reports", icon: FileText, permission: "reports:access" },
   { label: "Analytics", href: "/analytics", icon: BarChart3, permission: "analytics:view" },

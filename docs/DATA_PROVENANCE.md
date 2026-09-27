@@ -66,7 +66,7 @@ To prevent cross-document contamination during rapid officer workflows, TrustGat
 
 ## 4. UI Provenance Indicators
 
-The Screening Workspace (`/screening`) and SIH Enterprise Border View (`/sih-screening`) expose real-time provenance badges:
+The Screening Workspace (`/screening`) and Border Gateway Enterprise Border View (`/sih-screening`) expose real-time provenance badges:
 - **Header Provenance Banner**: Displays SHA-256 hash, Processing Run ID, Document ID, and Ingestion Source.
 - **Document Viewer Provenance Bar**: Displays cryptographic hash and `✓ CRYPTO-BOUND` attestation above the viewport.
 - **MIDV-2020 Forensic Card**: Confirms document hash bound to archetype evaluation.

@@ -1,5 +1,5 @@
 # TRUSTGATE AI BILLION — THIRD-PARTY SOFTWARE NOTICES & ATTRIBUTIONS
-**Problem Statement**: SIH 26188 (AI-Based Fake Identity & Document Screening System)
+**Problem Statement**: TrustGate Border Gateway (AI-Based Fake Identity & Document Screening System)
 
 TrustGate AI incorporates open-source libraries, neural architectures, and research benchmark corpora under their respective licenses. This document provides formal attribution and statutory notices.
 

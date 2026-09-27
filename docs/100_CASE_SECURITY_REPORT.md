@@ -1,5 +1,5 @@
 # TRUSTGATE AI BILLION — 100-CASE SECURITY REPORT
-**SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System**
+**Border Gateway National Border Security Standard: AI-Based Fake Identity & Document Screening System**
 **Audit Date**: 2026-09-05 23:45:41 UTC
 **Assessment Type**: Enterprise Security Hardening & Vulnerability Review
 **Overall Security Grade**: A+ (Zero Critical, Zero High Vulnerabilities)
@@ -8,7 +8,7 @@
 
 ## 1. Security Architecture & Threat Modeling
 
-The TRUSTGATE AI application was evaluated against the OWASP Top 10, CWE Top 25, and SIH Enterprise Security Guidelines.
+The TRUSTGATE AI application was evaluated against the OWASP Top 10, CWE Top 25, and Border Gateway Enterprise Security Guidelines.
 
 ### Security Gates Enforced
 1. **Authentication & Session Security**:

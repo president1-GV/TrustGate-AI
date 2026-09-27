@@ -45,7 +45,7 @@ PORT = 8000
 app = FastAPI(
     title="TrustGate AI — Forensic Microservice & MIDV-2020 Neural Engine",
     version="3.0.0",
-    description="Unified Forensic Microservice for SIH 26188 (AI-Based Fake Identity & Document Screening)"
+    description="Unified Forensic Microservice for AI-Based Fake Identity & Document Screening"
 )
 
 app.add_middleware(

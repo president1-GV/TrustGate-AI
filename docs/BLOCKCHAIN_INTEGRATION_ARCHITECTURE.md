@@ -1,5 +1,5 @@
 # TRUSTGATE AI — BLOCKCHAIN INTEGRATION ARCHITECTURE
-**SIH Problem Statement 26188: AI-Based Fake Identity & Document Screening System**  
+**Border Gateway National Border Security Standard: AI-Based Fake Identity & Document Screening System**  
 **Document Reference:** TG-ARCH-2026-09-BC  
 **Classification:** INSTITUTIONAL BORDER DEFENSE SYSTEM SPECIFICATION  
 **Target Station:** Sashastra Seema Bal (SSB) ICP Raxaul / Border Defense Nodes

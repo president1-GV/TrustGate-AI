@@ -1,7 +1,7 @@
 # TRUSTGATE AI BILLION — ENGINEERING BASELINE & ROOT CAUSE AUDIT
 **Document Reference**: `AUDIT_ROOT_CAUSE.md`  
 **Classification**: High-Assurance National Security / Border Screening Architectural Baseline  
-**SIH Problem Statement**: 26188 — AI-Based Fake Identity & Document Screening System  
+**National Border Security Standard**: Border Gateway Standard — AI-Based Fake Identity & Document Screening System  
 **Audit Timestamp**: 2026-09-05T23:15:00Z  
 **Principal Engineers**: Principal Architect, Computer Vision, Security, ML, Backend & QA Systems  
 
@@ -311,9 +311,9 @@ Baseline search identified historical mock artifacts that previously leaked into
 
 ---
 
-## 18. Border Gateway & SIH Scenario Alignment
+## 18. Border Gateway & Border Gateway Scenario Alignment
 
-- The Smart India Hackathon (SIH) Problem Statement 26188 requires rapid detection of forged documents at border gates.
+- The National Border Security Agency National Border Security Standard requires rapid detection of forged documents at border gates.
 - `/sih-screening` implements the 7 border screens:
   1. **SSB Officer Terminal Login**: Identity & clearance.
   2. **Document Ingestion**: High-res camera or scanned file with SHA-256 badge.

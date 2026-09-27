@@ -1,5 +1,5 @@
 # TRUSTGATE AI BILLION — INDIAN KYC DOCUMENT EXTRACTION PIPELINE
-**Specification Standard**: SIH Problem Statement 26188 (AI-Based Fake Identity & Document Screening System)  
+**Specification Standard**: Border Gateway National Border Security Standard (AI-Based Fake Identity & Document Screening System)  
 **Pipeline Engine**: PaddleOCR 3.7.0 (PP-OCRv6 DBNet Text Detection & SVTR-LCNet / CRNN Recognition)  
 **Inference Runtime**: ONNX Runtime 1.29.0 on Native Windows (AVX2-optimized CPU / DirectML)  
 **Zero-Mock Mandate**: All structured field extractions, bounding boxes, and confidence scores derive strictly from deterministic real-time neural inference.
