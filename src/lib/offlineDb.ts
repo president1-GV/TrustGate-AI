@@ -1597,11 +1597,9 @@ export async function getOfflineDbStats(): Promise<{
       };
 
       tx.oncomplete = () => {
-        // Pending CASE_CREATED items count towards total if not already counted
+        // Pending CASE_CREATED items count towards total if not already counted in casesCount
         const pendingNew = syncQueueItems.filter((i) => i.type === "CASE_CREATED").length;
-        const userScanned = getUserScannedSpecimens();
-        const baseCases = Math.max(casesCount, 143);
-        const total = Math.max(casesCount, baseCases + userScanned.length, 143 + pendingNew);
+        const total = Math.max(casesCount, 143, 143 + pendingNew);
         resolve({
           totalCases: total,
           totalAuditLogs: Math.max(auditsCount, 171),
@@ -1611,9 +1609,8 @@ export async function getOfflineDbStats(): Promise<{
       };
 
       tx.onerror = () => {
-        const userScanned = getUserScannedSpecimens();
         resolve({
-          totalCases: Math.max(143 + userScanned.length, 143),
+          totalCases: 143,
           totalAuditLogs: 171,
           pendingSyncCount: 0,
           isAvailable: false,
@@ -1621,9 +1618,8 @@ export async function getOfflineDbStats(): Promise<{
       };
     });
   } catch {
-    const userScanned = getUserScannedSpecimens();
     return {
-      totalCases: Math.max(143 + userScanned.length, 143),
+      totalCases: 143,
       totalAuditLogs: 171,
       pendingSyncCount: 0,
       isAvailable: false,

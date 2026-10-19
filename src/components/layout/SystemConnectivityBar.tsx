@@ -13,7 +13,6 @@ import {
   syncLocalDbWithRemote,
   flushSyncQueue,
   listCasesForDashboard,
-  getUserScannedSpecimens,
 } from "@/lib/db";
 import { checkMidvHealth } from "@/lib/midvService";
 import { insforge } from "@/lib/insforge";
@@ -52,7 +51,6 @@ export function SystemConnectivityBar() {
       }
 
       const stats = await getOfflineDbStats();
-      const userScanned = getUserScannedSpecimens();
 
       if (typeof navigator !== "undefined" && navigator.onLine && !simulatedAirGap) {
         try {
@@ -64,7 +62,7 @@ export function SystemConnectivityBar() {
           ) {
             setDbStats({
               ...stats,
-              totalCases: Math.max(dashboardSummary.totalCases, stats.totalCases, 143),
+              totalCases: dashboardSummary.totalCases,
             });
             return;
           }
@@ -73,13 +71,7 @@ export function SystemConnectivityBar() {
         }
       }
 
-      const baseCases = Math.max(stats.totalCases, 143);
-      const computedTotal = Math.max(baseCases, 143 + userScanned.length);
-
-      setDbStats({
-        ...stats,
-        totalCases: computedTotal,
-      });
+      setDbStats(stats);
     } catch {
       /* noop */
     }
