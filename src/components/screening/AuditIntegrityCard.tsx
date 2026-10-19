@@ -77,7 +77,7 @@ export function AuditIntegrityCard({
   };
 
   const manifest = anchorRecord?.canonical_manifest;
-  const models = manifest?.ai_pipeline.models || [];
+  const models = manifest?.ai_pipeline?.models || [];
   const status = verificationResult?.tamperDetected
     ? "TAMPER_DETECTED"
     : anchorRecord
@@ -229,7 +229,7 @@ export function AuditIntegrityCard({
           <div className="p-2 rounded bg-slate-950/40 border border-slate-800/80">
             <span className="text-slate-400 block text-[10px]">CHECKPOINT STATION</span>
             <span className="text-slate-200 font-mono truncate block">
-              {manifest?.officer_attestation.station_id || "ICP-RAXAUL-01 (SSB Border)"}
+              {manifest?.officer_attestation?.station_id || "ICP-RAXAUL-01 (SSB Border)"}
             </span>
           </div>
 
@@ -270,7 +270,7 @@ export function AuditIntegrityCard({
 
           <div className="text-[11px] text-slate-300 font-mono break-all bg-black/40 p-2 rounded border border-slate-800/60">
             {anchorRecord?.models_provenance_hash ||
-              manifest?.ai_pipeline.models_provenance_hash ||
+              manifest?.ai_pipeline?.models_provenance_hash ||
               "Merkle tree root computed over 8 active model weights"}
           </div>
 

@@ -12,7 +12,7 @@
 | Subsystem | Target Port / URL | Health / Process Status | Diagnostic Details |
 | :--- | :--- | :---: | :--- |
 | **Frontend Web** | `http://localhost:5173` | **HEALTHY** | Vite v6.4.3 / React 18.3.1. Bundles cleanly in 14.04s via `tsc -b && vite build`. |
-| **InsForge BaaS** | `https://heicn84u.us-east.insforge.app` | **ONLINE** | PostgreSQL PostgREST API responding with valid JSON. Anonymous & JWT auth active. |
+| **InsForge BaaS** | `https://i8yy29ec.us-east.insforge.app` | **ONLINE** | PostgreSQL PostgREST API responding with valid JSON. Anonymous & JWT auth active. |
 | **Python Forensic Engine** | `http://localhost:8000` | **STANDBY / READY** | `midv_llm_engine/server.py` verified. Dependencies & neural weights intact. |
 | **Hardware Camera** | WebRTC `getUserMedia` | **STANDBY** | Certified protocol: Real device active on physical terminals; gracefully standby in headless CI. |
 

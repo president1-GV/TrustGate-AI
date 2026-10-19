@@ -15,17 +15,21 @@ export function riskLevelOf(score: number | null | undefined): RiskLevel {
   return "LOW";
 }
 
-export function riskColor(level: RiskLevel) {
-  switch (level) {
-    case "LOW":
+export function riskColor(level?: string | null) {
+  const norm = String(level || "LOW").toUpperCase();
+  switch (norm) {
+    case "HIGH":
+    case "CRITICAL":
       return {
-        badge: "bg-risk-low/15 text-risk-low border-risk-low/30",
-        ring: "ring-risk-low/25",
-        text: "text-risk-low",
-        bg: "bg-risk-low",
-        grad: "from-risk-low/60 to-emerald-400/40",
+        badge: "bg-risk-high/15 text-risk-high border-risk-high/30",
+        ring: "ring-risk-high/25",
+        text: "text-risk-high",
+        bg: "bg-risk-high",
+        grad: "from-risk-high/60 to-rose-500/40",
       };
     case "MEDIUM":
+    case "WARNING":
+    case "MODERATE":
       return {
         badge: "bg-risk-medium/15 text-risk-medium border-risk-medium/30",
         ring: "ring-risk-medium/25",
@@ -33,13 +37,14 @@ export function riskColor(level: RiskLevel) {
         bg: "bg-risk-medium",
         grad: "from-risk-medium/60 to-amber-400/40",
       };
-    case "HIGH":
+    case "LOW":
+    default:
       return {
-        badge: "bg-risk-high/15 text-risk-high border-risk-high/30",
-        ring: "ring-risk-high/25",
-        text: "text-risk-high",
-        bg: "bg-risk-high",
-        grad: "from-risk-high/60 to-rose-500/40",
+        badge: "bg-risk-low/15 text-risk-low border-risk-low/30",
+        ring: "ring-risk-low/25",
+        text: "text-risk-low",
+        bg: "bg-risk-low",
+        grad: "from-risk-low/60 to-emerald-400/40",
       };
   }
 }
@@ -123,7 +128,7 @@ export function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
 
-export function shortId(id: string, len = 8) {
+export function shortId(id: string | null | undefined, len = 8) {
   if (!id) return "—";
-  return id.slice(0, len);
+  return String(id).slice(0, len);
 }

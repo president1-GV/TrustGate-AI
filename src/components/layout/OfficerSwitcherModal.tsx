@@ -16,6 +16,7 @@ import { type AppRole } from "@/lib/insforge";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { auditSecurityEvent } from "@/lib/security";
 
 export interface DutyOfficerProfile {
   id: string;
@@ -33,59 +34,59 @@ export interface DutyOfficerProfile {
 
 export const ROSTER_OFFICERS: DutyOfficerProfile[] = [
   {
-    id: "officer-rajesh-kumar",
-    name: "Inspector Rajesh Kumar",
+    id: "06d9077b-2a97-460e-b6ed-38d6a16581c3",
+    name: "Officer",
     role: "officer",
     badgeId: "FO-8921",
     station: "Indo-Nepal ICP Raxaul · Lane 04 (Primary Ingestion)",
     team: "First-Line Border Screening Roster",
-    email: "rajesh.kumar@trustgate.defense.gov",
+    email: "officer@trustgate.ai",
     clearanceLevel: "Level 1 — Operational Screener",
     dutyStatus: "ON_DUTY",
     avatarColor: "from-blue-600 to-cyan-500",
     description: "Frontline passport optical inspection, live biometric capture, and primary ICAO 9303 verification.",
   },
   {
-    id: "supervisor-priya-sharma",
-    name: "Supervisor Priya Sharma",
+    id: "e49cf4a5-e63d-4cac-a54a-436f47da9e52",
+    name: "Supervisor",
     role: "supervisor",
     badgeId: "SUP-4402",
     station: "Indo-Nepal ICP Raxaul · Command & Escalation Desk",
     team: "Border Defense Rapid Response",
-    email: "priya.sharma@trustgate.defense.gov",
+    email: "supervisor@trustgate.ai",
     clearanceLevel: "Level 2 — Supervisory Authority",
     dutyStatus: "ON_DUTY",
     avatarColor: "from-amber-600 to-orange-500",
     description: "Escalation review, manual override approvals, high-risk quarantine, and watchlist disposition management.",
   },
   {
-    id: "analyst-devendra-singh",
-    name: "Devendra Singh",
+    id: "59119414-9a9b-4b00-bade-16e0b1e11ed1",
+    name: "Analyst",
     role: "analyst",
     badgeId: "FOR-1109",
     station: "Indo-Nepal ICP Raxaul · Forensic Document Lab",
     team: "Forensics & Biometric Intelligence",
-    email: "devendra.singh@trustgate.defense.gov",
+    email: "analyst@trustgate.ai",
     clearanceLevel: "Level 3 — Forensic Document Examiner",
     dutyStatus: "ON_DUTY",
     avatarColor: "from-purple-600 to-indigo-500",
     description: "Deep Error Level Analysis (ELA), spectral photo inspection, and synthetic face detection.",
   },
   {
-    id: "admin-vk-nair",
-    name: "Commandant V. K. Nair",
+    id: "d78d7bfa-d033-412d-8d20-987e0019467c",
+    name: "Admin",
     role: "admin",
     badgeId: "ADM-001",
     station: "ICP Central Command · Headquarters",
     team: "Border Command & System Administration",
-    email: "commandant.nair@trustgate.defense.gov",
+    email: "admin@trustgate.ai",
     clearanceLevel: "Level 4 — Full Border Administrator",
     dutyStatus: "ON_DUTY",
     avatarColor: "from-emerald-600 to-teal-500",
     description: "System security, member authorizations, model lifecycle, and audit retention policies.",
   },
   {
-    id: "field-officer-airgap-01",
+    id: "b1e31d7e-cd98-46a1-97ba-ce395c3a6b34",
     name: "Field Officer (Air-Gapped Standalone Station)",
     role: "admin",
     badgeId: "AIRGAP-001",
@@ -130,6 +131,21 @@ export function OfficerSwitcherModal({ open, onClose }: OfficerSwitcherModalProp
       localStorage.setItem("tg_authenticated_session", JSON.stringify(updatedSession));
     } catch {}
 
+    // Record audit event for duty roster switch
+    auditSecurityEvent({
+      actorId: profile.id,
+      action: "ROLE_SWITCHED",
+      eventType: "auth.role.switch",
+      result: "SUCCESS",
+      metadata: {
+        previous_user: user?.name,
+        previous_role: user?.role,
+        new_name: profile.name,
+        new_role: profile.role,
+        station: profile.station,
+        badge_id: profile.badgeId,
+      },
+    }).catch(() => {});
 
     // Dispatch broadcast alert for real-time notification popover
     window.dispatchEvent(

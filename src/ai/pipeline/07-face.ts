@@ -11,7 +11,8 @@ function clamp(v: number, lo: number, hi: number): number {
  */
 export async function analyzeFace(
   canvas: HTMLCanvasElement,
-  quality: ImageQualityResult
+  quality: ImageQualityResult,
+  referenceFaceCanvas?: HTMLCanvasElement
 ): Promise<FaceResult> {
   const W = canvas.width;
   const H = canvas.height;
@@ -21,6 +22,7 @@ export async function analyzeFace(
       detected: false,
       quality: 0,
       resultLabel: "NO_FACE",
+      identityMatchStatus: "NOT_AVAILABLE",
     };
   }
 
@@ -107,6 +109,7 @@ export async function analyzeFace(
       quality: 0,
       resultLabel: "NO_FACE",
       boundingBox: undefined,
+      identityMatchStatus: "NOT_AVAILABLE",
     };
   }
 
@@ -200,10 +203,57 @@ export async function analyzeFace(
     faceForensicsVerdict = "SUSPICIOUS_MANIPULATION";
   }
 
+  let calculatedSimilarity: number | undefined = undefined;
+  let identityMatchStatus: "MATCH" | "MISMATCH" | "INCONCLUSIVE" | "NOT_VERIFIED" | "NOT_AVAILABLE" = "NOT_AVAILABLE";
+
+  if (referenceFaceCanvas) {
+    try {
+      const refCtx = referenceFaceCanvas.getContext("2d");
+      if (refCtx) {
+        // Compare normalized downsampled 32x32 luminance arrays
+        const S = 32;
+        const c1 = document.createElement("canvas");
+        c1.width = S; c1.height = S;
+        const ctx1 = c1.getContext("2d");
+        if (ctx1 && bestImgData) {
+          ctx1.drawImage(canvas, bestBox.x, bestBox.y, bestBox.w, bestBox.h, 0, 0, S, S);
+          const d1 = ctx1.getImageData(0, 0, S, S).data;
+
+          const c2 = document.createElement("canvas");
+          c2.width = S; c2.height = S;
+          const ctx2 = c2.getContext("2d");
+          if (ctx2) {
+            ctx2.drawImage(referenceFaceCanvas, 0, 0, referenceFaceCanvas.width, referenceFaceCanvas.height, 0, 0, S, S);
+            const d2 = ctx2.getImageData(0, 0, S, S).data;
+
+            let corrSum = 0;
+            let sum1 = 0;
+            let sum2 = 0;
+            for (let i = 0; i < S * S; i++) {
+              const y1 = 0.299 * d1[i * 4] + 0.587 * d1[i * 4 + 1] + 0.114 * d1[i * 4 + 2];
+              const y2 = 0.299 * d2[i * 4] + 0.587 * d2[i * 4 + 1] + 0.114 * d2[i * 4 + 2];
+              corrSum += y1 * y2;
+              sum1 += y1 * y1;
+              sum2 += y2 * y2;
+            }
+            const denom = Math.sqrt(sum1 * sum2);
+            const ncc = denom > 0 ? corrSum / denom : 0;
+            calculatedSimilarity = Math.round(clamp(ncc * 100, 0, 100));
+            identityMatchStatus = calculatedSimilarity >= 75 ? "MATCH" : calculatedSimilarity < 60 ? "MISMATCH" : "INCONCLUSIVE";
+          }
+        }
+      }
+    } catch {
+      calculatedSimilarity = undefined;
+      identityMatchStatus = "NOT_AVAILABLE";
+    }
+  }
+
   return {
     detected: true,
     quality: faceQuality,
-    similarity: Math.round(clamp(82 + (faceQuality / 100) * 14, 60, 98)),
+    similarity: calculatedSimilarity,
+    identityMatchStatus,
     poseYaw: 0,
     posePitch: 0,
     blurScore: clamp(1 - quality.blur / 200, 0, 1),

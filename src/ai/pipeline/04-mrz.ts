@@ -1,17 +1,21 @@
-import type { MrzResult, OcrResult } from "../types";
+import type { MrzResult, OcrResult, MrzChecksumValidation, FieldConflict } from "../types";
 
-function validateMrzCheckDigit(str: string, check: string): boolean {
+export function computeMrzCheckDigit(str: string): string {
   const weights = [7, 3, 1];
   let sum = 0;
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
     let val: number;
-    if (ch === "<") val = 0;
+    if (ch === "<" || ch === " ") val = 0;
     else if (ch >= "0" && ch <= "9") val = parseInt(ch, 10);
     else val = ch.charCodeAt(0) - 55;
     sum += val * weights[i % 3];
   }
-  const expected = (sum % 10).toString();
+  return (sum % 10).toString();
+}
+
+function validateMrzCheckDigit(str: string, check: string): boolean {
+  const expected = computeMrzCheckDigit(str);
   return expected === check;
 }
 
@@ -256,6 +260,7 @@ export async function parseMrz(
 
   // Cross-Field Concordance vs OCR (strictly real values only)
   const mismatches: MrzResult["mismatches"] = [];
+  const fieldConflicts: FieldConflict[] = [];
 
   const ocrDocNum = findOcrField(ocr.fields, "DOCUMENT_NUMBER");
   if (ocrDocNum && documentNumber && ocrDocNum !== documentNumber) {
@@ -263,17 +268,68 @@ export async function parseMrz(
       normalizeIsoDate(ocrDocNum) === normalizeIsoDate(documentNumber) ? "LOW" :
       ocrDocNum.slice(0, 6) === documentNumber.slice(0, 6) ? "MEDIUM" : "HIGH";
     mismatches.push({ field: "DOCUMENT_NUMBER", ocr: ocrDocNum, mrz: documentNumber, severity });
+    fieldConflicts.push({
+      field: "DOCUMENT_NUMBER",
+      value_a: ocrDocNum,
+      value_b: documentNumber,
+      source_a: "VISUAL_OCR",
+      source_b: "MRZ_LINE_2",
+      confidence: 0.95,
+      reason: `Document number conflict: Visual OCR extracted "${ocrDocNum}" while MRZ encoded "${documentNumber}"`,
+    });
   }
 
   const ocrDob = findOcrField(ocr.fields, "DATE_OF_BIRTH");
   if (ocrDob && dateOfBirth && normalizeIsoDate(ocrDob) !== normalizeIsoDate(dateOfBirth)) {
     mismatches.push({ field: "DATE_OF_BIRTH", ocr: ocrDob, mrz: dateOfBirth, severity: "HIGH" });
+    fieldConflicts.push({
+      field: "DATE_OF_BIRTH",
+      value_a: ocrDob,
+      value_b: dateOfBirth,
+      source_a: "VISUAL_OCR",
+      source_b: "MRZ_LINE_2",
+      confidence: 0.95,
+      reason: `Date of birth conflict: Visual OCR extracted "${ocrDob}" while MRZ encoded "${dateOfBirth}"`,
+    });
   }
 
   const ocrExp = findOcrField(ocr.fields, "EXPIRY_DATE");
   if (ocrExp && expiryDate && normalizeIsoDate(ocrExp) !== normalizeIsoDate(expiryDate)) {
     mismatches.push({ field: "EXPIRY_DATE", ocr: ocrExp, mrz: expiryDate, severity: "HIGH" });
+    fieldConflicts.push({
+      field: "EXPIRY_DATE",
+      value_a: ocrExp,
+      value_b: expiryDate,
+      source_a: "VISUAL_OCR",
+      source_b: "MRZ_LINE_2",
+      confidence: 0.95,
+      reason: `Expiry date conflict: Visual OCR extracted "${ocrExp}" while MRZ encoded "${expiryDate}"`,
+    });
   }
+
+  const checksumValidation: MrzChecksumValidation = {
+    documentNumberChecksum: {
+      encoded: mrzLines.length >= 2 ? mrzLines[1].slice(9, 10) : "",
+      calculated: documentNumber ? computeMrzCheckDigit(documentNumber.padEnd(9, "<")) : "",
+      status: checkDigitsValid ? "PASS" : "FAIL",
+    },
+    dateOfBirthChecksum: {
+      encoded: mrzLines.length >= 2 ? mrzLines[1].slice(19, 20) : "",
+      calculated: mrzLines.length >= 2 ? computeMrzCheckDigit(mrzLines[1].slice(13, 19)) : "",
+      status: checkDigitsValid ? "PASS" : "FAIL",
+    },
+    expiryDateChecksum: {
+      encoded: mrzLines.length >= 2 ? mrzLines[1].slice(27, 28) : "",
+      calculated: mrzLines.length >= 2 ? computeMrzCheckDigit(mrzLines[1].slice(21, 27)) : "",
+      status: checkDigitsValid ? "PASS" : "FAIL",
+    },
+    compositeChecksum: {
+      encoded: mrzLines.length >= 2 && mrzLines[1].length >= 44 ? mrzLines[1].slice(43, 44) : "",
+      calculated: mrzLines.length >= 2 && mrzLines[1].length >= 44 ? computeMrzCheckDigit(mrzLines[1].slice(0, 43)) : "",
+      status: compositeValid ? "PASS" : "FAIL",
+    },
+    overallStatus: compositeValid && checkDigitsValid ? "PASS" : "FAIL",
+  };
 
   return {
     present: true,
@@ -288,5 +344,7 @@ export async function parseMrz(
     compositeValid,
     rawLines: mrzLines,
     mismatches,
-  };
+    checksumValidation,
+    fieldConflicts,
+  } as MrzResult & { checksumValidation: MrzChecksumValidation; fieldConflicts: FieldConflict[] };
 }

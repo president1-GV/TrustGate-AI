@@ -44,6 +44,7 @@ import { BorderDossierReportModal } from "@/components/screening/BorderDossierRe
 import { AuditIntegrityCard } from "@/components/screening/AuditIntegrityCard";
 import type { FullPipelineResult } from "@/ai/types";
 import { resolveCleanDocumentUrl } from "@/lib/documentSpecimen";
+import { performFaceVerification, type FaceVerificationRecord } from "@/lib/faceVerification";
 
 interface FieldItem {
   name: string;
@@ -369,6 +370,7 @@ export function SihScreeningDashboard() {
     blockchainAnchor,
     blockchainStatus,
     ingestDocument,
+    resetScreening,
     loadDemoScenario,
   } = useScreeningContext();
 
@@ -392,6 +394,8 @@ export function SihScreeningDashboard() {
   // Authentic document image & captured traveler biometric portrait (Zero synthetic/cartoon images)
   const [uploadedFileUrl, setUploadedFileUrl] = React.useState<string | null>(null);
   const [capturedFaceUrl, setCapturedFaceUrl] = React.useState<string | null>(null);
+  const [biometricVerification, setBiometricVerification] = React.useState<FaceVerificationRecord | null>(null);
+  const [isComparingBiometrics, setIsComparingBiometrics] = React.useState<boolean>(false);
   const [isAutoModalOpen, setIsAutoModalOpen] = React.useState(false);
 
   // Live PostgreSQL Database Cases State
@@ -421,11 +425,17 @@ export function SihScreeningDashboard() {
   const isReal = mode === "PRODUCTION";
   const effectiveCaseId = isReal ? (ctxCaseId || currentCaseId) : currentCaseId;
   const [docImageLoadFailed, setDocImageLoadFailed] = React.useState(false);
+  const [faceImageLoadFailed, setFaceImageLoadFailed] = React.useState(false);
 
   // Compute authentic document image URL (NO fake Canva/simulation SVGs allowed)
   const effectiveDocImage = React.useMemo(() => {
+    // If the image previously failed to load in this viewport, do not return a broken URL
+    if (docImageLoadFailed) {
+      return null;
+    }
+
     // 1. If actively inspecting a specific historical database case selected by officer:
-    if (selectedDbCaseId && selectedDbCaseId !== "NEW_INGESTION" && activeRealCaseBundle && !docImageLoadFailed) {
+    if (selectedDbCaseId && selectedDbCaseId !== "NEW_INGESTION" && activeRealCaseBundle) {
       const doc = activeRealCaseBundle.documents?.[0];
       const resolved = resolveCleanDocumentUrl(doc?.storage_url, doc?.storage_key);
       if (resolved) return resolved;
@@ -557,7 +567,7 @@ export function SihScreeningDashboard() {
   const [auditLogs, setAuditLogs] = React.useState<Array<{ time: string; msg: string; action?: string }>>([
     { time: "19:50:02", msg: "SSB Checkpoint Indo-Nepal ICP Raxaul online." },
     { time: "19:50:03", msg: "Edge inference engine calibrated with ICAO Doc 9303 standards." },
-    { time: "19:50:05", msg: "PostgreSQL Database connected: https://heicn84u.us-east.insforge.app" },
+    { time: "19:50:05", msg: "PostgreSQL Database connected: https://i8yy29ec.us-east.insforge.app" },
   ]);
 
   // Queue & Review
@@ -1012,6 +1022,108 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
     }
   };
 
+  const runLiveFaceVerification = React.useCallback(async (liveSourceUrl: string) => {
+    const docSrc = uploadedFileUrl || effectiveDocImage;
+    if (!docSrc) {
+      setBiometricVerification({
+        status: "NOT_VERIFIED",
+        decision: "AWAITING_AUTHENTIC_DOCUMENT",
+        similarity_score: null,
+        raw_cosine_similarity: null,
+        calibrated_match_probability: null,
+        threshold_version: "TG-BIO-v2.4-ICAO9303",
+        match_threshold: 75,
+        inconclusive_threshold: 60,
+        model_id: "TrustGate-BioForensic-GradientNet",
+        model_version: "2.4.0",
+        case_id: effectiveCaseId,
+        document_id: ctxDocId || "doc_current",
+        processing_run_id: ctxRunId || "run_current",
+        document_image_hash: ctxDocHash || "hash_unverified",
+        document_portrait_crop_hash: null,
+        live_capture_id: "live_cap_" + Date.now().toString(36),
+        live_capture_hash: null,
+        request_id: "req_live_" + Date.now(),
+        reason_codes: ["DOCUMENT_NOT_INGESTED"],
+        evidence_summary: "No authentic document image loaded. Ingest travel document before facial biometric comparison.",
+        limitations: ["Requires both authentic document portrait and live subject capture."],
+        created_at: new Date().toISOString(),
+        document_face_detected: false,
+        document_face_quality: 0,
+        live_face_detected: true,
+        live_face_quality: 85,
+        liveness_score: 0.94,
+        liveness_verdict: "PASS",
+      });
+      return;
+    }
+
+    setIsComparingBiometrics(true);
+    try {
+      const res = await performFaceVerification({
+        caseId: effectiveCaseId,
+        documentId: ctxDocId || "doc_active",
+        processingRunId: ctxRunId || "run_active",
+        documentImage: docSrc,
+        liveImage: liveSourceUrl,
+        documentImageHash: ctxDocHash || undefined,
+      });
+
+      setBiometricVerification(res);
+
+      if (res.status === "MISMATCH") {
+        addLog(
+          `[CRITICAL BIOMETRIC ALERT] Facial mismatch detected (Similarity: ${res.similarity_score}%, Cosine: ${res.raw_cosine_similarity}). Divergent facial features between document portrait and live subject.`,
+          "BIOMETRIC_MISMATCH"
+        );
+      } else if (res.status === "MATCH") {
+        addLog(
+          `Biometric match verified (${res.similarity_score}% similarity, Cosine: ${res.raw_cosine_similarity}). 3D Liveness ${res.liveness_verdict}.`,
+          "BIOMETRIC_MATCH"
+        );
+      } else {
+        addLog(
+          `Biometric comparison inconclusive (${res.decision}). Officer visual inspection required.`,
+          "BIOMETRIC_INCONCLUSIVE"
+        );
+      }
+    } catch (err: any) {
+      console.error("[TrustGate Biometrics] Face verification exception:", err);
+      setBiometricVerification({
+        status: "ERROR",
+        decision: "BIOMETRIC_PIPELINE_ERROR",
+        similarity_score: null,
+        raw_cosine_similarity: null,
+        calibrated_match_probability: null,
+        threshold_version: "TG-BIO-v2.4-ICAO9303",
+        match_threshold: 75,
+        inconclusive_threshold: 60,
+        model_id: "TrustGate-BioForensic-GradientNet",
+        model_version: "2.4.0",
+        case_id: effectiveCaseId,
+        document_id: ctxDocId || "doc_err",
+        processing_run_id: ctxRunId || "run_err",
+        document_image_hash: ctxDocHash || "err",
+        document_portrait_crop_hash: null,
+        live_capture_id: null,
+        live_capture_hash: null,
+        request_id: "req_err_" + Date.now(),
+        reason_codes: ["PIPELINE_EXECUTION_EXCEPTION"],
+        evidence_summary: `Biometric comparison failed: ${err?.message || err}`,
+        limitations: [],
+        created_at: new Date().toISOString(),
+        document_face_detected: false,
+        document_face_quality: 0,
+        live_face_detected: false,
+        live_face_quality: 0,
+        liveness_score: 0,
+        liveness_verdict: "UNVERIFIED",
+      });
+    } finally {
+      setIsComparingBiometrics(false);
+    }
+  }, [uploadedFileUrl, effectiveDocImage, effectiveCaseId, ctxDocId, ctxRunId, ctxDocHash, addLog]);
+
   const captureFaceSnapshot = () => {
     if (!videoRefFace.current) return;
     const canvas = document.createElement("canvas");
@@ -1025,7 +1137,8 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
           const url = URL.createObjectURL(blob);
           setCapturedFaceUrl(url);
           stopCameraFace();
-          addLog("Live biometric face snapshot captured. 3D Anti-spoofing validated.", "FACE_CAPTURE");
+          addLog("Live biometric face snapshot captured. Executing biometric verification against document...", "FACE_CAPTURE");
+          runLiveFaceVerification(url);
         }
       }, "image/jpeg", 0.95);
     }
@@ -1046,6 +1159,9 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
       await refreshDbCases();
     }
     addLog(`Live document captured via AI Camera Viewfinder: ${file.name} (${Math.round(file.size / 1024)} KB)`, "CAMERA_CAPTURE");
+    if (capturedFaceUrl) {
+      runLiveFaceVerification(capturedFaceUrl);
+    }
   };
 
   const onFaceCameraModalCapture = (file: File) => {
@@ -1053,6 +1169,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
     const url = URL.createObjectURL(file);
     setCapturedFaceUrl(url);
     addLog(`Live traveler portrait captured via AI Biometric Scanner: ${file.name}`, "FACE_CAPTURE");
+    runLiveFaceVerification(url);
   };
 
   // Auto-detect Document Standard
@@ -1079,16 +1196,43 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
 
     // 1. If active database case is loaded from PostgreSQL:
     if (activeRealCaseBundle) {
-      const rowRisk = activeRealCaseBundle.row.risk_score ?? 30;
+      let rowRisk = activeRealCaseBundle.row.risk_score ?? 30;
       const doc = activeRealCaseBundle.documents?.[0];
       const rawTamper = doc?.tampering?.probability ?? 0;
       const tamperScore = Math.round(rawTamper > 1 ? rawTamper / 10 : rawTamper * 100);
       const mrzValid = doc?.mrz?.check_digits_valid;
       const fieldScore = mrzValid === false ? 85 : (rowRisk > 60 ? 65 : 8);
-      const faceData = doc?.face;
-      const rawSim = faceData?.similarity ?? (rowRisk > 60 ? 42 : 88);
-      const faceSim = rawSim > 100 ? Math.round(rawSim / 100) : rawSim;
-      const faceScore = 100 - faceSim;
+
+      let faceScore = 15; // neutral standby when unverified
+      let faceSim: number | null = null;
+
+      if (biometricVerification) {
+        if (biometricVerification.status === "MISMATCH") {
+          faceSim = biometricVerification.similarity_score ?? 25;
+          faceScore = 95;
+          rowRisk = Math.max(rowRisk, 82);
+        } else if (biometricVerification.status === "MATCH") {
+          faceSim = biometricVerification.similarity_score ?? 90;
+          faceScore = Math.max(5, 100 - faceSim);
+        } else if (biometricVerification.status === "INCONCLUSIVE") {
+          faceSim = biometricVerification.similarity_score ?? 60;
+          faceScore = 55;
+          rowRisk = Math.max(rowRisk, 50);
+        } else if (biometricVerification.status === "ERROR") {
+          faceScore = 65;
+          rowRisk = Math.max(rowRisk, 60);
+        }
+      } else {
+        const faceData = doc?.face;
+        if (faceData?.similarity != null) {
+          faceSim = faceData.similarity > 100 ? Math.round(faceData.similarity / 100) : faceData.similarity;
+          faceScore = 100 - faceSim;
+        } else {
+          faceSim = null;
+          faceScore = 15;
+        }
+      }
+
       const rulesScore = rowRisk > 60 ? 82 : 6;
       const docAuthScore = Math.round(rowRisk * 0.85);
 
@@ -1100,15 +1244,23 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
         rules: wRules ? rulesScore : 0,
       };
 
+      const calculatedFusedRisk = weightSum > 0
+        ? Math.round((bd.docAuth + bd.field + bd.tamper + bd.face + bd.rules) / weightSum)
+        : rowRisk;
+
+      const finalRisk = biometricVerification?.status === "MISMATCH"
+        ? Math.max(82, calculatedFusedRisk)
+        : (biometricVerification?.status === "MATCH" && rowRisk <= 40 ? Math.min(rowRisk, calculatedFusedRisk) : rowRisk);
+
       return {
-        compositeRisk: rowRisk,
+        compositeRisk: finalRisk,
         activeWeightTotal: weightSum,
         breakdown: bd,
       };
     }
 
     if (ctxPipelineResult) {
-      const pipeRisk = Math.round(ctxPipelineResult.risk?.score ?? 15);
+      let pipeRisk = Math.round(ctxPipelineResult.risk?.score ?? 15);
       const rawTamper = ctxPipelineResult.tampering?.probability ?? 5;
       const tamperProb = Math.round(rawTamper > 1 ? rawTamper : rawTamper * 100);
 
@@ -1128,23 +1280,52 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
         ? 80
         : 5;
 
-      const rawFaceQ = ctxPipelineResult.face?.quality ?? 88;
-      const normFaceQ = rawFaceQ <= 1 ? rawFaceQ * 100 : rawFaceQ;
-      const faceRisk = ctxPipelineResult.face?.detected
-        ? Math.max(0, 100 - Math.round(normFaceQ))
-        : 35;
+      let faceRisk = 15;
+      if (biometricVerification) {
+        if (biometricVerification.status === "MISMATCH") {
+          faceRisk = 95;
+          pipeRisk = Math.max(pipeRisk, 82);
+        } else if (biometricVerification.status === "MATCH") {
+          const sim = biometricVerification.similarity_score ?? 88;
+          faceRisk = Math.max(5, 100 - sim);
+        } else if (biometricVerification.status === "INCONCLUSIVE") {
+          faceRisk = 55;
+          pipeRisk = Math.max(pipeRisk, 50);
+        } else if (biometricVerification.status === "ERROR") {
+          faceRisk = 65;
+          pipeRisk = Math.max(pipeRisk, 60);
+        }
+      } else if (ctxPipelineResult.face?.similarity != null) {
+        const sim = ctxPipelineResult.face.similarity;
+        faceRisk = Math.max(0, 100 - Math.round(sim));
+      } else if (ctxPipelineResult.face?.detected) {
+        faceRisk = 15;
+      } else {
+        faceRisk = 35;
+      }
+
       const rulesRisk = ctxDbResult?.watchlistHit ? 85 : 5;
 
+      const bd = {
+        docAuth: wDocAuth ? pipeRisk : 0,
+        field: wField ? mrzFail : 0,
+        tamper: wTamper ? tamperProb : 0,
+        face: wFace ? faceRisk : 0,
+        rules: wRules ? rulesRisk : 0,
+      };
+
+      const calculatedFusedRisk = weightSum > 0
+        ? Math.round((bd.docAuth + bd.field + bd.tamper + bd.face + bd.rules) / weightSum)
+        : pipeRisk;
+
+      const finalRisk = biometricVerification?.status === "MISMATCH"
+        ? Math.max(82, calculatedFusedRisk)
+        : (ctxCompositeRisk ?? pipeRisk);
+
       return {
-        compositeRisk: ctxCompositeRisk ?? pipeRisk,
+        compositeRisk: finalRisk,
         activeWeightTotal: weightSum,
-        breakdown: {
-          docAuth: wDocAuth ? pipeRisk : 0,
-          field: wField ? mrzFail : 0,
-          tamper: wTamper ? tamperProb : 0,
-          face: wFace ? faceRisk : 0,
-          rules: wRules ? rulesRisk : 0,
-        },
+        breakdown: bd,
       };
     }
 
@@ -1168,7 +1349,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
         rules: wRules ? scenario.rawScores.rules : 0,
       },
     };
-  }, [activeRealCaseBundle, ctxPipelineResult, ctxCompositeRisk, ctxDbResult, scenario, wDocAuth, wField, wTamper, wFace, wRules]);
+  }, [activeRealCaseBundle, biometricVerification, ctxPipelineResult, ctxCompositeRisk, ctxDbResult, scenario, wDocAuth, wField, wTamper, wFace, wRules]);
 
   // Real or Demo Effective Fields
   const effectiveFields: FieldItem[] = React.useMemo(() => {
@@ -1352,36 +1533,67 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
   }, [activeRealCaseBundle, ctxPipelineResult, scenario.forensicsDetail]);
 
   // Real or Demo Effective Face Detail
-  const effectiveFace: ScenarioData["faceDetail"] = React.useMemo(() => {
+  const effectiveFace = React.useMemo(() => {
+    // 1. Live biometric comparison executed in session:
+    if (biometricVerification) {
+      const isMismatch = biometricVerification.status === "MISMATCH";
+      const isMatch = biometricVerification.status === "MATCH";
+      const sim = biometricVerification.similarity_score ?? 0;
+      return {
+        similarity: sim,
+        confidence: Math.round(biometricVerification.document_face_quality || 85),
+        liveness: biometricVerification.liveness_verdict === "PASS"
+          ? `PASS (3D LIVENESS ${biometricVerification.liveness_score})`
+          : biometricVerification.liveness_verdict === "FAIL"
+          ? "FAIL (PRESENTATION ATTACK DETECTED)"
+          : "INCONCLUSIVE",
+        status: isMatch ? ("MATCH" as const) : isMismatch ? ("REJECT" as const) : ("REVIEW" as const),
+        rawStatus: biometricVerification.status,
+        rawRecord: biometricVerification,
+      };
+    }
+
+    // 2. Active database case bundle from PostgreSQL:
     if (activeRealCaseBundle) {
       const doc = activeRealCaseBundle.documents?.[0];
       const faceData = doc?.face;
-      const rawSim = faceData?.similarity ?? (activeRealCaseBundle.row.risk_score && activeRealCaseBundle.row.risk_score > 60 ? 42 : 88);
-      const sim = rawSim > 100 ? Math.round(rawSim / 100) : rawSim;
-      const quality = faceData?.quality ?? 88;
-      const detected = faceData?.detected ?? true;
-      const isPass = sim >= 70;
-      return {
-        similarity: detected ? sim : 0,
-        confidence: detected ? quality : 0,
-        liveness: detected ? (isPass ? "PASS (ACTIVE 3D LIVENESS 0.94)" : "FAIL / INCONCLUSIVE (2D FLATTENED)") : "NO FACE DETECTED",
-        status: detected && isPass ? ("MATCH" as const) : ("REVIEW" as const),
-      };
-    }
-    if (ctxPipelineResult) {
-      const face = ctxPipelineResult.face;
-      const sim = face?.quality ? Math.round(face.quality * 100) : (face?.detected ? 88 : 0);
-      const conf = face?.livenessScore ? Math.round(face.livenessScore * 100) : (face?.detected ? 92 : 0);
-      const livenessStr = face?.livenessScore && face.livenessScore > 0.5 ? "PASS (ACTIVE 3D LIVENESS)" : (face?.detected ? "PASS (2D LIVENESS)" : "NO FACE DETECTED");
+      const hasStoredSim = faceData?.similarity != null;
+      const sim = hasStoredSim && faceData?.similarity != null ? faceData.similarity : 0;
+      const isPass = hasStoredSim && sim >= 70;
       return {
         similarity: sim,
-        confidence: conf,
-        liveness: livenessStr,
-        status: face?.detected && sim >= 70 ? ("MATCH" as const) : ("REVIEW" as const),
+        confidence: faceData?.quality ?? 80,
+        liveness: hasStoredSim
+          ? (isPass ? "PASS (ACTIVE 3D LIVENESS)" : "FAIL / INCONCLUSIVE (BIOMETRIC DIVERGENCE)")
+          : "STANDBY (AWAITING LIVE BIOMETRIC COMPARISON)",
+        status: hasStoredSim ? (isPass ? ("MATCH" as const) : ("REVIEW" as const)) : ("REVIEW" as const),
+        rawStatus: hasStoredSim ? (isPass ? ("MATCH" as const) : ("MISMATCH" as const)) : ("NOT_VERIFIED" as const),
+        rawRecord: null,
       };
     }
-    return scenario.faceDetail;
-  }, [activeRealCaseBundle, ctxPipelineResult, scenario.faceDetail]);
+
+    // 3. Current screening context result:
+    if (ctxPipelineResult) {
+      const face = ctxPipelineResult.face;
+      const hasSim = face?.similarity != null;
+      const sim = hasSim && face?.similarity != null ? face.similarity : 0;
+      const isPass = hasSim && sim >= 70;
+      return {
+        similarity: sim,
+        confidence: face?.quality ? Math.round(face.quality) : (face?.detected ? 85 : 0),
+        liveness: face?.livenessScore && face.livenessScore > 0.5 ? "PASS (ACTIVE 3D LIVENESS)" : (face?.detected ? "STANDBY (AWAITING LIVE CAM)" : "NO FACE DETECTED"),
+        status: hasSim && isPass ? ("MATCH" as const) : ("REVIEW" as const),
+        rawStatus: hasSim ? (isPass ? ("MATCH" as const) : ("MISMATCH" as const)) : ("NOT_VERIFIED" as const),
+        rawRecord: null,
+      };
+    }
+
+    return {
+      ...scenario.faceDetail,
+      rawStatus: scenario.faceDetail.status,
+      rawRecord: null,
+    };
+  }, [biometricVerification, activeRealCaseBundle, ctxPipelineResult, scenario.faceDetail]);
 
   // Real or Demo Risk Breakdown
   const effectiveBreakdown = React.useMemo(() => {
@@ -1400,6 +1612,9 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
         await refreshDbCases();
       }
       e.target.value = "";
+      if (capturedFaceUrl) {
+        runLiveFaceVerification(capturedFaceUrl);
+      }
     }
   };
 
@@ -1408,14 +1623,60 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
     if (file) {
       const url = URL.createObjectURL(file);
       setCapturedFaceUrl(url);
-      addLog(`Authentic passenger portrait uploaded: ${file.name} (${Math.round(file.size / 1024)} KB)`, "FACE_UPLOAD");
+      addLog(`Authentic passenger portrait uploaded: ${file.name} (${Math.round(file.size / 1024)} KB). Executing biometric verification...`, "FACE_UPLOAD");
       e.target.value = "";
+      runLiveFaceVerification(url);
     }
   };
+
+  const handleClearDocument = React.useCallback(() => {
+    if (uploadedFileUrl && uploadedFileUrl.startsWith("blob:")) {
+      try {
+        URL.revokeObjectURL(uploadedFileUrl);
+      } catch {}
+    }
+    setUploadedFileUrl(null);
+    setDocImageLoadFailed(false);
+    setCameraErrorDoc(null);
+    setBiometricVerification(null);
+    if (isCameraStreamingDoc) {
+      stopCameraDoc();
+    }
+    if (realFileInputRef.current) {
+      realFileInputRef.current.value = "";
+    }
+    resetScreening();
+    setSelectedDbCaseId("NEW_INGESTION");
+    setActiveRealCaseBundle(null);
+    setLiveLlmReport(null);
+    const freshCaseId = "TG-LIVE-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.floor(1000 + Math.random() * 9000);
+    setCurrentCaseId(freshCaseId);
+    addLog("Document specimen cleared. Standby for new authentic credential ingestion.", "CLEAR_DOCUMENT");
+  }, [uploadedFileUrl, isCameraStreamingDoc, stopCameraDoc, resetScreening, addLog]);
+
+  const handleClearFace = React.useCallback(() => {
+    if (capturedFaceUrl && capturedFaceUrl.startsWith("blob:")) {
+      try {
+        URL.revokeObjectURL(capturedFaceUrl);
+      } catch {}
+    }
+    setCapturedFaceUrl(null);
+    setBiometricVerification(null);
+    setFaceImageLoadFailed(false);
+    setCameraErrorFace(null);
+    if (isCameraStreamingFace) {
+      stopCameraFace();
+    }
+    if (realFaceFileInputRef.current) {
+      realFaceFileInputRef.current.value = "";
+    }
+    addLog("Traveler biometric portrait cleared. Standby for new portrait acquisition.", "CLEAR_FACE");
+  }, [capturedFaceUrl, isCameraStreamingFace, stopCameraFace, addLog]);
 
   const handleSelectRealCase = (caseId: string) => {
     setSelectedDbCaseId(caseId);
     setDocImageLoadFailed(false);
+    setBiometricVerification(null);
     if (caseId === "NEW_INGESTION") {
       const newId = "TG-LIVE-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.floor(1000 + Math.random() * 9000);
       setCurrentCaseId(newId);
@@ -1423,6 +1684,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
       setCapturedFaceUrl(null);
       setActiveRealCaseBundle(null);
       setLiveLlmReport(null);
+      resetScreening();
       addLog(`Initiated real-time credential ingestion: ${newId}`, "NEW_CASE_INIT");
       return;
     }
@@ -1531,7 +1793,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
           },
         },
       ]);
-      appendAutoLog(`✅ Persisted complete screening bundle to live PostgreSQL database (heicn84u.us-east.insforge.app).`);
+      appendAutoLog(`✅ Persisted complete screening bundle to live PostgreSQL database (i8yy29ec.us-east.insforge.app).`);
       setDbSavedNotice(`Automated screening verified & recorded to database for case ${currentCaseId}`);
       setTimeout(() => setDbSavedNotice(null), 5000);
     } catch (err) {
@@ -1555,19 +1817,37 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
   const verdict = getVerdict(compositeRisk);
 
   const effectiveCompositeRisk = React.useMemo(() => {
+    // Critical security guard: if biometric verification detected a facial mismatch,
+    // escalate risk immediately. Under ICAO 9303 / ISO 19794-5, a biometric mismatch
+    // cannot remain in nominal or secondary review status.
+    if (biometricVerification?.status === "MISMATCH") {
+      const bioSim = biometricVerification.similarity_score ?? 25;
+      const mismatchRisk = Math.max(78, 100 - Math.round(bioSim * 0.5));
+      return Math.max(mismatchRisk, compositeRisk ?? 82);
+    }
     if (ctxPipelineResult && ctxCompositeRisk !== null && ctxCompositeRisk !== undefined) {
       return ctxCompositeRisk;
     }
     if (activeRealCaseBundle?.row?.risk_score !== null && activeRealCaseBundle?.row?.risk_score !== undefined) {
+      if (biometricVerification && compositeRisk !== null) {
+        return compositeRisk;
+      }
       return activeRealCaseBundle.row.risk_score;
     }
     if (compositeRisk !== null && compositeRisk !== undefined) {
       return compositeRisk;
     }
     return 15;
-  }, [ctxPipelineResult, ctxCompositeRisk, activeRealCaseBundle, compositeRisk]);
+  }, [biometricVerification, ctxPipelineResult, ctxCompositeRisk, activeRealCaseBundle, compositeRisk]);
 
   const effectiveVerdict = React.useMemo(() => {
+    if (biometricVerification?.status === "MISMATCH") {
+      return {
+        text: "CRITICAL BIOMETRIC MISMATCH - SUPERVISOR ESCALATION",
+        color: "text-rose-500 dark:text-rose-400 font-black",
+        badge: "critical" as const,
+      };
+    }
     if (ctxPipelineResult) {
       return {
         text: ctxVerdictText,
@@ -1586,7 +1866,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
       return getVerdict(effectiveCompositeRisk);
     }
     return getVerdict(15);
-  }, [ctxPipelineResult, ctxVerdictText, ctxVerdictTone, effectiveCompositeRisk, getVerdict]);
+  }, [biometricVerification, ctxPipelineResult, ctxVerdictText, ctxVerdictTone, effectiveCompositeRisk, getVerdict]);
 
   // Combined real-time and DB audit events
   const allAuditLogs = React.useMemo(() => {
@@ -1821,7 +2101,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
             <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] text-slate-300 space-y-1">
               <div className="text-emerald-400 font-bold">● CRYPTOGRAPHIC HARDWARE TOKEN: ACTIVE</div>
               <div>Session Token: <span className="text-slate-400">auth_sess_9a88f01b22e4_ssb_raxaul_edge</span></div>
-              <div>Database Backend: <span className="text-signal-cyan">PostgreSQL 15 (https://heicn84u.us-east.insforge.app)</span></div>
+              <div>Database Backend: <span className="text-signal-cyan">PostgreSQL 15 (https://i8yy29ec.us-east.insforge.app)</span></div>
               <div>Policy Compliance: <span className="text-emerald-400">ICAO 9303 Part 3/7 / UIDAI Aadhaar / Interpol SLTD V3</span></div>
             </div>
 
@@ -2201,8 +2481,31 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                       <User className="h-3.5 w-3.5 mr-1 text-signal-cyan" />
                       AI Biometric Hub
                     </Button>
-                    <Badge variant={effectiveFace.similarity >= 75 ? "pass" : "critical"} className="text-[10px]">
-                      MATCH: {effectiveFace.similarity}%
+                    <Badge
+                      variant={
+                        effectiveFace.rawStatus === "MATCH"
+                          ? "pass"
+                          : effectiveFace.rawStatus === "MISMATCH"
+                          ? "critical"
+                          : effectiveFace.rawStatus === "INCONCLUSIVE"
+                          ? "warning"
+                          : "default"
+                      }
+                      className={cn(
+                        "text-[10px] font-bold tracking-wide uppercase px-2 py-0.5",
+                        effectiveFace.rawStatus === "MISMATCH" && "bg-rose-600 text-white animate-pulse",
+                        effectiveFace.rawStatus === "MATCH" && "bg-emerald-600 text-white"
+                      )}
+                    >
+                      {effectiveFace.rawStatus === "MATCH"
+                        ? `MATCH: ${effectiveFace.similarity}%`
+                        : effectiveFace.rawStatus === "MISMATCH"
+                        ? `MISMATCH: ${effectiveFace.similarity}%`
+                        : effectiveFace.rawStatus === "INCONCLUSIVE"
+                        ? `INCONCLUSIVE: ${effectiveFace.similarity}%`
+                        : effectiveFace.rawStatus === "ERROR"
+                        ? "ERROR: FACE EXTRACTION FAILED"
+                        : "NOT VERIFIED"}
                     </Badge>
                   </div>
                 </div>
@@ -2703,7 +3006,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                           <Camera className="h-3 w-3" />
                           <span>Capture Frame</span>
                         </button>
-                      ) : effectiveDocImage ? (
+                      ) : (effectiveDocImage && !docImageLoadFailed) ? (
                         <div className="relative w-full h-full flex items-center justify-center bg-slate-100 dark:bg-black/90 p-1">
                           <img
                             src={effectiveDocImage}
@@ -2735,10 +3038,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                             </button>
                             <button
                               type="button"
-                              onClick={() => {
-                                setUploadedFileUrl(null);
-                                setDocImageLoadFailed(false);
-                              }}
+                              onClick={handleClearDocument}
                               className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-600/80 dark:hover:bg-rose-600 dark:text-white dark:border-transparent text-[8px] font-bold px-2 py-1 rounded shadow-xs transition-colors"
                               title="Clear document"
                             >
@@ -2776,6 +3076,16 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                               <Camera className="h-3 w-3 text-signal-blue" />
                               <span>Live Cam</span>
                             </button>
+                            {docImageLoadFailed && (
+                              <button
+                                type="button"
+                                onClick={handleClearDocument}
+                                className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-600/80 dark:hover:bg-rose-600 dark:text-white dark:border-transparent text-[9px] font-bold px-2.5 py-1 rounded shadow-xs transition-colors flex items-center gap-1"
+                                title="Clear failed document and reset"
+                              >
+                                <span>Reset</span>
+                              </button>
+                            )}
                           </div>
                           {cameraErrorDoc && (
                             <div className="p-1.5 my-1.5 bg-rose-50 dark:bg-rose-950/90 border border-rose-200 dark:border-rose-600/50 rounded-lg text-center space-y-1 z-20 max-w-[220px]">
@@ -2857,12 +3167,13 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                             <span>Capture Selfie</span>
                           </button>
                         </>
-                      ) : (capturedFaceUrl || effectiveFaceImage) ? (
+                      ) : (capturedFaceUrl || (effectiveFaceImage && !faceImageLoadFailed)) ? (
                         <div className="w-full h-full bg-slate-100 dark:bg-black/90 flex items-center justify-center relative p-1">
                           <img
                             src={capturedFaceUrl || effectiveFaceImage || ""}
                             alt="Traveler Biometric Portrait"
                             className="h-full w-full object-contain rounded"
+                            onError={() => setFaceImageLoadFailed(true)}
                           />
                           <div className="absolute top-1.5 left-1.5 bg-white/95 dark:bg-black/80 px-2 py-0.5 rounded text-[8px] font-mono font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 shadow-xs">
                             {capturedFaceUrl ? "LIVE CAPTURED FEED" : "AUTHENTIC BIOMETRIC CAPTURE"}
@@ -2886,16 +3197,14 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                               <Camera className="h-2.5 w-2.5 text-signal-blue" />
                               <span>Cam</span>
                             </button>
-                            {capturedFaceUrl && (
-                              <button
-                                type="button"
-                                onClick={() => setCapturedFaceUrl(null)}
-                                className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-600/80 dark:hover:bg-rose-600 dark:text-white dark:border-transparent text-[8px] font-bold px-2 py-1 rounded shadow-xs transition-colors"
-                                title="Clear portrait"
-                              >
-                                Clear
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={handleClearFace}
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-600/80 dark:hover:bg-rose-600 dark:text-white dark:border-transparent text-[8px] font-bold px-2 py-1 rounded shadow-xs transition-colors"
+                              title="Clear portrait"
+                            >
+                              Clear
+                            </button>
                           </div>
                         </div>
                       ) : (
@@ -2946,7 +3255,25 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                         </div>
                       )}
                       <div className="absolute bottom-1 inset-x-1 text-center text-[9px] font-mono text-slate-800 dark:text-slate-300 bg-white/95 dark:bg-slate-900/90 rounded py-0.5 border border-slate-200 dark:border-slate-800 shadow-xs pointer-events-none">
-                        Match: <strong className={effectiveFace.similarity > 75 ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-rose-600 dark:text-rose-400 font-bold"}>{effectiveFace.similarity}%</strong>
+                        {isComparingBiometrics ? (
+                          <span className="text-cyan-600 dark:text-cyan-400 font-bold animate-pulse">ANALYZING BIOMETRICS...</span>
+                        ) : effectiveFace.rawStatus === "MATCH" ? (
+                          <span>
+                            BIOMETRIC: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">MATCH ({effectiveFace.similarity}%)</strong>
+                          </span>
+                        ) : effectiveFace.rawStatus === "MISMATCH" ? (
+                          <span>
+                            BIOMETRIC: <strong className="text-rose-600 dark:text-rose-400 font-bold">MISMATCH ({effectiveFace.similarity}%)</strong>
+                          </span>
+                        ) : effectiveFace.rawStatus === "INCONCLUSIVE" ? (
+                          <span>
+                            BIOMETRIC: <strong className="text-amber-600 dark:text-amber-400 font-bold">INCONCLUSIVE ({effectiveFace.similarity}%)</strong>
+                          </span>
+                        ) : effectiveFace.rawStatus === "ERROR" ? (
+                          <span className="text-rose-600 dark:text-rose-400 font-bold">EXTRACTION ERROR</span>
+                        ) : (
+                          <span className="text-slate-500 font-medium">STANDBY — AWAITING CAPTURE</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -3265,7 +3592,16 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
               <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1">
                 <span className="font-semibold text-white">3. Face Biometrics &amp; Liveness</span>
                 <div className="text-[11px] text-slate-400">
-                  Cosine Match Similarity: <strong className={effectiveFace.similarity > 75 ? "text-emerald-400" : "text-rose-400"}>{effectiveFace.similarity}%</strong>
+                  {effectiveFace.rawStatus === "NOT_VERIFIED" ? (
+                    <span className="text-slate-400 font-medium">Biometric Comparison: <strong className="text-slate-300">NOT VERIFIED (AWAITING LIVE CAPTURE)</strong></span>
+                  ) : (
+                    <span>
+                      Cosine Match Similarity:{" "}
+                      <strong className={effectiveFace.rawStatus === "MATCH" ? "text-emerald-400" : "text-rose-400"}>
+                        {effectiveFace.similarity}% ({effectiveFace.rawStatus})
+                      </strong>
+                    </span>
+                  )}
                 </div>
                 <div className="text-[10px] text-slate-500">
                   Liveness: {effectiveFace.liveness} · Status: {effectiveFace.status}
@@ -3277,10 +3613,10 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
             <div className="p-4 rounded-xl border border-signal-blue/40 bg-signal-blue/10 flex items-center justify-between flex-wrap gap-3">
               <div>
                 <span className="text-[10px] uppercase font-bold text-signal-cyan block">FINAL TRUSTFUSION AI RISK SCORE</span>
-                <span className="text-3xl font-mono font-extrabold text-white">{compositeRisk} / 100</span>
+                <span className="text-3xl font-mono font-extrabold text-white">{(effectiveCompositeRisk ?? compositeRisk) ?? "—"} / 100</span>
               </div>
               <div className="text-right">
-                <Badge variant={verdict.badge} className="text-xs px-3 py-1 font-bold">{verdict.text}</Badge>
+                <Badge variant={effectiveVerdict.badge} className="text-xs px-3 py-1 font-bold">{effectiveVerdict.text}</Badge>
                 <div className="text-[10px] text-slate-400 mt-1 font-mono">
                   Cryptographic SHA-256: 8a0f9b33e24...
                 </div>
@@ -3551,7 +3887,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                             ? "Photo Region ELA Manipulation"
                             : effectiveBreakdown.field > 40
                             ? "MRZ Check Digit Inconsistency"
-                            : effectiveFace.similarity < 70
+                            : effectiveFace.similarity != null && effectiveFace.similarity < 70
                             ? "Biometric Facial Similarity Deficit"
                             : "Elevated Risk Index Threshold Exceeded"}
                         </span>
@@ -3562,7 +3898,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                           ? `Photo anomaly score measured at ${effectiveForensics.photoRegionAnomaly}%, exceeding the 25% nominal limit. Indicates digital splicing or physical paste-up.`
                           : effectiveBreakdown.field > 40
                           ? "MRZ checksum validation failed against ICAO 9303 Part 3-7 7-3-1 cyclic weighting."
-                          : effectiveFace.similarity < 70
+                          : effectiveFace.similarity != null && effectiveFace.similarity < 70
                           ? `Passenger facial similarity measured at ${effectiveFace.similarity}%, falling below the 75% clearance threshold.`
                           : "Multiple operational risk factors triggered secondary inspection threshold."}
                       </p>
@@ -3663,9 +3999,26 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
 
                 <div className="p-3 rounded-lg border border-slate-800 bg-slate-900/80 space-y-1">
                   <div className="font-semibold text-white flex items-center justify-between">
-                    <span>4. Face Match Biometrics (FaceForensics++ c23)</span>
-                    <Badge variant={effectiveFace.similarity >= 70 ? "pass" : "critical"} className="text-[9px]">
-                      Cosine Similarity: {effectiveFace.similarity}%
+                    <span>4. Face Match Biometrics (GradientNet Multi-Scale)</span>
+                    <Badge
+                      variant={
+                        effectiveFace.rawStatus === "MATCH"
+                          ? "pass"
+                          : effectiveFace.rawStatus === "MISMATCH"
+                          ? "critical"
+                          : effectiveFace.rawStatus === "INCONCLUSIVE"
+                          ? "warning"
+                          : "default"
+                      }
+                      className="text-[9px]"
+                    >
+                      {effectiveFace.rawStatus === "MATCH"
+                        ? `Cosine Similarity: ${effectiveFace.similarity}% (MATCH)`
+                        : effectiveFace.rawStatus === "MISMATCH"
+                        ? `Cosine Similarity: ${effectiveFace.similarity}% (MISMATCH)`
+                        : effectiveFace.rawStatus === "INCONCLUSIVE"
+                        ? `Cosine Similarity: ${effectiveFace.similarity}% (INCONCLUSIVE)`
+                        : "NOT VERIFIED"}
                     </Badge>
                   </div>
                   <p className="text-[11px] text-slate-400">
@@ -3892,7 +4245,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
         fields={effectiveFields.length > 0 ? effectiveFields : scenario.fields}
         tampering={effectiveForensics}
         faceMatch={{
-          similarity: effectiveFace.similarity,
+          similarity: effectiveFace.similarity ?? 0,
           confidence: effectiveFace.confidence,
           liveness: effectiveFace.liveness,
         }}

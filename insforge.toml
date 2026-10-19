@@ -1,9 +1,8 @@
 [auth]
-# Restrict redirect URLs to known hosts only — no wildcards
-# Update the production URL to your actual Vercel deployment domain
+# Restrict redirect URLs strictly to https://i8yy29ec.insforge.site — no other URL allowed
 allowed_redirect_urls = [
-  "http://localhost:5173/reset-password",
-  "https://trustgate-ai.vercel.app/reset-password"
+  "https://i8yy29ec.insforge.site",
+  "https://i8yy29ec.insforge.site/reset-password"
 ]
 # NOTE: Set to true for production deployment
 # Kept false for SIH demo convenience — must enable before live border deployment
@@ -38,3 +37,6 @@ retention_days = 0
 
 [schedules]
 retention_days = 7
+
+[deployments]
+subdomain = "i8yy29ec"

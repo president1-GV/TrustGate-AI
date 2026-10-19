@@ -110,6 +110,16 @@ export async function computeRisk(input: {
 
   let rawScore = clamp(rawSum / totalWeights, 0, 100);
 
+  const isBiometricMismatch =
+    face.identityMatchStatus === "MISMATCH" ||
+    face.resultLabel === "MISMATCH" ||
+    (face.similarity != null && face.similarity < 60);
+
+  // If biometric mismatch is verified between live face and document portrait, enforce high risk
+  if (isBiometricMismatch) {
+    rawScore = Math.max(rawScore, 78);
+  }
+
   // If the document is classified as unknown, enforce high risk
   if ((docDetect.documentType === "unknown" && !isAadhaar) || (!isAadhaar && docDetect.confidence < 0.4)) {
     rawScore = Math.max(rawScore, 88);
@@ -185,10 +195,14 @@ export async function computeRisk(input: {
 
   factors.push({
     code: "face_analysis",
-    weight: weights.faceQuality * 100,
-    contribution: weights.faceQuality * (100 - components.faceQuality),
-    explanation: face.detected
-      ? `Portrait quality ${components.faceQuality.toFixed(0)}/100 (similarity=${components.faceSimilarity.toFixed(0)}%).`
+    weight: weights.faceSimilarity * 100,
+    contribution: isBiometricMismatch ? 25 : weights.faceQuality * (100 - components.faceQuality),
+    explanation: isBiometricMismatch
+      ? `Biometric mismatch flagged: Live subject features diverge from document portrait (${face.similarity != null ? `${face.similarity}% similarity` : "mismatch detected"}).`
+      : face.detected && face.similarity != null
+      ? `Biometric comparison verified (${face.similarity}% similarity, portrait quality ${components.faceQuality.toFixed(0)}/100).`
+      : face.detected
+      ? `Portrait quality ${components.faceQuality.toFixed(0)}/100 (awaiting live camera biometric comparison).`
       : "No facial portrait detected in current document.",
   });
 
@@ -205,7 +219,9 @@ export async function computeRisk(input: {
   else level = "HIGH";
 
   let recommendedAction: string;
-  if (docDetect.documentType === "unknown" && !isAadhaar) {
+  if (isBiometricMismatch) {
+    recommendedAction = "Biometric mismatch detected between document portrait and live passenger. Immediate supervisor escalation required.";
+  } else if (docDetect.documentType === "unknown" && !isAadhaar) {
     recommendedAction = "Reject non-credential submission. Request valid government-issued identity credential.";
   } else if (level === "LOW") {
     recommendedAction = isAadhaar

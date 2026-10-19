@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   ExternalLink,
   Radio,
+  RotateCcw,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -33,6 +34,7 @@ import { Separator } from "@/components/ui/Separator";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/Alert";
 import { Progress } from "@/components/ui/Progress";
 import { DocumentViewer } from "@/components/screening/DocumentViewer";
+import { ExtractionPanel } from "@/components/screening/ExtractionPanel";
 import { CameraCapture, type StorageUploadResult } from "@/components/camera";
 import { MidvArchetypeInspector } from "@/components/screening/MidvArchetypeInspector";
 import { MidvAuditCard } from "@/components/screening/MidvAuditCard";
@@ -49,11 +51,11 @@ import { useAuthStore } from "@/store/auth";
 import {
   saveScreeningCase,
   autoCheckinCameraScan,
-  checkDatabaseIdentity,
   type CaseStatus,
   type DatabaseIdentityCheckResult,
 } from "@/lib/db";
 import { genCaseCode, uploadScreeningDocument } from "@/lib/insforge";
+import { registerUserScannedSpecimen } from "@/lib/specimenResolver";
 import { validateUploadedFile, sanitizeErrorMessage } from "@/lib/security";
 import {
   cn,
@@ -358,6 +360,7 @@ export function ScreeningPage() {
   const blobUrlRef = React.useRef<string | null>(null);
   const currentFileRef = React.useRef<File | null>(null);
   const currentDataUrlRef = React.useRef<string | null>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     return () => {
@@ -506,12 +509,20 @@ export function ScreeningPage() {
     [result, captureSource, currentProvenance]
   );
 
-  const resetPipeline = () => {
+  const resetPipeline = React.useCallback(() => {
     // Revoke any existing blob URL to prevent memory leaks
     if (blobUrlRef.current) {
       URL.revokeObjectURL(blobUrlRef.current);
       blobUrlRef.current = null;
     }
+    currentFileRef.current = null;
+    currentDataUrlRef.current = null;
+    activeRunIdRef.current = null;
+    lastSyncedRunIdRef.current = null;
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+
     setPipelineModules(
       PIPELINE_STEPS.map((s) => ({
         id: s.id,
@@ -530,15 +541,30 @@ export function ScreeningPage() {
     setStorageInfo(null);
     setCurrentProvenance(null);
     setAutoClearResult(null);
-  };
+    setCaptureSource(null);
+    setBusy(false);
+    screeningCtx.resetScreening();
+  }, [screeningCtx]);
 
   const onCameraCapture = async (
     file: File,
     pipelineResult?: FullPipelineResult,
     storage?: StorageUploadResult
   ) => {
+    // Revoke previous blob URL
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+
+    const runId = "run_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+    activeRunIdRef.current = runId;
     setCaptureSource("camera");
     currentFileRef.current = file;
+    setError(null);
+    setResult(null);
+    setBusy(true);
+
     const reader = new FileReader();
     reader.onload = () => {
       const dUrl = reader.result as string;
@@ -546,11 +572,22 @@ export function ScreeningPage() {
     };
     reader.readAsDataURL(file);
 
-    if (pipelineResult) {
-      const runId = "run_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
-      activeRunIdRef.current = runId;
-      resetPipeline();
+    const url = storage?.url || URL.createObjectURL(file);
+    if (!storage?.url) {
+      blobUrlRef.current = url;
+    }
+    const sInfo = {
+      url,
+      key: storage?.key,
+      bucket: storage?.bucket,
+      mime: storage?.mimeType || file.type || "image/jpeg",
+      size: storage?.fileSizeBytes || file.size,
+      width: storage?.width,
+      height: storage?.height,
+    };
+    setStorageInfo(sInfo);
 
+    if (pipelineResult) {
       const docHash = await computeSha256(file);
       if (activeRunIdRef.current !== runId) return;
       const provenance = createDocumentProvenance({
@@ -565,25 +602,15 @@ export function ScreeningPage() {
       pipelineResult.provenance = provenance;
 
       setResult(pipelineResult);
-      const url = storage?.url || URL.createObjectURL(file);
-      blobUrlRef.current = url;
-      const sInfo = {
-        url,
-        key: storage?.key,
-        bucket: storage?.bucket,
-        mime: storage?.mimeType || file.type,
-        size: storage?.fileSizeBytes || file.size,
-        width: storage?.width,
-        height: storage?.height,
-      };
-      setStorageInfo(sInfo);
       triggerMidvAudit(pipelineResult, sInfo, "camera", provenance, runId);
 
+      const cameraCaseCode = genCaseCode();
       setCheckinLoading(true);
       autoCheckinCameraScan({
         userId: user?.id,
         file,
         result: pipelineResult,
+        caseCode: cameraCaseCode,
         storageUrl: storage?.url,
         mime: sInfo.mime,
         fileSizeBytes: sInfo.size,
@@ -598,11 +625,31 @@ export function ScreeningPage() {
                 if (chk.caseId) sessionStorage.setItem("tg_doc_img_" + chk.caseId, dUrl);
               } catch {}
             }
+            const docType = pipelineResult.docDetect?.documentType || "passport";
+            const docTypeLabel =
+              docType === "aadhaar"
+                ? "Aadhaar Card"
+                : docType === "visa"
+                ? "Visa"
+                : docType === "id"
+                ? "National ID"
+                : "Passport";
+            registerUserScannedSpecimen({
+              id: chk.caseId || runId,
+              case_code: chk.caseCode,
+              document_type: docTypeLabel,
+              country_code: (pipelineResult.mrz?.nationality as string) || (docType === "aadhaar" ? "IND" : null),
+              risk_level: pipelineResult.risk?.level || "LOW",
+              image_url: dUrl || storage?.url || "",
+            });
           }
         })
         .catch((chkErr) => console.warn("[TrustGate DB] Camera auto-checkin notice:", chkErr))
         .finally(() => {
-          if (activeRunIdRef.current === runId) setCheckinLoading(false);
+          if (activeRunIdRef.current === runId) {
+            setCheckinLoading(false);
+            setBusy(false);
+          }
         });
     } else {
       onFile(file, true);
@@ -610,16 +657,60 @@ export function ScreeningPage() {
   };
 
   const onFile = async (file: File, isFromCamera = false) => {
-    if (busy) return;
+    // 1. Concurrency token
     const runId = "run_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
     activeRunIdRef.current = runId;
-    resetPipeline();
-    setBusy(true);
+
+    // 2. Clear state from previous run while keeping activeRunIdRef set
     setError(null);
+    setResult(null);
+    setMidvResult(null);
+    setFaceForensicsResult(null);
+    setFaceForensicsLoading(false);
+    setCameraCheckin(null);
+    setCheckinLoading(false);
+    setAutoClearResult(null);
     setCaptureSource(isFromCamera ? "camera" : "upload");
+    setBusy(true);
+
+    // 3. Reset pipeline stages to IDLE
+    setPipelineModules(
+      PIPELINE_STEPS.map((s) => ({
+        id: s.id,
+        index: s.index,
+        label: s.label,
+        status: "IDLE",
+      }))
+    );
+
+    // 4. Revoke previous blob URL
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+
+    // 5. Instantly show the uploaded image in the BORDER INSPECTION SCANNER
+    const url = URL.createObjectURL(file);
+    blobUrlRef.current = url;
+    currentFileRef.current = file;
+
+    const initialStorageInfo = {
+      url,
+      mime: file.type || "image/jpeg",
+      size: file.size,
+    };
+    setStorageInfo(initialStorageInfo);
+
+    // Store base64 preview for persistence
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dUrl = reader.result as string;
+      currentDataUrlRef.current = dUrl;
+    };
+    reader.readAsDataURL(file);
 
     try {
-      // Validate file format, MIME type, magic bytes, dimensions, and path traversal
+      // 6. Validate file format and header
       const validation = await validateUploadedFile(file);
       if (activeRunIdRef.current !== runId) return;
       if (!validation.valid) {
@@ -628,7 +719,7 @@ export function ScreeningPage() {
         return;
       }
 
-      // Compute cryptographic SHA-256 hash directly from file bytes
+      // 7. Cryptographic SHA-256 provenance calculation
       const docHash = await computeSha256(file);
       if (activeRunIdRef.current !== runId) return;
 
@@ -642,22 +733,53 @@ export function ScreeningPage() {
       });
       setCurrentProvenance(provenance);
 
-      // Run local screening pipeline with bound provenance
+      // 8. Execute the TRUSTFUSION RISK ENGINE (all 9 multi-modal verification stages)
       const r = await runPipeline(file, { onStep, minStepMs: 120, provenance });
       if (activeRunIdRef.current !== runId) return;
       setResult(r);
-      const url = URL.createObjectURL(file);
 
-      // Persist real-time uploaded specimen as base64 so it remains durable across tabs & reloads
-      currentFileRef.current = file;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dUrl = reader.result as string;
-        currentDataUrlRef.current = dUrl;
+      // Register uploaded file as a live scanned specimen immediately
+      const detectedDocType = r.docDetect?.documentType || "passport";
+      const docTypeLabel =
+        detectedDocType === "aadhaar"
+          ? "Aadhaar Card"
+          : detectedDocType === "visa"
+          ? "Visa"
+          : detectedDocType === "id"
+          ? "National ID"
+          : "Passport";
+      const countryCode = (r.mrz?.nationality as string) || (detectedDocType === "aadhaar" ? "IND" : null);
+      const assignedCaseCode = genCaseCode();
+      registerUserScannedSpecimen({
+        id: runId,
+        case_code: assignedCaseCode,
+        document_type: docTypeLabel,
+        country_code: countryCode,
+        risk_level: r.risk?.level || "LOW",
+        image_url: currentDataUrlRef.current || url,
+      });
+
+      // 9. Inspect natural image dimensions & trigger deep MIDV/Face forensic audits
+      const img = new Image();
+      img.onload = () => {
+        if (activeRunIdRef.current !== runId) return;
+        const sInfo = {
+          url,
+          mime: validation.detectedMime ?? file.type,
+          size: file.size,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+        };
+        setStorageInfo(sInfo);
+        triggerMidvAudit(r, sInfo, isFromCamera ? "camera" : "upload", provenance, runId);
       };
-      reader.readAsDataURL(file);
+      img.onerror = () => {
+        if (activeRunIdRef.current !== runId) return;
+        triggerMidvAudit(r, initialStorageInfo, isFromCamera ? "camera" : "upload", provenance, runId);
+      };
+      img.src = url;
 
-      // Dispatch alert for top-right notification popover
+      // 10. Dispatch system alert
       if (r.risk.level === "HIGH" || (r.tampering?.regions && r.tampering.regions.length > 0)) {
         window.dispatchEvent(
           new CustomEvent("tg:new_alert", {
@@ -679,98 +801,50 @@ export function ScreeningPage() {
           })
         );
       }
-      blobUrlRef.current = url;
 
-      // Real-time Database Check-in & Watchlist Clearance
+      // 11. Central database check-in (Unified for camera and uploaded files)
       setCheckinLoading(true);
-      const isCamera = isFromCamera || captureSource === "camera";
-      if (isCamera) {
-        autoCheckinCameraScan({
-          userId: user?.id,
-          file,
-          result: r,
-          storageUrl: undefined,
-          mime: validation.detectedMime ?? file.type,
-          fileSizeBytes: file.size,
-        })
-          .then((chk) => {
-            if (activeRunIdRef.current === runId) {
-              setCameraCheckin(chk);
-              const dUrl = currentDataUrlRef.current;
-              if (dUrl) {
-                try {
-                  sessionStorage.setItem("tg_doc_img_" + chk.caseCode, dUrl);
-                  if (chk.caseId) sessionStorage.setItem("tg_doc_img_" + chk.caseId, dUrl);
-                } catch {}
-              }
+      autoCheckinCameraScan({
+        userId: user?.id,
+        file,
+        result: r,
+        caseCode: assignedCaseCode,
+        storageUrl: undefined,
+        mime: validation.detectedMime ?? file.type,
+        fileSizeBytes: file.size,
+      })
+        .then((chk) => {
+          if (activeRunIdRef.current === runId) {
+            setCameraCheckin(chk);
+            const dUrl = currentDataUrlRef.current;
+            if (dUrl) {
+              try {
+                sessionStorage.setItem("tg_doc_img_" + chk.caseCode, dUrl);
+                if (chk.caseId) sessionStorage.setItem("tg_doc_img_" + chk.caseId, dUrl);
+              } catch {}
             }
-          })
-          .catch((chkErr) => {
-            console.warn("[TrustGate DB] Camera auto-checkin notice:", chkErr);
-          })
-          .finally(() => {
-            if (activeRunIdRef.current === runId) {
-              setCheckinLoading(false);
-            }
-          });
-      } else {
-        const mrzDocNum = r.mrz.documentNumber;
-        const mrzName = r.mrz.names
-          ? typeof r.mrz.names === "string"
-            ? r.mrz.names
-            : [r.mrz.names.secondary, r.mrz.names.primary].filter(Boolean).join(" ")
-          : null;
-        const ocrDocNum = (r.ocr.fields.find((f) => f.fieldName === "DOCUMENT_NUMBER")?.fieldValue as string) || null;
-        const fullName = (r.ocr.fields.find((f) => f.fieldName === "FULL_NAME")?.fieldValue as string) || mrzName || null;
-
-        checkDatabaseIdentity({
-          documentNumber: mrzDocNum || ocrDocNum || null,
-          fullName,
-        })
-          .then((dbCheck) => {
-            if (activeRunIdRef.current === runId) {
-              setCameraCheckin({
-                caseId: null,
-                caseCode: genCaseCode(),
-                dbCheck,
+            if (chk.caseId) {
+              registerUserScannedSpecimen({
+                id: chk.caseId,
+                case_code: chk.caseCode,
+                document_type: docTypeLabel,
+                country_code: countryCode,
+                risk_level: r.risk?.level || "LOW",
+                image_url: currentDataUrlRef.current || url,
               });
             }
-          })
-          .catch((dbErr) => {
-            console.warn("[TrustGate DB] Lookup notice:", dbErr);
-          })
-          .finally(() => {
-            if (activeRunIdRef.current === runId) {
-              setCheckinLoading(false);
-            }
-          });
-      }
-
-      const img = new Image();
-      img.onload = () => {
-        if (activeRunIdRef.current !== runId) return;
-        const sInfo = {
-          url,
-          mime: validation.detectedMime ?? file.type,
-          size: file.size,
-          width: img.naturalWidth,
-          height: img.naturalHeight,
-        };
-        setStorageInfo(sInfo);
-        triggerMidvAudit(r, sInfo, isFromCamera ? "camera" : "upload", provenance, runId);
-      };
-      img.onerror = () => {
-        if (activeRunIdRef.current !== runId) return;
-        const sInfo = {
-          url,
-          mime: validation.detectedMime ?? file.type,
-          size: file.size,
-        };
-        setStorageInfo(sInfo);
-        triggerMidvAudit(r, sInfo, isFromCamera ? "camera" : "upload", provenance, runId);
-      };
-      img.src = url;
+          }
+        })
+        .catch((chkErr) => {
+          console.warn("[TrustGate DB] Auto-checkin notice:", chkErr);
+        })
+        .finally(() => {
+          if (activeRunIdRef.current === runId) {
+            setCheckinLoading(false);
+          }
+        });
     } catch (e: any) {
+      console.error("[TrustGate] Pipeline error:", e);
       if (activeRunIdRef.current === runId) {
         setError(sanitizeErrorMessage(e?.message ?? "Local pipeline failed on uploaded file"));
       }
@@ -794,7 +868,7 @@ export function ScreeningPage() {
         (result.docDetect.documentType !== "unknown" && result.risk.score < 35));
 
     if (isPassed) {
-      const code = genCaseCode();
+      const code = cameraCheckin?.caseCode || genCaseCode();
       const traveler =
         result.mrz.names?.primary
           ? `${result.mrz.names.primary} ${result.mrz.names.secondary ?? ""}`.trim()
@@ -803,13 +877,36 @@ export function ScreeningPage() {
 
       playGateClearanceChime();
 
+      // If already persisted via autoCheckinCameraScan, do not create duplicate case
+      if (cameraCheckin?.caseId) {
+        setAutoClearResult({
+          cleared: true,
+          caseId: cameraCheckin.caseId,
+          caseCode: code,
+          timestamp: new Date().toLocaleTimeString(),
+          travelerName: traveler,
+        });
+
+        window.dispatchEvent(
+          new CustomEvent("tg:new_alert", {
+            detail: {
+              title: `✅ e-Gate Auto-Cleared: Case #${code}`,
+              body: `Traveler ${traveler} automatically cleared. Gate barrier opened.`,
+              kind: "review",
+              case_id: cameraCheckin.caseId,
+            },
+          })
+        );
+        return;
+      }
+
       const activeUserId = user?.id || "d78d7bfa-d033-412d-8d20-987e0019467c";
       saveScreeningCase({
         userId: activeUserId,
         caseCode: code,
         result,
         isDemo: false,
-        storageUrl: storageInfo?.url,
+        storageUrl: storageInfo?.url && !storageInfo.url.startsWith("blob:") ? storageInfo.url : undefined,
         storageKey: storageInfo?.key,
         storageBucket: storageInfo?.bucket,
         mime: storageInfo?.mime,
@@ -818,6 +915,24 @@ export function ScreeningPage() {
         imageHeight: storageInfo?.height,
       })
           .then((newId) => {
+            const docType = result.docDetect?.documentType || "passport";
+            const docTypeLabel =
+              docType === "aadhaar"
+                ? "Aadhaar Card"
+                : docType === "visa"
+                ? "Visa"
+                : docType === "id"
+                ? "National ID"
+                : "Passport";
+            registerUserScannedSpecimen({
+              id: newId,
+              case_code: code,
+              document_type: docTypeLabel,
+              country_code: (result.mrz?.nationality as string) || (docType === "aadhaar" ? "IND" : null),
+              risk_level: result.risk?.level || "LOW",
+              image_url: currentDataUrlRef.current || storageInfo?.url || "",
+            });
+
             setAutoClearResult({
               cleared: true,
               caseId: newId,
@@ -865,15 +980,17 @@ export function ScreeningPage() {
     }
   };
 
-  const inputRef = React.useRef<HTMLInputElement>(null);
-
   const saveCase = async () => {
     if (!result || saving) return;
+    if (cameraCheckin?.caseId) {
+      navigate(`/cases/${cameraCheckin.caseId}`);
+      return;
+    }
     const activeUserId = user?.id || "d78d7bfa-d033-412d-8d20-987e0019467c";
     setSaving(true);
     setError(null);
     try {
-      const caseCode = genCaseCode();
+      const caseCode = cameraCheckin?.caseCode || genCaseCode();
       const persistentDataUrl = currentDataUrlRef.current || null;
 
       if (persistentDataUrl) {
@@ -922,6 +1039,24 @@ export function ScreeningPage() {
           sessionStorage.setItem("tg_doc_img_" + newId, persistentDataUrl);
         } catch {}
       }
+
+      const savedDocType = result.docDetect?.documentType || "passport";
+      const savedDocTypeLabel =
+        savedDocType === "aadhaar"
+          ? "Aadhaar Card"
+          : savedDocType === "visa"
+          ? "Visa"
+          : savedDocType === "id"
+          ? "National ID"
+          : "Passport";
+      registerUserScannedSpecimen({
+        id: newId,
+        case_code: caseCode,
+        document_type: savedDocTypeLabel,
+        country_code: (result.mrz?.nationality as string) || (savedDocType === "aadhaar" ? "IND" : null),
+        risk_level: result.risk?.level || "LOW",
+        image_url: persistentDataUrl || storageUrl || "",
+      });
 
       navigate(`/cases/${newId}`);
     } catch (e: any) {
@@ -995,6 +1130,18 @@ export function ScreeningPage() {
             >
               REAL-TIME AUTHENTIC
             </Badge>
+          )}
+          {(storageInfo?.url || result || captureSource) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetPipeline}
+              className="h-8 text-xs font-bold border-rose-300 text-rose-700 bg-rose-50 hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-950/40 dark:text-rose-300 gap-1.5 cursor-pointer shadow-xs"
+              title="Reset workspace and clear current document"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Reset Workspace
+            </Button>
           )}
         </div>
       </div>
@@ -1355,6 +1502,12 @@ export function ScreeningPage() {
         <div className="xl:col-span-6 min-w-0 space-y-4">
           <DocumentViewer
             imageUrl={storageInfo?.url}
+            enhancedImageUrl={result?.enhancement?.enhancedDataUrl || undefined}
+            rectifiedImageUrl={result?.enhancement?.rectifiedDataUrl || undefined}
+            originalHash={result?.originalHash || currentProvenance?.documentHash || undefined}
+            enhancedHash={result?.enhancedHash || undefined}
+            rectifiedHash={result?.rectifiedHash || undefined}
+            transformationsApplied={result?.enhancement?.transformationsApplied || []}
             docBBox={result?.docDetect.boundingBox ?? null}
             ocrFields={result?.ocr.fields ?? []}
             mrzLines={result?.mrz.rawLines ?? []}
@@ -1363,7 +1516,15 @@ export function ScreeningPage() {
             provenance={currentProvenance || result?.provenance}
             onActivateCamera={() => setCameraOpen(true)}
             onUploadFile={() => inputRef.current?.click()}
+            onResetDocument={resetPipeline}
           />
+
+          {result && (
+            <ExtractionPanel
+              result={result}
+              databaseResult={cameraCheckin?.dbCheck}
+            />
+          )}
 
           <MidvAuditCard
             result={midvResult}

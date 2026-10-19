@@ -28,7 +28,6 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { NotificationBell } from "@/components/layout/NotificationBell";
-import { OfficerSwitcherModal } from "@/components/layout/OfficerSwitcherModal";
 import { SystemConnectivityBar } from "@/components/layout/SystemConnectivityBar";
 
 const SIDEBAR_WIDTH = 240;
@@ -64,7 +63,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [sidebarSearch, setSidebarSearch] = React.useState("");
-  const [officerModalOpen, setOfficerModalOpen] = React.useState(false);
 
   const visibleNav = NAV_ITEMS.filter((item) => {
     if (!user) return false;
@@ -191,15 +189,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* User chip - Interactive Duty Officer Switcher */}
+        {/* User chip - Profile & Settings */}
         <div className="p-3 border-t border-ink-border">
           {user && (
-            <button
-              type="button"
-              onClick={() => setOfficerModalOpen(true)}
+            <Link
+              to="/settings"
               className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 bg-ink-raised/40 hover:bg-ink-raised/80 border border-ink-border/70 hover:border-signal-blue/50 transition-all text-left group cursor-pointer shadow-sm"
-              title="Click to switch active duty officer profile"
-              aria-label="Officer Profile & Duty Switcher"
+              title="Profile & Settings"
+              aria-label="Profile & Settings"
             >
               <div className="relative flex-shrink-0">
                 <div className="h-9 w-9 rounded-full bg-gradient-to-br from-signal-blue/70 to-signal-purple/70 flex items-center justify-center text-xs font-bold text-white shadow-sm group-hover:scale-105 transition-transform">
@@ -225,7 +222,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   )}
                 </div>
               </div>
-            </button>
+            </Link>
           )}
         </div>
       </aside>
@@ -367,7 +364,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <main className="flex-1 p-6 min-w-0 max-w-full overflow-x-hidden print:!p-0 print:!m-0 print:!max-w-none print:!w-full print:!overflow-visible">{children}</main>
       </div>
-      <OfficerSwitcherModal open={officerModalOpen} onClose={() => setOfficerModalOpen(false)} />
     </div>
   );
 }

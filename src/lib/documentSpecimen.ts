@@ -42,10 +42,9 @@ export function resolveCleanDocumentUrl(
 
     // Active session blob URLs (created in the current browser window)
     if (trimmed.startsWith("blob:")) {
-      // Discard stale blob URLs from legacy test domains or foreign origins that cannot load
+      // Discard stale blob URLs from foreign origins that cannot load
       if (
-        trimmed.includes("heicn84u") ||
-        (typeof window !== "undefined" && !trimmed.startsWith(`blob:${window.location.origin}`))
+        typeof window !== "undefined" && !trimmed.startsWith(`blob:${window.location.origin}`)
       ) {
         return null;
       }

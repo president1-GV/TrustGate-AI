@@ -522,11 +522,11 @@ export function DatasetsPage() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
             <Database className="h-6 w-6 text-signal-blue" />
             Dataset Pipeline & MIDV-2020 Engine
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             Three-phase training progression grounded in the L3i Laboratory MIDV-2020 benchmark with Python LLM verification.
           </p>
         </div>
@@ -573,14 +573,14 @@ export function DatasetsPage() {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-slate-100">
+            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               MIDV-2020 Benchmark Integration
             </span>
-            <Badge variant="default" className="bg-signal-cyan/20 text-signal-cyan border-signal-cyan/40 text-[10px] font-mono">
+            <Badge variant="default" className="bg-signal-cyan/20 text-signal-cyan border-signal-cyan/40 text-[10px] font-mono font-semibold">
               OFFICIAL DATASET
             </Badge>
           </div>
-          <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+          <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
             Provided by <strong>L3i Laboratory, University of La Rochelle</strong> (
             <a
               href="http://l3i-share.univ-lr.fr"
@@ -596,40 +596,40 @@ export function DatasetsPage() {
       </div>
 
       {/* Real-Time Production Data Stream Banner */}
-      <div className="rounded-xl border border-emerald-500/40 bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-slate-950/80 p-4 shadow-lg shadow-emerald-950/20">
+      <div className="rounded-xl border border-emerald-500/40 bg-emerald-50/90 dark:bg-gradient-to-r dark:from-emerald-950/40 dark:via-slate-900/60 dark:to-slate-950/80 p-4 shadow-sm dark:shadow-lg dark:shadow-emerald-950/20">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
             <div className="relative mt-1">
               <span className="relative flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-600 dark:bg-emerald-500"></span>
               </span>
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-bold text-slate-100 uppercase tracking-wide flex items-center gap-1.5">
+                <span className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide flex items-center gap-1.5">
                   Real-Time Test Engine Connected
                 </span>
-                <Badge variant="pass" className="text-[10px] font-mono py-0 px-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
+                <Badge variant="pass" className="text-[10px] font-mono py-0.5 px-2 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 font-semibold">
                   <Activity className="h-3 w-3 mr-1 animate-pulse" /> LIVE STREAM
                 </Badge>
-                <Badge variant="default" className="text-[10px] font-mono py-0 px-2 bg-slate-800 text-slate-300 border-slate-700">
-                  <ShieldCheck className="h-3 w-3 mr-1 text-emerald-400" /> ZERO FAKE DATA STRICTLY ENFORCED
+                <Badge variant="default" className="text-[10px] font-mono py-0.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-semibold">
+                  <ShieldCheck className="h-3 w-3 mr-1 text-emerald-600 dark:text-emerald-400" /> ZERO FAKE DATA STRICTLY ENFORCED
                 </Badge>
               </div>
-              <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
+              <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 max-w-3xl leading-relaxed font-normal">
                 Directly bound to live PostgreSQL database cases and verified L3i Laboratory MIDV-2020 ground truth.
                 Synthetic/dummy entries (e.g. placeholder names or serials) are strictly prohibited and mathematically filtered.
               </p>
-              <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-400 font-mono">
-                <span className="flex items-center gap-1 text-emerald-400">
+              <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-600 dark:text-slate-400 font-mono">
+                <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold">
                   <Radio className="h-3 w-3 animate-pulse" />
                   <strong>{liveCases.length}</strong> live database cases streaming
                 </span>
                 <span>•</span>
-                <span>Engine: <strong>{engineOnline ? "Python 3.14 (:8000)" : "Client Reasoner"}</strong></span>
+                <span className="text-slate-700 dark:text-slate-300">Engine: <strong className="text-slate-900 dark:text-slate-100">{engineOnline ? "Python 3.14 (:8000)" : "Client Reasoner"}</strong></span>
                 <span>•</span>
-                <span className="text-slate-500 flex items-center gap-1">
+                <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   Last synced: {lastRealtimeSync ? lastRealtimeSync.toLocaleTimeString() : "Pending"}
                 </span>
@@ -643,7 +643,7 @@ export function DatasetsPage() {
               size="sm"
               onClick={loadRealtimeCases}
               disabled={realtimeLoading}
-              className="border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 h-8 text-xs font-mono"
+              className="border border-emerald-500/50 bg-white dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 h-8 text-xs font-mono font-semibold shadow-sm transition-colors"
             >
               <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", realtimeLoading && "animate-spin")} />
               {realtimeLoading ? "Syncing..." : "Sync Live DB Cases"}
@@ -652,7 +652,7 @@ export function DatasetsPage() {
               variant="outline"
               size="sm"
               onClick={() => setActiveTab("neural_studio")}
-              className="border-purple-500/40 text-purple-300 hover:bg-purple-500/10 h-8 text-xs font-mono"
+              className="border border-purple-500/50 bg-white dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/20 h-8 text-xs font-mono font-semibold shadow-sm transition-colors"
             >
               <BrainCircuit className="h-3.5 w-3.5 mr-1.5" />
               Neural Studio
@@ -661,7 +661,7 @@ export function DatasetsPage() {
               variant="primary"
               size="sm"
               onClick={() => setActiveTab("realtime")}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white h-8 text-xs font-semibold shadow-md"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white h-8 text-xs font-bold shadow-md transition-all"
             >
               <Cpu className="h-3.5 w-3.5 mr-1.5" />
               Open Live Test Bench
@@ -672,7 +672,7 @@ export function DatasetsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-ink-card border border-ink-border">
+        <TabsList className="bg-slate-100 dark:bg-ink-card border border-slate-300/80 dark:border-ink-border shadow-sm p-1 gap-1">
           <Tab value="overview" className="gap-2">
             <Layers className="h-4 w-4" /> Progression Roadmap & Registry
           </Tab>
@@ -682,20 +682,20 @@ export function DatasetsPage() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <span>Live Real-Time Engine ({liveCases.length})</span>
-            <Badge variant="pass" className="text-[9px] py-0 px-1 bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+            <Badge variant="pass" className="text-[9px] py-0 px-1 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 font-semibold">
               LIVE
             </Badge>
           </Tab>
           <Tab value="neural_studio" className="gap-2">
-            <BrainCircuit className="h-4 w-4 text-purple-400" /> Neural Training Studio
-            <Badge variant="pass" className="ml-1 text-[10px] py-0 px-1 bg-purple-500/20 text-purple-300 border-purple-500/30">
+            <BrainCircuit className="h-4 w-4 text-purple-600 dark:text-purple-400" /> Neural Training Studio
+            <Badge variant="pass" className="ml-1 text-[10px] py-0 px-1 bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30 font-semibold">
               100% VAL
             </Badge>
           </Tab>
           <Tab value="benchmark" className="gap-2">
             <Cpu className="h-4 w-4" /> MIDV-2020 Live Benchmark
             {benchmarkResult && (
-              <Badge variant="pass" className="ml-1 text-[10px] py-0 px-1">
+              <Badge variant="pass" className="ml-1 text-[10px] py-0 px-1 font-semibold">
                 100%
               </Badge>
             )}
@@ -706,7 +706,7 @@ export function DatasetsPage() {
           <Tab value="faceforensics" className="gap-2">
             <ScanFace className="h-4 w-4 text-signal-cyan" /> FaceForensics++ (FF++)
             {ffBenchmarkResult && (
-              <Badge variant="pass" className="ml-1 text-[10px] py-0 px-1">
+              <Badge variant="pass" className="ml-1 text-[10px] py-0 px-1 font-semibold">
                 {ffBenchmarkResult.accuracy_percentage}%
               </Badge>
             )}
@@ -763,7 +763,7 @@ export function DatasetsPage() {
                               <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
                                 {step.title}
                               </div>
-                              <div className="text-base font-bold text-slate-100 tracking-tight">
+                              <div className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                                 {step.dataset}
                               </div>
                               <div className="mt-3 pt-3 border-t border-ink-border/70">
@@ -802,15 +802,15 @@ export function DatasetsPage() {
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <CardTitle className="text-base font-bold text-slate-100 flex items-center gap-2">
+                    <CardTitle className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                       <Database className="h-5 w-5 text-signal-blue" />
                       Authoritative International Benchmark Registry (10 Scientific Datasets)
                     </CardTitle>
-                    <Badge variant="pass" className="text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
+                    <Badge variant="pass" className="text-[10px] font-mono bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30">
                       10/10 EMBEDDED & AIR-GAPPED
                     </Badge>
                   </div>
-                  <CardDescription className="text-xs text-slate-400 mt-1">
+                  <CardDescription className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                     Grounded strictly on the 10 authoritative international benchmarks specified for TrustGate-FusionNet. Zero random or fake datasets.
                   </CardDescription>
                 </div>
@@ -833,7 +833,7 @@ export function DatasetsPage() {
                         "h-7 text-[11px] font-mono py-0 px-2.5",
                         datasetFilter === cat.key
                           ? "bg-signal-blue text-white border-signal-blue font-bold shadow-sm"
-                          : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                          : "bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                       )}
                     >
                       {cat.label}
@@ -847,7 +847,7 @@ export function DatasetsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 border-b border-ink-border bg-slate-950/40">
+                    <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600 dark:text-slate-400 border-b border-ink-border bg-slate-100 dark:bg-slate-950/40">
                       <th className="px-4 py-3 w-12 text-center">#</th>
                       <th className="px-4 py-3">Benchmark & Category</th>
                       <th className="px-4 py-3">Author & Institution</th>
@@ -862,13 +862,13 @@ export function DatasetsPage() {
                     {filteredAuthoritativeDatasets.map((ds, idx) => (
                       <tr
                         key={ds.id}
-                        className="hover:bg-ink-raised/30 transition-colors align-top text-xs"
+                        className="hover:bg-slate-50 dark:hover:bg-ink-raised/30 transition-colors align-top text-xs"
                       >
-                        <td className="px-4 py-3.5 text-center font-mono font-bold text-slate-400">
+                        <td className="px-4 py-3.5 text-center font-mono font-bold text-slate-500 dark:text-slate-400">
                           {idx + 1}
                         </td>
                         <td className="px-4 py-3.5 max-w-xs">
-                          <div className="font-bold text-slate-100 flex items-center gap-1.5">
+                          <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                             {ds.name}
                           </div>
                           <div className="flex items-center gap-1.5 mt-1">
@@ -876,23 +876,23 @@ export function DatasetsPage() {
                               variant="default"
                               className={cn(
                                 "text-[9px] font-mono py-0 px-1.5",
-                                ds.category === "DOCUMENT_FRAUD" && "bg-rose-500/15 text-rose-300 border-rose-500/30",
+                                ds.category === "DOCUMENT_FRAUD" && "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
                                 ds.category === "IDENTITY_ANALYSIS" && "bg-signal-blue/15 text-signal-blue border-signal-blue/30",
-                                ds.category === "GEOMETRY_HOMOGRAPHY" && "bg-signal-cyan/15 text-signal-cyan border-signal-cyan/30",
-                                ds.category === "BIOMETRICS_DEEPFAKE" && "bg-purple-500/15 text-purple-300 border-purple-500/30"
+                                ds.category === "GEOMETRY_HOMOGRAPHY" && "bg-signal-cyan/15 text-cyan-700 dark:text-signal-cyan border-signal-cyan/30",
+                                ds.category === "BIOMETRICS_DEEPFAKE" && "bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30"
                               )}
                             >
                               {ds.category.replace(/_/g, " ")}
                             </Badge>
                             <span className="text-[10px] font-mono text-slate-500">{ds.id}</span>
                           </div>
-                          <p className="text-[11px] text-slate-400 mt-1 leading-snug line-clamp-2">
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-snug line-clamp-2">
                             {ds.description}
                           </p>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-300">
-                          <div className="font-semibold text-slate-200">{ds.author}</div>
-                          <div className="text-[10px] text-slate-400 mt-0.5">{ds.institution}</div>
+                        <td className="px-4 py-3.5 text-slate-700 dark:text-slate-300">
+                          <div className="font-semibold text-slate-900 dark:text-slate-200">{ds.author}</div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{ds.institution}</div>
                         </td>
                         <td className="px-4 py-3.5 max-w-xs">
                           <a
@@ -910,12 +910,12 @@ export function DatasetsPage() {
                             href={ds.repoUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] font-mono text-slate-300 hover:text-white bg-slate-900 px-2 py-1 rounded border border-slate-800 transition-colors"
+                            className="inline-flex items-center gap-1 text-[11px] font-mono text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded border border-slate-300 dark:border-slate-800 transition-colors"
                           >
                             <span className="truncate max-w-[140px]">
                               {ds.repoUrl.replace("https://github.com/", "").replace("https://huggingface.co/datasets/", "hf:").replace("https://www.kaggle.com/datasets/", "kaggle:")}
                             </span>
-                            <ExternalLink className="h-3 w-3 shrink-0 text-slate-500" />
+                            <ExternalLink className="h-3 w-3 shrink-0 text-slate-400" />
                           </a>
                         </td>
                         <td className="px-4 py-3.5 max-w-xs">
@@ -924,7 +924,7 @@ export function DatasetsPage() {
                               <Badge
                                 key={feat}
                                 variant="default"
-                                className="text-[9px] font-mono bg-slate-900 border-slate-700 text-purple-300 py-0 px-1"
+                                className="text-[9px] font-mono bg-purple-50 dark:bg-slate-900 border-purple-200 dark:border-slate-700 text-purple-700 dark:text-purple-300 py-0 px-1 font-semibold"
                               >
                                 {feat}
                               </Badge>
@@ -1328,20 +1328,20 @@ export function DatasetsPage() {
 
         {/* TAB 4: FACEFORENSICS++ */}
         <TabsContent value="faceforensics" className="space-y-6">
-          <Card className="border-signal-cyan/40 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 shadow-xl">
+          <Card className="border-signal-cyan/40 bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 shadow-sm dark:shadow-xl">
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <ScanFace className="h-6 w-6 text-signal-cyan" />
-                    <CardTitle className="text-xl font-bold tracking-tight text-slate-100">
+                    <CardTitle className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                       FaceForensics++ (FF++) Biometric & Deepfake Suite
                     </CardTitle>
-                    <Badge variant="default" className="text-xs font-mono bg-signal-cyan/15 text-signal-cyan border-signal-cyan/30">
+                    <Badge variant="default" className="text-xs font-mono bg-signal-cyan/15 text-signal-cyan border-signal-cyan/30 font-semibold">
                       ICCV 2019 / c23
                     </Badge>
                   </div>
-                  <CardDescription className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                  <CardDescription className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
                     Developed by Technical University of Munich (TUM) and Friedrich-Alexander-Universität Erlangen-Nürnberg (FAU).
                     Integrated with community Kaggle mirror (c23 high-quality compression) and automated access scripts.
                   </CardDescription>
@@ -1563,29 +1563,29 @@ export function DatasetsPage() {
 
         {/* TAB: LIVE REAL-TIME ENGINE */}
         <TabsContent value="realtime" className="space-y-6">
-          <Card className="border-emerald-500/40 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 shadow-xl">
+          <Card className="border-emerald-500/40 bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 shadow-sm dark:shadow-xl">
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <Radio className="h-5 w-5 text-emerald-400 animate-pulse" />
-                    <CardTitle className="text-xl font-bold tracking-tight text-slate-100">
+                    <Radio className="h-5 w-5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+                    <CardTitle className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                       Real-Time Live Production Data Test Bench
                     </CardTitle>
-                    <Badge variant="pass" className="text-xs font-mono bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
+                    <Badge variant="pass" className="text-xs font-mono bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 font-semibold">
                       LIVE DATABASE STREAM
                     </Badge>
                   </div>
-                  <CardDescription className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                  <CardDescription className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
                     Directly connected to active PostgreSQL production cases. Evaluates real incoming identity documents
                     against ICAO 9303 7-3-1 check digit algorithms, physical geometry standards, and FaceForensics++ biometric suites.
-                    <span className="text-emerald-400 font-semibold ml-1">Strict zero fake data policy: no placeholders or dummy serials.</span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-semibold ml-1">Strict zero fake data policy: no placeholders or dummy serials.</span>
                   </CardDescription>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="default" className="text-xs font-mono bg-slate-800 text-slate-300 border-slate-700">
-                    <ShieldCheck className="h-3.5 w-3.5 mr-1 text-emerald-400" />
+                  <Badge variant="default" className="text-xs font-mono bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700 font-semibold">
+                    <ShieldCheck className="h-3.5 w-3.5 mr-1 text-emerald-600 dark:text-emerald-400" />
                     AUTHENTIC PRODUCTION DATA ONLY
                   </Badge>
                   <Button
@@ -1593,7 +1593,7 @@ export function DatasetsPage() {
                     size="sm"
                     onClick={loadRealtimeCases}
                     disabled={realtimeLoading}
-                    className="border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 text-xs font-mono"
+                    className="border border-emerald-500/50 bg-white dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 text-xs font-mono font-semibold shadow-sm transition-colors"
                   >
                     <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", realtimeLoading && "animate-spin")} />
                     {realtimeLoading ? "Refreshing..." : "Refresh Stream"}
@@ -1652,26 +1652,26 @@ export function DatasetsPage() {
                             className={cn(
                               "rounded-xl border p-3.5 cursor-pointer transition-all space-y-2",
                               isSelected
-                                ? "border-emerald-500 bg-emerald-950/20 ring-1 ring-emerald-500/30"
-                                : "border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-900/80"
+                                ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30"
+                                : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/80 shadow-sm"
                             )}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-mono text-xs font-bold text-slate-100">
+                                  <span className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100">
                                     {lc.case_code}
                                   </span>
                                   {lc.country_code && (
-                                    <Badge variant="default" className="text-[10px] font-mono bg-slate-800 text-slate-300 border-slate-700 py-0">
+                                    <Badge variant="default" className="text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 py-0 font-semibold">
                                       {lc.country_code}
                                     </Badge>
                                   )}
-                                  <Badge variant="pass" className="text-[9px] py-0 px-1 font-mono uppercase">
+                                  <Badge variant="pass" className="text-[9px] py-0 px-1 font-mono uppercase font-semibold">
                                     {lc.status}
                                   </Badge>
                                 </div>
-                                <div className="text-[11px] text-slate-400 mt-0.5">
+                                <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
                                   {lc.document_type.replace(/_/g, " ").toUpperCase()} • {holderName}
                                 </div>
                               </div>
@@ -1684,24 +1684,24 @@ export function DatasetsPage() {
                                   e.stopPropagation();
                                   onTestRealtimeCase(lc);
                                 }}
-                                className="h-7 text-xs border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 font-mono"
+                                className="h-7 text-xs border border-emerald-500/50 bg-white dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 font-mono font-semibold shadow-sm transition-colors"
                               >
                                 <Cpu className={cn("h-3 w-3 mr-1", isTesting && "animate-spin")} />
                                 {isTesting ? "Testing..." : "Test"}
                               </Button>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-1.5 pt-1 text-[10px] font-mono text-slate-400">
-                              <div className="bg-slate-950/60 rounded px-2 py-1 border border-slate-800/80 truncate">
-                                Doc: <span className="text-slate-200">{docNum}</span>
+                            <div className="grid grid-cols-3 gap-1.5 pt-1 text-[10px] font-mono text-slate-600 dark:text-slate-400">
+                              <div className="bg-slate-100 dark:bg-slate-950/60 rounded px-2 py-1 border border-slate-200 dark:border-slate-800/80 truncate">
+                                Doc: <span className="text-slate-900 dark:text-slate-200 font-semibold">{docNum}</span>
                               </div>
-                              <div className="bg-slate-950/60 rounded px-2 py-1 border border-slate-800/80">
-                                MRZ: <span className={lc.mrz_lines.length > 0 ? "text-emerald-400 font-bold" : "text-amber-400"}>
+                              <div className="bg-slate-100 dark:bg-slate-950/60 rounded px-2 py-1 border border-slate-200 dark:border-slate-800/80">
+                                MRZ: <span className={lc.mrz_lines.length > 0 ? "text-emerald-700 dark:text-emerald-400 font-bold" : "text-amber-700 dark:text-amber-400 font-semibold"}>
                                   {lc.mrz_lines.length > 0 ? `${lc.mrz_lines.length}L Valid` : "VIZ"}
                                 </span>
                               </div>
-                              <div className="bg-slate-950/60 rounded px-2 py-1 border border-slate-800/80 truncate">
-                                Tamp: <span className={lc.tampering.probability > 40 ? "text-rose-400" : "text-emerald-400"}>
+                              <div className="bg-slate-100 dark:bg-slate-950/60 rounded px-2 py-1 border border-slate-200 dark:border-slate-800/80 truncate">
+                                Tamp: <span className={lc.tampering.probability > 40 ? "text-rose-700 dark:text-rose-400 font-bold" : "text-emerald-700 dark:text-emerald-400 font-semibold"}>
                                   {lc.tampering.probability}%
                                 </span>
                               </div>
@@ -1747,21 +1747,21 @@ export function DatasetsPage() {
                     )}
 
                     {!testingRealtimeId && realtimeTestResult && (
-                      <div className="rounded-xl border border-emerald-500/40 bg-slate-900/80 p-5 space-y-4 shadow-xl">
+                      <div className="rounded-xl border border-emerald-500/40 bg-white dark:bg-slate-900/80 p-5 space-y-4 shadow-sm dark:shadow-xl">
                         {/* Summary Header */}
-                        <div className="flex items-start justify-between flex-wrap gap-3 pb-3 border-b border-slate-800">
+                        <div className="flex items-start justify-between flex-wrap gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                              <span className="text-base font-bold text-slate-100 font-mono">
+                              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                              <span className="text-base font-bold text-slate-900 dark:text-slate-100 font-mono">
                                 {selectedLiveCase?.case_code}
                               </span>
-                              <Badge variant="pass" className="font-mono text-[10px] bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
+                              <Badge variant="pass" className="font-mono text-[10px] bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 font-semibold">
                                 <ShieldCheck className="h-3 w-3 mr-1" />
                                 LIVE POSTGRESQL PRODUCTION DATA
                               </Badge>
                             </div>
-                            <div className="text-xs text-slate-400 mt-1 font-mono">
+                            <div className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-mono">
                               Engine Mode: <strong>{realtimeTestResult.engine_mode || "PYTHON_SERVICE"}</strong> •
                               Timestamp: {new Date(realtimeTestResult.timestamp).toLocaleTimeString()}
                             </div>
@@ -1894,22 +1894,22 @@ export function DatasetsPage() {
 
         {/* TAB 6: NEURAL TRAINING STUDIO */}
         <TabsContent value="neural_studio" className="space-y-6">
-          <Card className="border-purple-500/40 bg-gradient-to-br from-slate-900 via-purple-950/20 to-slate-900 shadow-xl">
+          <Card className="border-purple-500/40 bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-purple-950/20 dark:to-slate-900 shadow-sm dark:shadow-xl">
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <BrainCircuit className="h-6 w-6 text-purple-400" />
-                    <CardTitle className="text-xl font-bold tracking-tight text-slate-100">
+                    <BrainCircuit className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                    <CardTitle className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                       TrustGate-FusionNet Neural Architecture & Streaming Studio
                     </CardTitle>
-                    <Badge variant="default" className="text-xs font-mono bg-purple-500/15 text-purple-300 border-purple-500/30">
+                    <Badge variant="default" className="text-xs font-mono bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30 font-semibold">
                       v3.0.0-fusionnet-10benchmarks
                     </Badge>
                   </div>
-                  <CardDescription className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                  <CardDescription className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
                     Air-gapped 4-layer multi-task deep neural classifier trained via a non-contiguous streaming generator
-                    (<code className="text-purple-300 font-mono">StreamingBatchIterator</code>, $O(B \times 16)$ buffer, zero bulk contiguous allocation)
+                    (<code className="text-purple-700 dark:text-purple-300 font-mono">StreamingBatchIterator</code>, $O(B \times 16)$ buffer, zero bulk contiguous allocation)
                     grounded on all 10 authoritative international benchmarks (MIDV-500, MIDV-2020, ICDAR 2024 DocTamper, IDNet-2025, FaceForensics++ c23).
                     100% offline & air-gapped execution via native Python arithmetic and client WebAssembly/JS.
                   </CardDescription>

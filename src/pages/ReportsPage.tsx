@@ -31,6 +31,8 @@ import { Separator } from "@/components/ui/Separator";
 import { formatDate, riskColor } from "@/lib/utils";
 import { RealtimeDigitalSignature } from "@/components/common/RealtimeDigitalSignature";
 import { ForensicSpecimenCard } from "@/components/common/ForensicSpecimenCard";
+import { resolveSpecimenUrl } from "@/lib/specimenResolver";
+import { insforge } from "@/lib/insforge";
 
 export function ReportsPage() {
   const [search, setSearch] = React.useState("");
@@ -40,8 +42,73 @@ export function ReportsPage() {
   const { data, isLoading, error, refetch, isFetching } = useQuery<ReportRow[]>({
     queryKey: ["reports"],
     queryFn: () => listReports(),
-    staleTime: 30_000,
+    staleTime: 3_000,
+    refetchInterval: 3_000,
   });
+
+  // Real-time synchronization: listen to scan events, storage changes, and InsForge WebSocket updates
+  React.useEffect(() => {
+    const handleSync = () => {
+      refetch();
+    };
+
+    window.addEventListener("trustgate:report_saved", handleSync);
+    window.addEventListener("reports_changed", handleSync);
+    window.addEventListener("trustgate:case_saved", handleSync);
+    window.addEventListener("cases_changed", handleSync);
+    window.addEventListener("tg:db_updated", handleSync);
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "tg_user_scanned_documents" || e.key === "tg:last_db_change") {
+        refetch();
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      if (typeof BroadcastChannel !== "undefined") {
+        bc = new BroadcastChannel("trustgate_live_events");
+        bc.onmessage = (msg) => {
+          if (msg.data?.type === "report_saved" || msg.data?.type === "case_saved") {
+            refetch();
+          }
+        };
+      }
+    } catch {}
+
+    // InsForge Realtime WebSocket subscription for live Postgres changes on reports and cases
+    let realtimeConnected = false;
+    try {
+      if ((insforge as any).realtime?.connect) {
+        (insforge as any).realtime.connect().then(() => {
+          realtimeConnected = true;
+          (insforge as any).realtime?.subscribe("reports:global").catch(() => {});
+          (insforge as any).realtime?.on("report_saved", handleSync);
+          (insforge as any).realtime?.on("case_saved", handleSync);
+          (insforge as any).realtime?.on("status_changed", handleSync);
+        }).catch(() => {});
+      }
+    } catch {}
+
+    return () => {
+      window.removeEventListener("trustgate:report_saved", handleSync);
+      window.removeEventListener("reports_changed", handleSync);
+      window.removeEventListener("trustgate:case_saved", handleSync);
+      window.removeEventListener("cases_changed", handleSync);
+      window.removeEventListener("tg:db_updated", handleSync);
+      window.removeEventListener("storage", handleStorage);
+      if (bc) bc.close();
+      if (realtimeConnected) {
+        try {
+          (insforge as any).realtime?.unsubscribe("reports:global").catch(() => {});
+          (insforge as any).realtime?.off("report_saved", handleSync);
+          (insforge as any).realtime?.off("case_saved", handleSync);
+          (insforge as any).realtime?.off("status_changed", handleSync);
+        } catch {}
+      }
+    };
+  }, [refetch]);
 
   const reports = data ?? [];
 
@@ -84,11 +151,13 @@ export function ReportsPage() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
-            Screening Reports
-          </h1>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
+              Screening Reports
+            </h1>
+          </div>
           <p className="text-sm text-slate-400 mt-1">
-            Formal, explainable identity screening audit reports and forensic exports.
+            Formal, explainable identity screening audit reports and forensic exports ({data?.length ?? 0} live reports).
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -174,6 +243,7 @@ export function ReportsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 border-b border-ink-border">
+                    <th className="px-5 py-3">Specimen</th>
                     <th className="px-5 py-3">Case Code</th>
                     <th className="px-5 py-3">Doc Type</th>
                     <th className="px-5 py-3">Risk Assessment</th>
@@ -185,12 +255,37 @@ export function ReportsPage() {
                 <tbody className="divide-y divide-ink-border">
                   {filteredReports.map((report) => {
                     const c = report.cases;
+                    const rawUrl =
+                      report.storage_url ||
+                      c?.storage_url ||
+                      (report as any).image_url ||
+                      (c as any)?.image_url;
+                    const thumbUrl = resolveSpecimenUrl(rawUrl, c?.case_code, c?.document_type);
                     return (
                       <tr
                         key={report.id}
                         className="hover:bg-ink-raised/40 transition-colors"
                       >
-                        <td className="px-5 py-3.5 font-mono text-xs text-signal-cyan font-medium">
+                        <td className="px-5 py-3">
+                          <div className="h-9 w-14 relative rounded-md border border-slate-700 bg-slate-950 overflow-hidden shadow-sm flex items-center justify-center">
+                            {thumbUrl ? (
+                              <img
+                                src={thumbUrl}
+                                alt={c?.case_code ?? "Specimen"}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center justify-center text-[10px] text-slate-500 font-mono">
+                                <FileText className="h-3.5 w-3.5 opacity-40" />
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 font-mono text-xs text-signal-cyan font-bold">
                           {c?.case_code ?? "TG-CASE"}
                         </td>
                         <td className="px-5 py-3.5 capitalize text-slate-300">
@@ -201,7 +296,7 @@ export function ReportsPage() {
                             <span
                               className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${riskColor(
                                 c.risk_level
-                              )}`}
+                              ).badge}`}
                             >
                               {c.risk_level} ({c.risk_score ?? 0})
                             </span>
@@ -470,7 +565,7 @@ export function ReportsPage() {
                     <ForensicSpecimenCard
                       caseId={selectedReport.cases?.id || selectedReport.case_id}
                       caseCode={selectedReport.cases?.case_code}
-                      storageUrl={repDoc?.storage_url}
+                      storageUrl={selectedReport.storage_url || selectedReport.cases?.storage_url || repDoc?.storage_url}
                       images={repDoc?.images}
                       documentType={selectedReport.cases?.document_type}
                       documentHash={repDoc?.document_hash}
@@ -480,7 +575,7 @@ export function ReportsPage() {
                       dateOfBirth={repDoc?.mrz?.date_of_birth || repDoc?.mrz?.dateOfBirth}
                       nationality={selectedReport.cases?.country_code || repDoc?.country_code}
                       rawMrzLines={repDoc?.mrz?.raw_lines || repDoc?.mrz?.rawLines}
-                      source={repDoc?.storage_url?.includes("camera") ? "LIVE_CAMERA" : "SCREEN_UPLOAD"}
+                      source={selectedReport.storage_url?.includes("camera") || repDoc?.storage_url?.includes("camera") ? "LIVE_CAMERA" : "SCREEN_UPLOAD"}
                     />
 
                     {/* Forensic Pipeline Findings Body */}

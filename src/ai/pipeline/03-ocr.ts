@@ -457,31 +457,44 @@ export interface OcrRunContext {
   documentId?: string;
   processingRunId?: string;
   imageHash?: string;
+  enhancedCanvas?: HTMLCanvasElement;
+  rectifiedCanvas?: HTMLCanvasElement;
+  enhancedHash?: string;
+  rectifiedHash?: string;
+  documentTypeHint?: string;
 }
 
 /**
  * Executes OCR on the current authoritative document canvas.
- * 1. Attempts high-accuracy PaddleOCR 3.7.0 execution via local inference microservice.
+ * 1. Attempts high-accuracy Multi-Pass PaddleOCR 3.7.0 execution via local inference microservice.
  * 2. Gracefully falls back to browser-based Tesseract engine if microservice is offline.
  */
 export async function runOcr(
   canvas: HTMLCanvasElement,
   context?: OcrRunContext
-): Promise<OcrResult> {
+): Promise<OcrResult & { passes?: any[]; conflicts?: any[]; ocrConflict?: boolean }> {
   const start = performance.now();
 
-  // 1. Attempt Official PaddleOCR 3.7.0 Microservice
+  // 1. Attempt Official PaddleOCR 3.7.0 Microservice with Multi-Pass support
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-    const payload = {
+    const payload: Record<string, any> = {
       image_base64: canvas.toDataURL("image/jpeg", 0.95),
       document_id: context?.documentId || `DOC-${Date.now()}`,
       processing_run_id: context?.processingRunId || `RUN-${Date.now()}`,
       image_hash: context?.imageHash || undefined,
-      capture_source: "OFFICER_CURRENT_DOCUMENT"
+      capture_source: "OFFICER_CURRENT_DOCUMENT",
+      document_type_hint: context?.documentTypeHint
     };
+
+    if (context?.enhancedCanvas) {
+      payload.enhanced_image_base64 = context.enhancedCanvas.toDataURL("image/jpeg", 0.95);
+    }
+    if (context?.rectifiedCanvas) {
+      payload.rectified_image_base64 = context.rectifiedCanvas.toDataURL("image/jpeg", 0.95);
+    }
 
     const resp = await fetch("http://127.0.0.1:8000/api/v1/ocr", {
       method: "POST",
@@ -500,7 +513,7 @@ export async function runOcr(
         const item = val as { value?: string; confidence?: number };
         if (item && item.value) {
           fields.push({
-            fieldName: key,
+            fieldName: key.toUpperCase(),
             fieldValue: item.value,
             confidence: item.confidence ?? 0.95,
             boundingBox: { x: 0, y: 0, w: 0, h: 0 },
@@ -509,15 +522,18 @@ export async function runOcr(
         }
       }
 
-      const rawText = data.raw_text || "";
-      const enrichedFields = enrichOcrFields(fields, rawText, data.confidence_mean || 0.95);
+      const rawText = data.raw_text || data.text || "";
+      const enrichedFields = enrichOcrFields(fields, rawText, data.confidence_mean || data.confidence || 0.95);
       const executionMs = performance.now() - start;
       return {
-        provider: "PaddleOCR 3.7.0",
+        provider: "PaddleOCR 3.7.0 (Multi-Pass)",
         rawText,
-        overallConfidence: data.confidence_mean || (enrichedFields.length > 0 ? 0.95 : 0.0),
+        overallConfidence: data.confidence_mean || data.confidence || (enrichedFields.length > 0 ? 0.95 : 0.0),
         fields: enrichedFields,
         executionMs,
+        passes: data.passes || [],
+        conflicts: data.conflicts || [],
+        ocrConflict: !!data.ocr_conflict,
       };
     }
   } catch (_paddleErr) {

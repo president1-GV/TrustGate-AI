@@ -175,7 +175,7 @@ export function AuthorizationGatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-grid flex items-center justify-center p-4 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100/90 dark:from-slate-950 dark:via-ink dark:to-slate-950 text-slate-900 dark:text-slate-100 transition-colors flex items-center justify-center p-4 py-8 relative">
       <div className="w-full max-w-2xl glass-card rounded-2xl shadow-2xl border border-signal-blue/30 overflow-hidden">
         {/* Header Ribbon */}
         <div className="bg-gradient-to-r from-ink-card via-signal-blue/15 to-ink-card border-b border-ink-border p-6 text-center relative">

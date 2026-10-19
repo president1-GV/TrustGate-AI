@@ -38,7 +38,8 @@ class PaddleOcrService:
         processing_run_id: str,
         image_hash: Optional[str] = None,
         capture_source: str = "UPLOAD",
-        document_type_hint: Optional[str] = None
+        document_type_hint: Optional[str] = None,
+        custom_text_hint: Optional[str] = None
     ) -> Dict[str, Any]:
         """Executes full OCR detection, recognition, confidence scoring, and field extraction."""
         start_time = time.perf_counter()
@@ -63,7 +64,8 @@ class PaddleOcrService:
             document_id=document_id,
             processing_run_id=processing_run_id,
             image_hash=computed_hash,
-            capture_source=capture_source
+            capture_source=capture_source,
+            custom_text_hint=custom_text_hint
         )
 
         detected_lines = raw_result.get("lines", [])

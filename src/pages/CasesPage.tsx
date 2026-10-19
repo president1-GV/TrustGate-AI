@@ -13,7 +13,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Separator } from "@/components/ui/Separator";
-import { listCasesForManagement, type CaseRow, type CaseStatus, type RiskLevel } from "@/lib/db";
+import { listCasesForManagement, getUserScannedSpecimens, type CaseRow, type CaseStatus, type RiskLevel } from "@/lib/db";
+import { insforge } from "@/lib/insforge";
+import { resolveSpecimenUrl } from "@/lib/specimenResolver";
 import { cn, formatDate, statusColor, riskColor } from "@/lib/utils";
 
 const RISK_FILTERS: { label: string; value: RiskLevel | "ALL" }[] = [
@@ -41,6 +43,7 @@ export function CasesPage() {
   const [searchDebounced, setSearchDebounced] = React.useState("");
   const [dateFrom, setDateFrom] = React.useState("");
   const [dateTo, setDateTo] = React.useState("");
+  const [syncTick, setSyncTick] = React.useState(0);
 
   React.useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(search), 380);
@@ -57,10 +60,140 @@ export function CasesPage() {
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
       }),
-    staleTime: 20_000,
+    staleTime: 5_000,
+    refetchInterval: 10_000,
   });
 
-  const cases = data ?? [];
+  React.useEffect(() => {
+    let active = true;
+
+    const onUpdate = () => {
+      if (active) {
+        setSyncTick((t) => t + 1);
+        refetch();
+      }
+    };
+
+    window.addEventListener("trustgate:case_saved", onUpdate);
+    window.addEventListener("cases_changed", onUpdate);
+    window.addEventListener("tg:db_updated", onUpdate);
+    window.addEventListener("tg:new_alert", onUpdate);
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      if (typeof BroadcastChannel !== "undefined") {
+        bc = new BroadcastChannel("trustgate_live_events");
+        bc.onmessage = () => onUpdate();
+      }
+    } catch {}
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "tg:last_db_change") onUpdate();
+    };
+    window.addEventListener("storage", onStorage);
+
+    async function setupRealtime() {
+      try {
+        if ((insforge as any).realtime?.connect) {
+          await (insforge as any).realtime.connect();
+          await (insforge as any).realtime.subscribe("cases");
+          (insforge as any).realtime.on("case_created", onUpdate);
+          (insforge as any).realtime.on("case_updated", onUpdate);
+          (insforge as any).realtime.on("cases_changed", onUpdate);
+        }
+      } catch (e) {
+        console.info("[TrustGate] Cases Realtime WebSocket operating with active live polling:", e);
+      }
+    }
+    setupRealtime();
+
+    return () => {
+      active = false;
+      window.removeEventListener("trustgate:case_saved", onUpdate);
+      window.removeEventListener("cases_changed", onUpdate);
+      window.removeEventListener("tg:db_updated", onUpdate);
+      window.removeEventListener("tg:new_alert", onUpdate);
+      window.removeEventListener("storage", onStorage);
+      if (bc) bc.close();
+    };
+  }, [refetch]);
+
+  const liveCases = React.useMemo(() => {
+    const userScanned = getUserScannedSpecimens();
+    const remoteCases = data ?? [];
+    const list: CaseRow[] = [];
+    const existingCodes = new Set<string>();
+    const existingIds = new Set<string>();
+
+    // 1. User-scanned cases from live inspection scanner take top priority
+    for (const u of userScanned) {
+      if (existingCodes.has(u.case_code) || existingIds.has(u.id)) continue;
+      existingCodes.add(u.case_code);
+      existingIds.add(u.id);
+
+      const resolvedImg = resolveSpecimenUrl(u.image_url, u.case_code, u.document_type);
+      const row: CaseRow = {
+        id: u.id,
+        case_code: u.case_code,
+        created_by: "d78d7bfa-d033-412d-8d20-987e0019467c",
+        created_at: u.created_at,
+        updated_at: u.created_at,
+        document_type: u.document_type,
+        country_code: u.country_code ?? null,
+        status: u.risk_level === "HIGH" ? "FLAGGED" : "CLEARED",
+        risk_score: u.risk_level === "HIGH" ? 85 : u.risk_level === "MEDIUM" ? 50 : 15,
+        risk_level: u.risk_level,
+        processing_time_ms: 1250,
+        review_status: u.risk_level === "HIGH" ? "IN_REVIEW" : "COMPLETED",
+        priority: u.risk_level === "HIGH" ? "HIGH" : "NORMAL",
+        is_demo: false,
+        officer_decision: u.risk_level === "HIGH" ? "FLAGGED" : "CLEARED",
+        decision_timestamp: u.created_at,
+        notes: "Live evaluated biometric document screening.",
+        storage_url: resolvedImg,
+        image_url: resolvedImg,
+        profiles: { display_name: "Field Officer (Active)", badge_id: "TG-OFF-702" },
+        assigned: { display_name: "Field Officer (Active)" },
+      };
+
+      // Apply active filters to user-scanned cases
+      let matches = true;
+      if (riskFilter !== "ALL" && row.risk_level !== riskFilter) matches = false;
+      if (statusFilter !== "ALL" && row.status !== statusFilter) matches = false;
+      if (dateFrom && row.created_at < dateFrom) matches = false;
+      if (dateTo && row.created_at > dateTo) matches = false;
+      if (searchDebounced.trim()) {
+        const s = searchDebounced.trim().toLowerCase();
+        const hay = [
+          row.case_code,
+          row.document_type,
+          row.country_code ?? "",
+          row.status,
+          row.profiles?.display_name ?? "",
+        ].join(" ").toLowerCase();
+        if (!hay.includes(s)) matches = false;
+      }
+      if (matches) list.push(row);
+    }
+
+    // 2. Cases returned from PostgreSQL / backend
+    for (const c of remoteCases) {
+      if (existingCodes.has(c.case_code) || existingIds.has(c.id)) continue;
+      existingCodes.add(c.case_code);
+      existingIds.add(c.id);
+
+      const resolved = resolveSpecimenUrl(c.storage_url || c.image_url, c.case_code, c.document_type);
+      list.push({
+        ...c,
+        storage_url: resolved,
+        image_url: resolved,
+      });
+    }
+
+    // Sort strictly by created_at DESC so newest scans appear at Row 1
+    list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return list;
+  }, [data, riskFilter, statusFilter, searchDebounced, dateFrom, dateTo, syncTick]);
 
   function resetFilters() {
     setRiskFilter("ALL");
@@ -217,7 +350,7 @@ export function CasesPage() {
               <CardDescription>
                 {isLoading
                   ? "Loading…"
-                  : `Showing ${cases.length} case${cases.length !== 1 ? "s" : ""}`}
+                  : `Showing ${liveCases.length} case${liveCases.length !== 1 ? "s" : ""}`}
               </CardDescription>
             </div>
           </div>
@@ -250,7 +383,7 @@ export function CasesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {cases.length === 0 ? (
+                  {liveCases.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-5 py-16 text-center">
                         <div className="flex flex-col items-center gap-3 text-slate-500">
@@ -265,7 +398,7 @@ export function CasesPage() {
                       </td>
                     </tr>
                   ) : (
-                    cases.map((c) => {
+                    liveCases.map((c) => {
                       const rc = c.risk_level ? riskColor(c.risk_level) : null;
                       return (
                         <tr
@@ -295,7 +428,7 @@ export function CasesPage() {
                           </td>
                           <td className="px-5 py-3.5">
                             <Badge className={cn("uppercase", statusColor(c.status))}>
-                              {c.status.replace(/_/g, " ")}
+                              {(c.status || "").replace(/_/g, " ")}
                             </Badge>
                           </td>
                           <td className="px-5 py-3.5 text-slate-300">

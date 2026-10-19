@@ -10,6 +10,8 @@ interface Props {
 interface State {
   hasError: boolean;
   sanitizedMessage: string;
+  rawError?: string;
+  componentStack?: string;
 }
 
 /**
@@ -18,16 +20,17 @@ interface State {
  * Prevents unhandled exceptions, malformed attacker payloads, or corrupt state
  * from crashing the application into a blank white screen.
  * Suppresses raw file paths, line numbers, and database stack traces to prevent
- * information disclosure / reconnaissance attacks.
+ * information disclosure / reconnaissance attacks, while allowing authorized inspection.
  */
 export class SecurityErrorBoundary extends Component<Props, State> {
   public override state: State = {
     hasError: false,
     sanitizedMessage: "",
+    rawError: "",
+    componentStack: "",
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    // Sanitize error message to prevent leaking internal code paths or database details
     const raw = error?.message || "";
     let safeMessage = "A guarded application component encountered an unexpected event. State has been isolated.";
 
@@ -40,27 +43,35 @@ export class SecurityErrorBoundary extends Component<Props, State> {
     return {
       hasError: true,
       sanitizedMessage: safeMessage,
+      rawError: raw || String(error),
     };
   }
 
   public override componentDidCatch(_error: Error, errorInfo: ErrorInfo) {
-    // Log securely to client console with masked details
+    this.setState({
+      componentStack: errorInfo.componentStack || "",
+    });
     console.warn(
       "[TrustGate Security Defense] Guarded error intercepted and isolated:",
       {
         timestamp: new Date().toISOString(),
-        componentStack: errorInfo.componentStack?.slice(0, 150),
+        error: _error?.message,
+        componentStack: errorInfo.componentStack?.slice(0, 300),
       }
     );
   }
 
   private handleReset = () => {
-    this.setState({ hasError: false, sanitizedMessage: "" });
+    this.setState({ hasError: false, sanitizedMessage: "", rawError: "", componentStack: "" });
     window.location.reload();
   };
 
+  private handleRetry = () => {
+    this.setState({ hasError: false, sanitizedMessage: "", rawError: "", componentStack: "" });
+  };
+
   private handleGoHome = () => {
-    this.setState({ hasError: false, sanitizedMessage: "" });
+    this.setState({ hasError: false, sanitizedMessage: "", rawError: "", componentStack: "" });
     window.location.href = "/dashboard";
   };
 
@@ -93,14 +104,38 @@ export class SecurityErrorBoundary extends Component<Props, State> {
               </div>
             </div>
 
-            <div className="flex gap-3 justify-center pt-2">
+            {this.state.rawError && (
+              <details className="text-left text-[11px] bg-ink-raised/80 rounded-xl p-3 border border-ink-border text-slate-400">
+                <summary className="cursor-pointer font-semibold text-slate-300 hover:text-white select-none">
+                  Diagnostic Information (Authorized Personnel)
+                </summary>
+                <div className="mt-2 space-y-1 font-mono text-[10px] break-all">
+                  <div className="text-rose-400 font-semibold">{this.state.rawError}</div>
+                  {this.state.componentStack && (
+                    <pre className="text-slate-500 whitespace-pre-wrap max-h-32 overflow-auto text-[9px] mt-1 pt-1 border-t border-ink-border">
+                      {this.state.componentStack.slice(0, 500)}
+                    </pre>
+                  )}
+                </div>
+              </details>
+            )}
+
+            <div className="flex gap-2 justify-center pt-2 flex-wrap">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={this.handleRetry}
+                className="border-ink-border text-slate-300 hover:text-white"
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                Try Recovering State
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={this.handleReset}
                 className="border-ink-border text-slate-300 hover:text-white"
               >
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                 Reload View
               </Button>
               <Button

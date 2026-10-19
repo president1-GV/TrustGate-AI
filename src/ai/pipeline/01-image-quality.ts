@@ -1,4 +1,5 @@
 import type { ImageQualityResult } from "../types";
+import { analyzeDetailedQuality } from "../../lib/imageProcessing";
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -115,13 +116,30 @@ export async function analyzeImageQuality(
   else if (score >= 50) grade = "FAIR";
   else grade = "POOR";
 
+  // Calculate high-frequency residual noise and perspective proxy
+  let noiseSum = 0;
+  let noiseCount = 0;
+  for (let i = W; i < pixelCount - W; i += 7) {
+    const diff = Math.abs(luminance[i] - (luminance[i - 1] + luminance[i + 1]) / 2);
+    noiseSum += diff;
+    noiseCount++;
+  }
+  const noiseVal = noiseCount > 0 ? noiseSum / noiseCount : 0;
+  const noiseScore = clamp(Math.round(100 - noiseVal * 5), 0, 100);
+
+  const detailed = await analyzeDetailedQuality(canvas);
+
   return {
     score,
     blur,
     brightness,
     contrast: contrastNorm,
+    noise: noiseScore,
     resolutionScore,
     glare,
+    perspectiveScore: clamp(Math.round(100 - (blur / 4)), 20, 100),
+    croppingScore: clamp(Math.round(resolutionScore * 0.9 + 10), 10, 100),
     grade,
+    detailedQuality: detailed,
   };
 }

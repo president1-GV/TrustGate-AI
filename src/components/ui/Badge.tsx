@@ -8,19 +8,19 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-slate-500/15 text-slate-300 border-slate-500/30",
+          "bg-slate-100 dark:bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-500/30",
         low:
-          "bg-risk-low/15 text-risk-low border-risk-low/30",
+          "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40",
         medium:
-          "bg-risk-medium/15 text-risk-medium border-risk-medium/30",
+          "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40",
         high:
-          "bg-risk-high/15 text-risk-high border-risk-high/30",
+          "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/40",
         critical:
-          "bg-rose-500/15 text-rose-400 border-rose-500/30",
+          "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/40",
         pass:
-          "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+          "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40",
         warning:
-          "bg-amber-500/15 text-amber-400 border-amber-500/30",
+          "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40",
       },
     },
     defaultVariants: {

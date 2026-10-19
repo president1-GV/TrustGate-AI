@@ -1,7 +1,7 @@
 # TRUSTGATE AI BILLION — DATABASE SECURITY & POSTGRESQL RLS SPECIFICATION
 **Document Reference**: `DATABASE_SECURITY.md`  
 **Database**: PostgreSQL 15 (PostgREST BaaS via InsForge)  
-**Host**: `https://heicn84u.us-east.insforge.app`  
+**Host**: `https://i8yy29ec.us-east.insforge.app`  
 **Security Standard**: Least Privilege / Zero Trust / IDOR Neutralization  
 **Last Hardened**: 2026-09-05T23:45:00Z  
 

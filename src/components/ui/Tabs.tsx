@@ -35,7 +35,7 @@ function TabsList({ className, ...props }: TabsListProps) {
   return (
     <div
       className={cn(
-        "inline-flex h-11 items-center justify-center rounded-lg bg-ink-card/60 border border-ink-border p-1 text-slate-400",
+        "inline-flex h-11 items-center justify-start rounded-lg bg-slate-100 dark:bg-ink-card/60 border border-slate-200 dark:border-ink-border p-1 text-slate-600 dark:text-slate-400 max-w-full overflow-x-auto",
         className
       )}
       {...props}
@@ -55,10 +55,10 @@ function Tab({ value, className, ...props }: TabProps) {
       type="button"
       onClick={() => onValueChange(value)}
       className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all",
+        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-semibold transition-all text-slate-700 dark:text-slate-300",
         isActive
-          ? "bg-signal-blue/15 text-signal-blue shadow-sm"
-          : "hover:text-slate-200",
+          ? "bg-white dark:bg-signal-blue/20 text-signal-blue font-bold shadow-sm border border-slate-300/80 dark:border-signal-blue/30"
+          : "hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-200/70 dark:hover:bg-slate-800/60",
         className
       )}
       {...props}

@@ -60,6 +60,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/Alert";
 import { DocumentViewer } from "@/components/screening/DocumentViewer";
 import { createDocumentProvenance } from "@/lib/provenance";
 import { fetchSecureBlobUrl } from "@/lib/insforge";
+import { resolveSpecimenUrl } from "@/lib/specimenResolver";
 import { validateRiskOverrideRequest } from "@/lib/security";
 import {
   fetchCaseDetails,
@@ -226,8 +227,64 @@ const TAB_ITEMS: { id: TabId; label: string; icon: React.ComponentType<any> }[] 
   { id: "report", label: "Report", icon: FileOutput },
 ];
 
+class CaseDetailErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  override state: { hasError: boolean; error: Error | null } = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  override componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.warn("[CaseDetail] Component render intercepted:", error, info);
+  }
+
+  override render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 rounded-2xl border border-risk-high/40 bg-risk-high/5 text-slate-100 space-y-4 my-6">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-risk-high/15 border border-risk-high/30 flex items-center justify-center text-risk-high">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-slate-100">Forensic Component Isolated</h3>
+              <p className="text-xs text-slate-400">
+                A non-critical case section encountered unusual document metadata and was safely contained.
+              </p>
+            </div>
+          </div>
+          {this.state.error?.message && (
+            <div className="text-xs font-mono text-rose-300 bg-black/50 p-3 rounded-lg border border-risk-high/20">
+              {this.state.error.message}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => this.setState({ hasError: false, error: null })}
+            >
+              Retry Section
+            </Button>
+            <Link to="/cases">
+              <Button variant="ghost" size="sm">
+                Return to Cases
+              </Button>
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export function CaseDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id: rawId } = useParams<{ id: string }>();
+  const id = React.useMemo(() => (rawId ? rawId.trim().replace(/\s+/g, "-") : undefined), [rawId]);
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const qc = useQueryClient();
@@ -360,6 +417,7 @@ export function CaseDetailPage() {
         payload,
         format: "json",
       });
+      qc.invalidateQueries({ queryKey: ["reports"] });
       setReportPreview({ id: reportId, createdAt: new Date().toISOString() });
       setToast({ tone: "ok", msg: "Report generated. Ready to print." });
     } catch (e: any) {
@@ -372,7 +430,7 @@ export function CaseDetailPage() {
   const row = data?.row;
   const doc = data?.documents?.[0];
   const risk = data?.risk;
-  const rc = risk ? riskColor(risk.level) : row?.risk_level ? riskColor(row.risk_level) : null;
+  const rc = risk?.level ? riskColor(risk.level) : row?.risk_level ? riskColor(row.risk_level) : riskColor("LOW");
 
   const docProvenance: DocumentProvenance | undefined = React.useMemo(() => {
     if (!doc?.document_hash) return undefined;
@@ -511,44 +569,66 @@ export function CaseDetailPage() {
   }
 
   // Authoritative Document Type
+  const rawOcrUpper = (doc?.ocr?.raw_text || "").toUpperCase();
   const isPassport =
     doc?.document_type === "passport" ||
     row?.document_type === "passport" ||
     doc?.mrz?.format === "TD3" ||
-    mrzLines?.some((l) => l.startsWith("P<")) ||
-    doc?.ocr?.raw_text?.toUpperCase().includes("PASSPORT") ||
-    doc?.ocr?.raw_text?.toUpperCase().includes("UNITED STATES OF AMERICA");
+    mrzLines?.some((l) => typeof l === "string" && l.startsWith("P<")) ||
+    rawOcrUpper.includes("PASSPORT") ||
+    rawOcrUpper.includes("UNITED STATES OF AMERICA");
 
   const effectiveDocType = isPassport
     ? "PASSPORT"
     : (doc?.document_type ?? row?.document_type ?? "id").toUpperCase();
 
-  // Authoritative Subject Full Legal Name
-  const mrzFullName = React.useMemo(() => {
-    if (mrzLines && mrzLines.length > 0) {
-      const line1 = mrzLines.find((l) => l.startsWith("P<"));
-      if (line1) {
-        const namePart = line1.slice(5).replace(/<+$/, "");
-        const parts = namePart.split(/<+/).filter(Boolean);
-        if (parts.length >= 2) {
-          const surname = parts[0].replace(/LK$|K$/, "").trim();
-          const given = parts[1].replace(/LK$|K$/, "").trim();
-          if (surname && given) return `${given} ${surname}`;
-          return surname || given;
-        } else if (parts.length === 1) {
-          return parts[0].replace(/LK$|K$/, "").trim();
-        }
+  const activeSpecimenUrl = resolveSpecimenUrl(
+    secureDocUrl || doc?.storage_url || row?.storage_url || row?.image_url,
+    row?.case_code,
+    effectiveDocType
+  );
+
+  // Authoritative Subject Full Legal Name (Computed directly without conditional React hooks)
+  let mrzFullName: string | null = null;
+  if (mrzLines && mrzLines.length > 0) {
+    const line1 = mrzLines.find((l) => typeof l === "string" && l.startsWith("P<"));
+    if (line1) {
+      const namePart = line1.slice(5).replace(/<+$/, "");
+      const parts = namePart.split(/<+/).filter(Boolean);
+      if (parts.length >= 2) {
+        const surname = parts[0].replace(/LK$|K$/, "").trim();
+        const given = parts[1].replace(/LK$|K$/, "").trim();
+        if (surname && given) mrzFullName = `${given} ${surname}`;
+        else mrzFullName = surname || given || null;
+      } else if (parts.length === 1) {
+        mrzFullName = parts[0].replace(/LK$|K$/, "").trim() || null;
       }
     }
-    return null;
-  }, [mrzLines]);
+  }
+
+  // Normalized Face Metrics (Handles 0-100 or multiplied 0-10000 DB records safely)
+  const normalizedFaceQuality =
+    doc?.face?.quality != null
+      ? Number(doc.face.quality) > 100
+        ? Math.round(Number(doc.face.quality) / 100)
+        : Math.round(Number(doc.face.quality))
+      : undefined;
+
+  const normalizedFaceSimilarity =
+    doc?.face?.similarity != null
+      ? Number(doc.face.similarity) > 100
+        ? Number(doc.face.similarity) / 10000
+        : Number(doc.face.similarity) > 1
+        ? Number(doc.face.similarity) / 100
+        : Number(doc.face.similarity)
+      : undefined;
 
   const rawOcrFullName = fieldByName(ocrFields, "FULL_NAME") ?? fieldByName(ocrFields, "NAME");
   const effectiveFullName =
     rawOcrFullName && !/^(SIGNATURE|BEARER|TITULAIRE|TITULAR)$/i.test(rawOcrFullName)
       ? rawOcrFullName
       : mrzFullName ??
-        (doc?.ocr?.raw_text?.includes("TRAVELER") && doc?.ocr?.raw_text?.includes("HAPPY") ? "HAPPY TRAVELER" : "—");
+        (rawOcrUpper.includes("TRAVELER") && rawOcrUpper.includes("HAPPY") ? "HAPPY TRAVELER" : "—");
 
   // Authoritative Document Number
   const rawOcrDocNum = fieldByName(ocrFields, "DOCUMENT_NUMBER");
@@ -573,7 +653,7 @@ export function CaseDetailPage() {
       : cleanOcrNat ??
         (doc?.country_code && doc.country_code !== "NIG" ? doc.country_code : null) ??
         (row?.country_code && row.country_code !== "NIG" ? row.country_code : null) ??
-        (isPassport && (doc?.ocr?.raw_text?.includes("UNITED STATES") || mrzLines.some((l) => l.includes("USA"))) ? "USA" : "—");
+        (isPassport && (rawOcrUpper.includes("UNITED STATES") || mrzLines.some((l) => typeof l === "string" && l.includes("USA"))) ? "USA" : "—");
 
   // Authoritative Date of Birth
   const effectiveDob = fieldByName(ocrFields, "DATE_OF_BIRTH") ?? doc?.mrz?.date_of_birth ?? "—";
@@ -585,7 +665,8 @@ export function CaseDetailPage() {
   const effectiveSex = fieldByName(ocrFields, "SEX") ?? doc?.mrz?.sex ?? "—";
 
   return (
-    <div className="space-y-5 pb-24">
+    <CaseDetailErrorBoundary>
+      <div className="space-y-5 pb-24">
       <div className="flex items-center gap-3 no-print print:hidden">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4" />
@@ -679,7 +760,7 @@ export function CaseDetailPage() {
               <Badge
                 className={cn("uppercase", statusColor(row.status))}
               >
-                {row.status.replace("_", " ")}
+                {(row.status || "").replace(/_/g, " ")}
               </Badge>
               {row.is_demo && (
                 <Badge variant="warning">DEMO</Badge>
@@ -691,7 +772,7 @@ export function CaseDetailPage() {
                     statusColor(row.officer_decision as any)
                   )}
                 >
-                  Decision {row.officer_decision.replace("_", " ")}
+                  Decision {(row.officer_decision || "").replace(/_/g, " ")}
                 </Badge>
               )}
             </div>
@@ -855,8 +936,8 @@ export function CaseDetailPage() {
                 />
                 <SignalRow
                   label="Face Quality"
-                  score={Number(doc?.face?.quality ?? 0)}
-                  pass={Number(doc?.face?.quality ?? 0) >= 70}
+                  score={normalizedFaceQuality ?? 0}
+                  pass={(normalizedFaceQuality ?? 0) >= 70}
                 />
                 <SignalRow
                   label="Identity Consistency"
@@ -910,7 +991,7 @@ export function CaseDetailPage() {
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
             <div className="xl:col-span-8">
               <DocumentViewer
-                imageUrl={secureDocUrl ?? doc?.storage_url ?? undefined}
+                imageUrl={activeSpecimenUrl}
                 provenance={docProvenance}
                 ocrFields={ocrFields}
                 mrzLines={mrzLines}
@@ -919,14 +1000,8 @@ export function CaseDetailPage() {
                   doc?.face
                     ? {
                         detected: doc.face.detected,
-                        quality:
-                          doc.face.quality != null
-                            ? Number(doc.face.quality)
-                            : undefined,
-                        similarity:
-                          doc.face.similarity != null
-                            ? Number(doc.face.similarity) / 100
-                            : undefined,
+                        quality: normalizedFaceQuality,
+                        similarity: normalizedFaceSimilarity,
                         resultLabel: (doc.face.result_label as any) ?? undefined,
                         boundingBox: (doc.face.bounding_box as BBox | null) ?? undefined,
                       }
@@ -1169,14 +1244,14 @@ export function CaseDetailPage() {
                           const o = fieldByName(ocrFields, fn);
                           const m =
                             fn === "DOCUMENT_NUMBER"
-                              ? doc.mrz!.document_number
+                              ? doc?.mrz?.document_number
                               : fn === "DATE_OF_BIRTH"
-                              ? doc.mrz!.date_of_birth
+                              ? doc?.mrz?.date_of_birth
                               : fn === "EXPIRY_DATE"
-                              ? doc.mrz!.expiry_date
+                              ? doc?.mrz?.expiry_date
                               : fn === "NATIONALITY"
-                              ? doc.mrz!.nationality
-                              : doc.mrz!.sex;
+                              ? doc?.mrz?.nationality
+                              : doc?.mrz?.sex;
                           const ok = !!o && !!m && String(o).trim() === String(m).trim();
                           const both = !!o || !!m;
                           return (
@@ -1321,15 +1396,15 @@ export function CaseDetailPage() {
                     </div>
                     <div>
                       <div className="text-[11px] uppercase tracking-wide text-slate-500 mb-2">
-                        Suspicious Regions ({doc.tampering.regions.length})
+                        Suspicious Regions ({doc.tampering.regions?.length ?? 0})
                       </div>
                       <div className="space-y-2">
-                        {doc.tampering.regions.length === 0 ? (
+                        {(!doc.tampering.regions || doc.tampering.regions.length === 0) ? (
                           <p className="text-xs text-slate-500 italic">
                             No suspicious regions flagged.
                           </p>
                         ) : (
-                          doc.tampering.regions.map((r) => (
+                          (doc.tampering.regions ?? []).map((r) => (
                             <div
                               key={r.id}
                               className="rounded-xl border border-ink-border bg-ink-card/50 p-3"
@@ -1373,20 +1448,14 @@ export function CaseDetailPage() {
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
             <div className="xl:col-span-8">
               <DocumentViewer
-                imageUrl={secureDocUrl ?? doc?.storage_url ?? undefined}
+                imageUrl={activeSpecimenUrl}
                 provenance={docProvenance}
                 face={
                   doc?.face
                     ? {
                         detected: doc.face.detected,
-                        quality:
-                          doc.face.quality != null
-                            ? Number(doc.face.quality)
-                            : undefined,
-                        similarity:
-                          doc.face.similarity != null
-                            ? Number(doc.face.similarity) / 100
-                            : undefined,
+                        quality: normalizedFaceQuality,
+                        similarity: normalizedFaceSimilarity,
                         resultLabel: (doc.face.result_label as any) ?? undefined,
                         boundingBox: (doc.face.bounding_box as BBox | null) ?? undefined,
                       }
@@ -1419,16 +1488,16 @@ export function CaseDetailPage() {
                       <MiniStat
                         label="Quality"
                         value={
-                          doc.face.quality != null
-                            ? `${Number(doc.face.quality)}%`
+                          normalizedFaceQuality != null
+                            ? `${normalizedFaceQuality}%`
                             : "—"
                         }
                       />
                       <MiniStat
                         label="Similarity"
                         value={
-                          doc.face.similarity != null
-                            ? `${Number(doc.face.similarity)}%`
+                          normalizedFaceSimilarity != null
+                            ? `${Math.round(normalizedFaceSimilarity * 100)}%`
                             : "—"
                         }
                       />
@@ -1625,18 +1694,21 @@ export function CaseDetailPage() {
 
                   <div>
                     <div className="text-[11px] uppercase tracking-wide text-slate-500 mb-2">
-                      Risk Factor Contributions ({risk.factors.length})
+                      Risk Factor Contributions ({(risk.factors ?? []).length})
                     </div>
                     <div className="grid gap-2">
-                      {risk.factors.map((f) => {
-                        const contrib = Number(f.contribution ?? 0);
-                        const weight = Number(f.weight ?? 0);
-                        const norm = Math.max(0, Math.min(100, contrib * 100));
-                        return (
-                          <div
-                            key={f.id}
-                            className="rounded-xl border border-ink-border bg-ink-card/50 p-3"
-                          >
+                      {(risk.factors ?? []).length === 0 ? (
+                        <p className="text-xs text-slate-500 italic p-2">No contributing risk factors detected.</p>
+                      ) : (
+                        (risk.factors ?? []).map((f) => {
+                          const contrib = Number(f.contribution ?? 0);
+                          const weight = Number(f.weight ?? 0);
+                          const norm = Math.max(0, Math.min(100, contrib * 100));
+                          return (
+                            <div
+                              key={f.id}
+                              className="rounded-xl border border-ink-border bg-ink-card/50 p-3"
+                            >
                             <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
                               <div className="font-mono text-xs text-slate-300 tracking-wide">
                                 {f.code}
@@ -1663,7 +1735,8 @@ export function CaseDetailPage() {
                             </div>
                           </div>
                         );
-                      })}
+                      })
+                    )}
                     </div>
                   </div>
 
@@ -2000,12 +2073,12 @@ export function CaseDetailPage() {
                     </div>
                     <div className="text-xl font-extrabold tracking-tight text-slate-100 print:text-black">
                       {row.officer_decision
-                        ? `DECISION RECORDED: ${row.officer_decision.replace(/_/g, " ")}`
+                        ? `DECISION RECORDED: ${(row.officer_decision || "").replace(/_/g, " ")}`
                         : row.status === "CLEARED"
                         ? "CLEARANCE DETERMINATION: CLEARED FOR TRANSIT"
                         : row.status === "FLAGGED"
                         ? "FLAGGED: SECONDARY INSPECTION REQUIRED"
-                        : `STATUS: ${row.status.replace(/_/g, " ")}`}
+                        : `STATUS: ${(row.status || "").replace(/_/g, " ")}`}
                     </div>
                     <p className="text-xs text-slate-300 print:text-slate-700 max-w-2xl leading-relaxed">
                       {risk?.recommended_action ??
@@ -2028,7 +2101,7 @@ export function CaseDetailPage() {
                 <ForensicSpecimenCard
                   caseId={row.id}
                   caseCode={row.case_code}
-                  storageUrl={doc?.storage_url}
+                  storageUrl={activeSpecimenUrl}
                   secureDocUrl={secureDocUrl}
                   images={doc?.images}
                   documentType={effectiveDocType}
@@ -2138,7 +2211,7 @@ export function CaseDetailPage() {
                       <div className="font-bold text-slate-200 print:text-slate-900">Face Biometrics</div>
                       <div className="text-[11px] text-slate-400 print:text-slate-600">Detected: {doc?.face?.detected ? "YES" : "NO"}</div>
                       <div className="text-xs font-semibold text-emerald-400 print:text-emerald-700">
-                        {doc?.face?.similarity != null ? `${doc.face.similarity}% Cosine Match` : "Verified"}
+                        {normalizedFaceSimilarity != null ? `${Math.round(normalizedFaceSimilarity * 100)}% Cosine Match` : "Verified"}
                       </div>
                     </div>
                   </div>
@@ -2240,7 +2313,7 @@ export function CaseDetailPage() {
                 <div className="text-[11px] text-slate-500 truncate">
                   Status{" "}
                   <span className="text-slate-300">
-                    {row.status.replace("_", " ")}
+                    {(row.status || "").replace(/_/g, " ")}
                   </span>{" "}
                   · Risk{" "}
                   <span className={cn(rc?.text, "font-semibold")}>
@@ -2442,7 +2515,8 @@ export function CaseDetailPage() {
         </div>
       )}
     </div>
-  );
+  </CaseDetailErrorBoundary>
+);
 }
 
 
@@ -2651,10 +2725,11 @@ function fieldByName(
 }
 
 function scoreFromRisk(
-  data: CaseDetailBundle,
+  data: CaseDetailBundle | null | undefined,
   code: string
 ): number | null {
-  const f = data.risk?.factors?.find((x) => x.code === code);
+  if (!data?.risk?.factors || !Array.isArray(data.risk.factors)) return null;
+  const f = data.risk.factors.find((x) => x.code === code);
   if (!f) return null;
   const contribution = Number(f.contribution ?? 0);
   return Math.max(0, Math.min(100, 100 - contribution * 50));
@@ -2666,16 +2741,16 @@ function Timeline({
   decided,
   status,
   decision,
-  audits,
-  reports,
+  audits = [],
+  reports = [],
 }: {
   created: string;
   updated: string;
   decided?: string;
   status: string;
   decision?: string;
-  audits: CaseDetailBundle["audits"];
-  reports: CaseDetailBundle["reports"];
+  audits?: CaseDetailBundle["audits"];
+  reports?: CaseDetailBundle["reports"];
 }) {
   type Item = {
     when: string;
@@ -2715,7 +2790,7 @@ function Timeline({
   if (decided) {
     items.push({
       when: decided,
-      label: `Decision recorded: ${decision?.replace(/_/g, " ") ?? status}`,
+      label: `Decision recorded: ${decision?.replace(/_/g, " ") ?? (status || "").replace(/_/g, " ")}`,
       sub: "Final officer determination.",
       tone: decision === "CLEARED" ? "ok" : decision === "FLAGGED" || decision === "ESCALATED" ? "warn" : "info",
     });

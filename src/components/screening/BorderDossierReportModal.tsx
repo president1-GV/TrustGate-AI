@@ -189,7 +189,21 @@ export function BorderDossierReportModal({
             <div className="p-3 rounded-xl border border-slate-800 bg-slate-900/50 space-y-2">
               <div className="flex justify-between items-center text-xs font-semibold text-slate-300">
                 <span>BIOMETRIC TRAVELER PORTRAIT</span>
-                <span className="font-mono text-[10px] text-emerald-400">Match: {faceMatch.similarity}%</span>
+                {faceMatch.similarity > 0 ? (
+                  <span
+                    className={cn(
+                      "font-mono text-[10px] font-bold",
+                      faceMatch.similarity >= 75 ? "text-emerald-400" : faceMatch.similarity < 60 ? "text-rose-400" : "text-amber-400"
+                    )}
+                  >
+                    {faceMatch.similarity >= 75 ? "MATCH: " : faceMatch.similarity < 60 ? "MISMATCH: " : "INCONCLUSIVE: "}
+                    {faceMatch.similarity}%
+                  </span>
+                ) : (
+                  <span className="font-mono text-[10px] text-slate-400 font-semibold">
+                    AWAITING LIVE BIOMETRIC COMPARISON
+                  </span>
+                )}
               </div>
               <div className="h-44 rounded-lg bg-black/60 border border-slate-800 flex items-center justify-center overflow-hidden">
                 {faceImage ? (

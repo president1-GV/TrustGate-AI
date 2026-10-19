@@ -3,8 +3,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link } from "react-router-dom";
-import { Mail, Loader2, CheckCircle2 } from "lucide-react";
+import { Mail, Loader2, CheckCircle2, ArrowLeft, Lock, ShieldCheck, Sun, Moon } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
+import { useTheme } from "@/providers/ThemeProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
@@ -18,6 +19,7 @@ type ForgotForm = z.infer<typeof forgotSchema>;
 
 export function ForgotPasswordPage() {
   const { sendPasswordReset } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [sent, setSent] = React.useState(false);
 
@@ -45,106 +47,152 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-grid">
-      <div className="w-full max-w-md glass-card rounded-card shadow-panel glow-border p-8">
-        {/* Brand */}
-        <div className="flex flex-col items-center mb-6">
-          <img
-            src="/trustgate-logo.png"
-            alt="TrustGate AI Logo"
-            className="h-16 w-16 rounded-2xl object-cover shadow-glow mb-3 border border-signal-blue/40"
-          />
-          <h1 className="text-2xl font-bold tracking-[0.16em] text-slate-100">
-            TRUSTGATE <span className="text-signal-blue">AI</span>
-          </h1>
-          <p className="text-xs text-signal-cyan mt-1 font-mono tracking-widest uppercase font-semibold">
-            VERIFY · DETECT · PROTECT
-          </p>
-          <p className="text-[11px] text-slate-400 mt-0.5 tracking-wider">
-            AI-POWERED IDENTITY &amp; DOCUMENT SCREENING
-          </p>
-        </div>
-
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-signal-blue/40 to-transparent mb-6" />
-
-        <h2 className="text-lg font-semibold text-slate-100 mb-1">Reset password</h2>
-        <p className="text-sm text-slate-400 mb-6">
-          Enter your email and we'll send a secure reset code to your inbox.
-        </p>
-
-        {sent ? (
-          <Alert severity="success" className="mb-5">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              <div>
-                <AlertTitle>Reset code sent</AlertTitle>
-                <AlertDescription>
-                  Check your inbox for a password reset email. Follow the link
-                  to set a new password. The code expires shortly for security.
-                </AlertDescription>
-              </div>
-            </div>
-          </Alert>
-        ) : (
-          <>
-            {errorMsg && (
-              <Alert severity="destructive" className="mb-5">
-                <AlertTitle>Could not send</AlertTitle>
-                <AlertDescription>{errorMsg}</AlertDescription>
-              </Alert>
-            )}
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="officer@trustgate.ai"
-                    className="pl-9"
-                    autoComplete="email"
-                    {...register("email")}
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-xs text-rose-400">{errors.email.message}</p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Sending…
-                  </>
-                ) : (
-                  "Send reset link"
-                )}
-              </Button>
-            </form>
-          </>
-        )}
-
-        <div className="mt-6 pt-5 border-t border-ink-border text-center">
-          <p className="text-xs text-slate-400">
-            Remembered it?{" "}
-            <Link
-              to="/login"
-              className="text-signal-blue hover:text-signal-cyan font-medium transition-colors"
-            >
-              Back to sign in
-            </Link>
-          </p>
-        </div>
+    <div className="min-h-screen flex flex-col justify-between bg-gradient-to-b from-slate-50 via-white to-slate-100/90 dark:from-slate-950 dark:via-ink dark:to-slate-950 text-slate-900 dark:text-slate-100 transition-colors relative overflow-hidden">
+      {/* Soft Ambient Illumination */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[380px] bg-signal-blue/5 dark:bg-signal-blue/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[250px] bg-slate-200/40 dark:bg-signal-purple/5 rounded-full blur-3xl" />
       </div>
+
+      {/* Header Bar */}
+      <header className="w-full border-b border-slate-200/80 dark:border-ink-border bg-white/80 dark:bg-ink/80 backdrop-blur-md px-4 sm:px-8 py-3 flex items-center justify-between gap-4 z-10">
+        <Link
+          to="/login"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue rounded-md px-2 py-1"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 text-slate-500" />
+          <span>Back to Sign In</span>
+        </Link>
+
+        <div className="hidden sm:inline-flex items-center gap-2 text-[11px] font-mono font-medium text-slate-600 dark:text-slate-400 bg-slate-100/80 dark:bg-ink-card px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800">
+          <Lock className="h-3 w-3 text-signal-blue" />
+          <span>PASSWORD RECOVERY · SECURE ENCRYPTED CHANNEL</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="h-8 w-8 rounded-lg border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer shadow-2xs"
+          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {theme === "dark" ? <Sun className="h-3.5 w-3.5 text-amber-500" /> : <Moon className="h-3.5 w-3.5 text-signal-blue" />}
+        </button>
+      </header>
+
+      {/* Main Card */}
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 z-10 my-4 sm:my-6">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-7 sm:p-8 shadow-xl shadow-slate-900/5 dark:shadow-2xl dark:shadow-black/50 transition-all">
+          <div className="flex flex-col items-center mb-6 text-center">
+            <img
+              src="/trustgate-logo.png"
+              alt="TrustGate AI Logo"
+              className="h-16 w-16 rounded-2xl object-cover shadow-xs mb-3 border border-signal-blue/40"
+            />
+            <h1 className="text-2xl font-extrabold tracking-[0.16em] text-slate-900 dark:text-white">
+              TRUSTGATE <span className="text-signal-blue">AI</span>
+            </h1>
+            <p className="text-xs text-sky-700 dark:text-signal-cyan mt-1 font-mono tracking-widest uppercase font-bold">
+              VERIFY · DETECT · PROTECT
+            </p>
+          </div>
+
+          <div className="h-px w-full bg-slate-200 dark:bg-slate-800 mb-6" />
+
+          <div className="mb-6">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Reset credentials</h2>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+              Enter your official station email to receive a secure recovery code.
+            </p>
+          </div>
+
+          {sent ? (
+            <Alert severity="success" className="mb-5">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <div>
+                  <AlertTitle className="text-xs">Reset code dispatched</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    Check your official inbox for a password reset email. Follow the secure link
+                    to set a new password. The code expires shortly for security compliance.
+                  </AlertDescription>
+                </div>
+              </div>
+            </Alert>
+          ) : (
+            <>
+              {errorMsg && (
+                <Alert severity="destructive" className="mb-5">
+                  <AlertTitle className="text-xs">Could not send</AlertTitle>
+                  <AlertDescription className="text-xs">{errorMsg}</AlertDescription>
+                </Alert>
+              )}
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    Official email address
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="officer@trustgate.ai"
+                      className="pl-9 h-10 text-sm border-slate-300 dark:border-ink-border focus:border-signal-blue"
+                      autoComplete="email"
+                      {...register("email")}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">{errors.email.message}</p>
+                  )}
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  className="w-full font-semibold shadow-xs h-11 text-sm"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      Dispatching reset link…
+                    </>
+                  ) : (
+                    "Send reset link"
+                  )}
+                </Button>
+              </form>
+            </>
+          )}
+
+          <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 text-center">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
+              Remembered your password?{" "}
+              <Link
+                to="/login"
+                className="text-signal-blue hover:underline font-semibold transition-colors"
+              >
+                Back to sign in
+              </Link>
+            </p>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full border-t border-slate-200/80 dark:border-ink-border bg-white/70 dark:bg-ink/70 backdrop-blur-md px-4 sm:px-8 py-3.5 z-10 text-center">
+        <div className="max-w-2xl mx-auto space-y-1">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-risk-low">
+              <ShieldCheck className="h-3 w-3" />
+              <span>TLS 1.3 · 256-BIT RECOVERY PROTOCOL</span>
+            </span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

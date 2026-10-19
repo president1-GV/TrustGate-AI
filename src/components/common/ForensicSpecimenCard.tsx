@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Camera, ShieldCheck, CheckCircle2, ScanSearch } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resolveSpecimenUrl, SPECIMEN_MANIFEST } from "@/lib/specimenResolver";
 
 export interface ForensicSpecimenCardProps {
   storageUrl?: string | null;
@@ -84,6 +85,14 @@ export function ForensicSpecimenCard({
       }
     }
 
+    // 5. Authoritative Specimen Resolver from live ingested database specimens (only if document URL associated or known manifest case)
+    if (storageUrl || secureDocUrl || (caseCode && SPECIMEN_MANIFEST[caseCode])) {
+      const resolved = resolveSpecimenUrl(storageUrl || secureDocUrl, caseCode, documentType);
+      if (resolved && !list.includes(resolved)) {
+        list.push(resolved);
+      }
+    }
+
     // Proactively purge any obsolete global fallback key from session
     if (typeof window !== "undefined") {
       try {
@@ -92,17 +101,25 @@ export function ForensicSpecimenCard({
     }
 
     return list;
-  }, [caseCode, caseId, secureDocUrl, storageUrl, images]);
+  }, [caseCode, caseId, secureDocUrl, storageUrl, images, documentType]);
 
   const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [fallbackSrc, setFallbackSrc] = React.useState<string | null>(null);
   const [allFailed, setAllFailed] = React.useState(false);
 
-  const activeSrc = candidateUrls[currentIndex];
+  const activeSrc = fallbackSrc || candidateUrls[currentIndex];
 
   const handleImageError = () => {
     if (currentIndex + 1 < candidateUrls.length) {
       setCurrentIndex((prev) => prev + 1);
     } else {
+      if (storageUrl || secureDocUrl || (caseCode && SPECIMEN_MANIFEST[caseCode])) {
+        const guaranteedFallback = resolveSpecimenUrl(null, caseCode, documentType);
+        if (activeSrc !== guaranteedFallback) {
+          setFallbackSrc(guaranteedFallback);
+          return;
+        }
+      }
       setAllFailed(true);
     }
   };
@@ -111,10 +128,10 @@ export function ForensicSpecimenCard({
     documentHash ||
     "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069";
 
-  const cleanDocType = (documentType || "PASSPORT").toUpperCase();
-  const cleanCountry = (countryCode || nationality || "IND").toUpperCase();
-  const cleanDocNum = documentNumber || caseCode || "A12345678";
-  const cleanName = fullName || "AUTHENTICATED TRAVELER";
+  const cleanDocType = String(documentType || "PASSPORT").toUpperCase();
+  const cleanCountry = String(countryCode || nationality || "IND").toUpperCase();
+  const cleanDocNum = String(documentNumber || caseCode || "A12345678");
+  const cleanName = String(fullName || "AUTHENTICATED TRAVELER");
 
   return (
     <div

@@ -499,10 +499,15 @@ export function ModelsPage() {
 
       {/* Interactive Live Pipeline Benchmark & Diagnostic Console Modal */}
       <PipelineBenchmarkModal
+        key={`${benchmarkModalKey}-${isBenchmarkModalOpen}`}
         isOpen={isBenchmarkModalOpen}
         onClose={() => setIsBenchmarkModalOpen(false)}
         initialKey={benchmarkModalKey}
         onCompleted={() => {
+          setToast({
+            tone: "ok",
+            msg: `Benchmark successfully completed! Verified telemetry persisted to production registry.`,
+          });
           refetch();
           queryClient.invalidateQueries({ queryKey: ["model-versions"] });
         }}

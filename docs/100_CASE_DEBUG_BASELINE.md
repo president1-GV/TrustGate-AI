@@ -11,7 +11,7 @@
 | Subsystem | Target / Port | Operational Status | Diagnostic Finding |
 | :--- | :--- | :---: | :--- |
 | **Frontend Framework** | React 18.3.1 / Vite 6.0.6 | **HEALTHY** | Typechecked via `tsc -b` with 0 errors. Bundle compiles in 14.04s. |
-| **Backend BaaS** | InsForge PostgREST | **ONLINE** | Host `https://heicn84u.us-east.insforge.app`. 26 tables operational. |
+| **Backend BaaS** | InsForge PostgREST | **ONLINE** | Host `https://i8yy29ec.us-east.insforge.app`. 26 tables operational. |
 | **PostgreSQL RLS** | InsForge Database | **HARDENED** | 58 active RLS policies. `member_access_requests` secured via migration `20260905000002`. |
 | **Python Forensic Engine**| FastAPI / HTTP :8000 | **STANDBY** | `midv_llm_engine/server.py` syntax and imports clean. Zero-mock in `/scan`. |
 | **Hardware Camera** | WebRTC MediaStream | **STANDBY** | WebRTC unmirrored stream handler ready. Standby in headless CI environments. |

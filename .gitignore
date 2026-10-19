@@ -16,6 +16,8 @@
 # Dependencies and build artifacts
 node_modules
 dist
+deploy-src/
+capture-*.jpg
 .vite
 .venv
 venv

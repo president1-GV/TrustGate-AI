@@ -25,6 +25,8 @@ import { detectTampering } from "./06-tampering";
 import { analyzeFace } from "./07-face";
 import { identityConsistency } from "./08-identity";
 import { computeRisk } from "./09-risk";
+import { processAdaptiveEnhancement, computeCanvasHash } from "../../lib/imageProcessing";
+import { computeSha256 } from "../../lib/provenance";
 
 export const PIPELINE_STEPS: { id: string; index: number; label: string }[] = [
   { id: "01-image-quality", index: 1, label: "Image Quality" },
@@ -285,17 +287,31 @@ export function isVerbosePipelineLogging(): boolean {
 
 export async function runPipeline(
   fileOrCanvas: File | HTMLCanvasElement,
-  opts?: { onStep?: StepCallback; minStepMs?: number; provenance?: DocumentProvenance }
+  opts?: {
+    onStep?: StepCallback;
+    minStepMs?: number;
+    provenance?: DocumentProvenance;
+    referenceFaceCanvas?: HTMLCanvasElement;
+  }
 ): Promise<FullPipelineResult> {
   const startedAt = Date.now();
   const minStepMs = opts?.minStepMs ?? 0;
   const onStep = opts?.onStep;
 
   let canvas: HTMLCanvasElement;
+  let originalHash = opts?.provenance?.documentHash;
+
   if (fileOrCanvas instanceof File) {
+    if (!originalHash) {
+      const buf = await fileOrCanvas.arrayBuffer();
+      originalHash = await computeSha256(buf);
+    }
     canvas = await imageFromFile(fileOrCanvas);
   } else {
     canvas = fileOrCanvas;
+    if (!originalHash) {
+      originalHash = await computeCanvasHash(canvas);
+    }
   }
 
   const modules: PipelineModule[] = PIPELINE_STEPS.map((s) => ({
@@ -342,27 +358,70 @@ export async function runPipeline(
   const imageQuality = await analyzeImageQuality(canvas);
   await ensureDelay(t0);
   stepFinish(mod1, statusForStep01(imageQuality), imageQuality.score, `Grade ${imageQuality.grade}`);
-  partial = { ...partial, imageQuality };
+  partial = { ...partial, imageQuality, detailedQuality: imageQuality.detailedQuality };
   fire(mod1, partial);
 
   const t1 = performance.now();
   const mod2 = stepStart(1);
   const docDetect = await detectDocument(canvas, imageQuality);
+
+  // Execute non-destructive adaptive enhancement and corner homography rectification
+  const docId = opts?.provenance?.documentId || `DOC-${Date.now().toString(36).toUpperCase()}`;
+  const runId = opts?.provenance?.processingRunId || `RUN-${Date.now().toString(36).toUpperCase()}`;
+  const enhancement = await processAdaptiveEnhancement({
+    originalCanvas: canvas,
+    quality: imageQuality.detailedQuality,
+    documentId: docId,
+    originalHash: originalHash || "hash-pending",
+    processingRunId: runId,
+  });
+
+  if (enhancement.documentDetection?.detected) {
+    docDetect.confidence = Math.max(docDetect.confidence, 0.92);
+  }
+
   await ensureDelay(t1);
   stepFinish(mod2, statusForStep02(docDetect), docDetect.confidence * 100, `Type=${docDetect.documentType}`);
-  partial = { ...partial, docDetect };
+  partial = {
+    ...partial,
+    docDetect,
+    enhancement: {
+      transformationsApplied: enhancement.transformationsApplied,
+      transformationDetails: enhancement.transformationDetails,
+      enhancedHash: enhancement.enhancedHash,
+      rectifiedHash: enhancement.rectifiedHash,
+      metadata: enhancement.metadata,
+      documentDetection: enhancement.documentDetection,
+    },
+    originalHash,
+    enhancedHash: enhancement.enhancedHash,
+    rectifiedHash: enhancement.rectifiedHash,
+  };
   fire(mod2, partial);
 
   const t2 = performance.now();
   const mod3 = stepStart(2);
   const ocr = await runOcr(canvas, {
-    documentId: opts?.provenance?.documentId,
-    processingRunId: opts?.provenance?.processingRunId,
-    imageHash: opts?.provenance?.documentHash,
+    documentId: docId,
+    processingRunId: runId,
+    imageHash: originalHash,
+    enhancedCanvas: enhancement.enhancedCanvas,
+    enhancedHash: enhancement.enhancedHash,
+    rectifiedCanvas: enhancement.rectifiedCanvas,
+    rectifiedHash: enhancement.rectifiedHash,
+    documentTypeHint: docDetect.documentType,
   });
   await ensureDelay(t2);
   stepFinish(mod3, statusForStep03(ocr), ocr.overallConfidence * 100, `${ocr.fields.length} fields (${ocr.provider})`);
-  partial = { ...partial, ocr };
+  partial = {
+    ...partial,
+    ocr,
+    multiPassOcr: {
+      ...ocr,
+      passes: (ocr as any).passes,
+      conflicts: (ocr as any).conflicts,
+    },
+  };
   fire(mod3, partial);
 
   // Upgrade document type if OCR reveals Indian Aadhaar
@@ -394,14 +453,20 @@ export async function runPipeline(
 
   const t3 = performance.now();
   const mod4 = stepStart(3);
-  const mrz = await parseMrz(ocr, canvas);
+  const mrzCanvas = enhancement.rectifiedCanvas || enhancement.enhancedCanvas || canvas;
+  const mrz = await parseMrz(ocr, mrzCanvas);
   await ensureDelay(t3);
   if (isAadhaarDoc) {
     stepFinish(mod4, "PASS", 100, "MRZ Waived (Domestic Smart Card)");
   } else {
     stepFinish(mod4, statusForStep04(mrz), mrz.present ? (mrz.compositeValid ? 100 : 60) : 0, mrz.format ? `Format=${mrz.format}` : mrz.present ? "MRZ found" : "No MRZ");
   }
-  partial = { ...partial, mrz };
+  partial = {
+    ...partial,
+    mrz,
+    checksums: (mrz as any).checksumValidation,
+    fieldConflicts: (mrz as any).fieldConflicts || [],
+  };
   fire(mod4, partial);
 
   // Upgrade document type if MRZ or OCR reveals Passport
@@ -603,7 +668,7 @@ export async function runPipeline(
 
   const t6 = performance.now();
   const mod7 = stepStart(6);
-  const face = await analyzeFace(canvas, imageQuality);
+  const face = await analyzeFace(canvas, imageQuality, opts?.referenceFaceCanvas);
   await ensureDelay(t6);
   stepFinish(mod7, statusForStep07(face), face.quality, face.resultLabel ?? (face.detected ? "Detected" : "No face"));
   partial = { ...partial, face };
@@ -641,6 +706,25 @@ export async function runPipeline(
     finishedAt: Date.now(),
     totalMs: 0,
     provenance: opts?.provenance,
+    detailedQuality: imageQuality.detailedQuality,
+    enhancement: {
+      transformationsApplied: enhancement.transformationsApplied,
+      transformationDetails: enhancement.transformationDetails,
+      enhancedHash: enhancement.enhancedHash,
+      rectifiedHash: enhancement.rectifiedHash,
+      metadata: enhancement.metadata,
+      documentDetection: enhancement.documentDetection,
+    },
+    multiPassOcr: {
+      ...ocr,
+      passes: (ocr as any).passes,
+      conflicts: (ocr as any).conflicts,
+    },
+    fieldConflicts: (mrz as any).fieldConflicts || [],
+    checksums: (mrz as any).checksumValidation,
+    originalHash,
+    enhancedHash: enhancement.enhancedHash,
+    rectifiedHash: enhancement.rectifiedHash,
   };
   result.totalMs = result.finishedAt - result.startedAt;
   result.findings = buildFindings(result);

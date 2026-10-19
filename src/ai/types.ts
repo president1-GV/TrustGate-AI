@@ -24,6 +24,7 @@ export interface ImageQualityResult {
   perspectiveScore?: number;
   croppingScore?: number;
   grade: "EXCELLENT" | "GOOD" | "FAIR" | "POOR";
+  detailedQuality?: any;
 }
 
 export interface DocDetectResult {
@@ -107,6 +108,7 @@ export interface FaceResult {
   posePitch?: number;
   blurScore?: number;
   resultLabel?: "NO_FACE" | "POSSIBLE_MATCH" | "LIKELY_MATCH" | "MISMATCH" | "FACE_DETECTED";
+  identityMatchStatus?: "MATCH" | "MISMATCH" | "INCONCLUSIVE" | "NOT_VERIFIED" | "NOT_AVAILABLE";
   boundingBox?: BBox;
   boundaryGradientDelta?: number;
   cornealReflectionDelta?: number;
@@ -164,6 +166,40 @@ export interface DocumentProvenance {
   timestamp: string; // ISO-8601 string
 }
 
+export interface MrzChecksumValidation {
+  documentNumberChecksum: { encoded: string; calculated: string; status: "PASS" | "FAIL" };
+  dateOfBirthChecksum: { encoded: string; calculated: string; status: "PASS" | "FAIL" };
+  expiryDateChecksum: { encoded: string; calculated: string; status: "PASS" | "FAIL" };
+  optionalDataChecksum?: { encoded: string; calculated: string; status: "PASS" | "FAIL" };
+  compositeChecksum: { encoded: string; calculated: string; status: "PASS" | "FAIL" };
+  overallStatus: "PASS" | "FAIL" | "NOT_DETECTED" | "INCONCLUSIVE";
+}
+
+export interface FieldConflict {
+  field: string;
+  value_a: string;
+  value_b: string;
+  source_a: string;
+  source_b: string;
+  confidence: number;
+  reason: string;
+}
+
+export interface MultiPassOcrResult extends OcrResult {
+  passes?: {
+    passName: string;
+    imageSource: "ORIGINAL" | "ENHANCED" | "RECTIFIED" | "REGION";
+    sourceImageHash: string;
+    confidence: number;
+    text: string;
+    fieldsCount: number;
+  }[];
+  conflicts?: {
+    field: string;
+    competingValues: { value: string; pass: string; confidence: number }[];
+  }[];
+}
+
 export interface FullPipelineResult {
   imageQuality: ImageQualityResult;
   docDetect: DocDetectResult;
@@ -180,6 +216,14 @@ export interface FullPipelineResult {
   finishedAt: number;
   totalMs: number;
   provenance?: DocumentProvenance;
+  detailedQuality?: any;
+  enhancement?: any;
+  multiPassOcr?: MultiPassOcrResult;
+  fieldConflicts?: FieldConflict[];
+  checksums?: MrzChecksumValidation;
+  originalHash?: string;
+  enhancedHash?: string;
+  rectifiedHash?: string;
 }
 
 export type StepCallback = (

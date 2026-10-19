@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, type ReactNode } from "react";
-import { insforge, getCurrentAppRole, ensureAuthenticatedClient, type AppRole } from "@/lib/insforge";
+import { insforge, getCurrentAppRole, ensureAuthenticatedClient, isTokenExpired, type AppRole } from "@/lib/insforge";
 import { useAuthStore } from "@/store/auth";
 import { createMemberAccessRequest } from "@/lib/authRequests";
+import { auditSecurityEvent, AUTHORITATIVE_SYSTEM_ACTOR_ID } from "@/lib/security";
 
 interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
@@ -23,6 +24,42 @@ const DEMO_EMAILS = new Set([
 ]);
 
 /**
+ * Sanitize cached sessions to purge legacy hardcoded demo personas ("Officer Sarah Chen", etc.)
+ * Ensures instant access never retains a fake personal name.
+ */
+function sanitizeSession<T extends Record<string, any>>(session: T): T {
+  if (!session) return session;
+  let name = session.name;
+  let badgeId = session.badgeId;
+
+  if (name === "Officer Sarah Chen" || name === "Sarah Chen") {
+    name = "Officer";
+    if (badgeId === "TG-OFF-702") badgeId = undefined;
+  } else if (name === "Supervisor Marcus Vance" || name === "Marcus Vance") {
+    name = "Supervisor";
+    if (badgeId === "TG-SUP-104") badgeId = undefined;
+  } else if (name === "Chief Security Officer" && session.email === "admin@trustgate.ai") {
+    name = "Admin";
+    if (badgeId === "TG-SEC-001") badgeId = undefined;
+  } else if (name === "Border Intelligence Analyst" && session.email === "analyst@trustgate.ai") {
+    name = "Analyst";
+    if (badgeId === "TG-ANA-409") badgeId = undefined;
+  }
+
+  const sanitized = {
+    ...session,
+    name,
+    badgeId,
+  };
+
+  try {
+    localStorage.setItem("tg_authenticated_session", JSON.stringify(sanitized));
+  } catch {}
+
+  return sanitized;
+}
+
+/**
  * Fetch the current user from InsForge, load their profile, and hydrate the
  * Zustand auth store. Falls back to cached local session or emergency air-gapped station if offline.
  */
@@ -37,15 +74,15 @@ async function hydrate(
       if (cached) {
         const parsed = JSON.parse(cached);
         if (parsed && parsed.id && parsed.role) {
-          setSession(parsed);
+          setSession(sanitizeSession(parsed));
           return;
         }
       }
     } catch {}
 
     const airGapSession = {
-      id: "field-officer-airgap-01",
-      email: "airgap.officer@trustgate.defense.gov",
+      id: AUTHORITATIVE_SYSTEM_ACTOR_ID,
+      email: "admin@trustgate.ai",
       name: "Field Officer (Air-Gapped Standalone Station)",
       role: "admin" as AppRole,
       badgeId: "AIRGAP-001",
@@ -61,7 +98,14 @@ async function hydrate(
     // Ensure access token is active before querying current user
     const token = typeof window !== "undefined" ? localStorage.getItem("tg_access_token") : null;
     if (token) {
-      insforge.setAccessToken(token);
+      if (isTokenExpired(token)) {
+        try {
+          localStorage.removeItem("tg_access_token");
+        } catch {}
+        insforge.setAccessToken(null);
+      } else {
+        insforge.setAccessToken(token);
+      }
     } else {
       await ensureAuthenticatedClient();
     }
@@ -73,7 +117,7 @@ async function hydrate(
       if (cached) {
         const parsed = JSON.parse(cached);
         if (parsed && parsed.id && parsed.role) {
-          setSession(parsed);
+          setSession(sanitizeSession(parsed));
           return;
         }
       }
@@ -92,6 +136,20 @@ async function hydrate(
     const isDemoAccount = u.email && DEMO_EMAILS.has(u.email.toLowerCase().trim());
     let userStatus: "pending" | "approved" | "rejected" = "approved";
     let processId: string | undefined = p.process_id ?? undefined;
+
+    // Name & identity resolution:
+    // - For Instant Access / demo personas: NO personal name (e.g. Sarah Chen). Display role title only ("Officer", "Supervisor", "Admin", "Analyst").
+    // - For officers who logged in with their actual account/name: ONLY that officer's registered name comes.
+    let resolvedName = "Officer";
+    if (isDemoAccount) {
+      resolvedName = role === "admin" ? "Admin" : role === "supervisor" ? "Supervisor" : role === "analyst" ? "Analyst" : "Officer";
+    } else {
+      resolvedName =
+        (p.display_name && p.display_name.trim()) ||
+        (u.profile?.name && u.profile.name.trim()) ||
+        (u.name && u.name.trim()) ||
+        (u.email ? u.email.split("@")[0] : "Officer");
+    }
 
     if (isDemoAccount) {
       userStatus = "approved";
@@ -115,7 +173,7 @@ async function hydrate(
         } else {
           const newReq = await createMemberAccessRequest({
             email: u.email ?? "",
-            displayName: p.display_name ?? u.name ?? "Officer",
+            displayName: resolvedName,
             badgeId: p.badge_id ?? undefined,
             station: p.station ?? undefined,
             requestedRole: role,
@@ -132,9 +190,9 @@ async function hydrate(
     const sessionObj = {
       id: u.id,
       email: u.email ?? "",
-      name: p.display_name ?? u.name ?? u.email?.split("@")[0] ?? "Officer",
+      name: resolvedName,
       role,
-      badgeId: p.badge_id ?? undefined,
+      badgeId: isDemoAccount ? undefined : (p.badge_id ?? undefined),
       station: p.station ?? undefined,
       team: p.team ?? undefined,
       status: userStatus,
@@ -154,7 +212,7 @@ async function hydrate(
       if (cached) {
         const parsed = JSON.parse(cached);
         if (parsed && parsed.id && parsed.role) {
-          setSession(parsed);
+          setSession(sanitizeSession(parsed));
           return;
         }
       }
@@ -162,8 +220,8 @@ async function hydrate(
 
     // Fallback to standalone air-gapped operator
     const airGapSession = {
-      id: "field-officer-airgap-01",
-      email: "airgap.officer@trustgate.defense.gov",
+      id: AUTHORITATIVE_SYSTEM_ACTOR_ID,
+      email: "admin@trustgate.ai",
       name: "Field Officer (Air-Gapped Standalone Station)",
       role: "admin" as AppRole,
       badgeId: "AIRGAP-001",
@@ -213,8 +271,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Sign in with email + password, or fallback to offline station if disconnected. */
   async function login(email: string, password: string): Promise<void> {
+    const demoRoles: Record<string, AppRole> = {
+      "officer@trustgate.ai": "officer",
+      "supervisor@trustgate.ai": "supervisor",
+      "admin@trustgate.ai": "admin",
+      "analyst@trustgate.ai": "analyst",
+    };
+    const fallbackRole = (email && demoRoles[email.toLowerCase()]) || "officer";
+
     if (typeof navigator !== "undefined" && !navigator.onLine) {
-      loginOffline("admin", email);
+      loginOffline(fallbackRole, email);
       return;
     }
 
@@ -223,10 +289,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         if (
           error.message?.toLowerCase().includes("network") ||
-          error.message?.toLowerCase().includes("fetch") ||
-          error.message?.toLowerCase().includes("failed")
+          error.message?.toLowerCase().includes("fetch")
         ) {
-          loginOffline("admin", email);
+          loginOffline(fallbackRole, email);
           return;
         }
         throw error;
@@ -241,13 +306,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         (u) => setSession(u),
         () => clearSession()
       );
+
+      const activeUser = useAuthStore.getState().user;
+      if (activeUser?.id) {
+        auditSecurityEvent({
+          actorId: activeUser.id,
+          action: "USER_LOGIN",
+          eventType: "auth.login.success",
+          result: "SUCCESS",
+          metadata: {
+            email: activeUser.email || email,
+            role: activeUser.role,
+            station: activeUser.station || "Border Checkpoint Central",
+            name: activeUser.name,
+            auth_provider: "credentials",
+          },
+        }).catch(() => {});
+      }
     } catch (err: any) {
       if (
         err.message?.toLowerCase().includes("network") ||
         err.message?.toLowerCase().includes("fetch") ||
         (typeof navigator !== "undefined" && !navigator.onLine)
       ) {
-        loginOffline("admin", email);
+        loginOffline(fallbackRole, email);
         return;
       }
       throw err;
@@ -256,36 +338,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Direct access to air-gapped offline station or demo fallback. */
   function loginOffline(role: AppRole = "admin", email?: string): void {
-    const demoMeta: Record<string, { name: string; badge: string; station: string }> = {
+    const demoMeta: Record<string, { name: string; station: string }> = {
       "officer@trustgate.ai": {
-        name: "Officer Sarah Chen",
-        badge: "TG-OFF-702",
+        name: "Officer",
         station: "Indo-Nepal ICP Raxaul · Lane 03",
       },
       "supervisor@trustgate.ai": {
-        name: "Supervisor Marcus Vance",
-        badge: "TG-SUP-104",
+        name: "Supervisor",
         station: "Northern Command HQ · Field Supervisor",
       },
       "admin@trustgate.ai": {
-        name: "Chief Security Officer",
-        badge: "TG-SEC-001",
+        name: "Admin",
         station: "Border Defense National Cyber Command",
       },
       "analyst@trustgate.ai": {
-        name: "Border Intelligence Analyst",
-        badge: "TG-ANA-409",
+        name: "Analyst",
         station: "Central Intelligence & Analytics Division",
       },
     };
 
     const matched = email ? demoMeta[email.toLowerCase()] : undefined;
+    const defaultName = role === "admin" ? "Admin" : role === "supervisor" ? "Supervisor" : role === "analyst" ? "Analyst" : "Officer";
+
+    const actorId =
+      role === "officer"
+        ? "06d9077b-2a97-460e-b6ed-38d6a16581c3"
+        : role === "supervisor"
+        ? "e49cf4a5-e63d-4cac-a54a-436f47da9e52"
+        : role === "analyst"
+        ? "59119414-9a9b-4b00-bade-16e0b1e11ed1"
+        : AUTHORITATIVE_SYSTEM_ACTOR_ID;
+
     const offlineSession = {
-      id: "field-officer-airgap-01",
-      email: email || "airgap.officer@trustgate.defense.gov",
-      name: matched?.name || (role === "admin" ? "Chief Administrator" : "Field Officer"),
+      id: actorId,
+      email: email || (role === "admin" ? "admin@trustgate.ai" : role === "supervisor" ? "supervisor@trustgate.ai" : role === "analyst" ? "analyst@trustgate.ai" : "officer@trustgate.ai"),
+      name: matched?.name || defaultName,
       role,
-      badgeId: matched?.badge || "AIRGAP-001",
+      badgeId: undefined,
       station: matched?.station || "Indo-Nepal ICP Raxaul · Terminal 01 (Offline)",
       team: "Border Defense Rapid Response",
       status: "approved" as const,
@@ -294,6 +383,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("tg_authenticated_session", JSON.stringify(offlineSession));
     } catch {}
     setSession(offlineSession);
+
+    auditSecurityEvent({
+      actorId,
+      action: "USER_LOGIN",
+      eventType: "auth.login.offline",
+      result: "SUCCESS",
+      metadata: {
+        email: email || "offline.officer@trustgate.defense.gov",
+        role,
+        station: matched?.station || "Indo-Nepal ICP Raxaul · Terminal 01 (Offline)",
+        name: matched?.name || defaultName,
+        auth_provider: "airgap_station",
+      },
+    }).catch(() => {});
   }
 
   /**
@@ -309,12 +412,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await insforge.auth.signUp({ email, password, name });
     if (error) throw error;
 
-    // If a badgeId was supplied, update the profile row before hydrate
-    if (_badgeId && data?.user?.id) {
+    // Ensure display_name and badgeId are explicitly saved in public.profiles
+    if (data?.user?.id) {
       try {
+        const updatePayload: Record<string, string> = {
+          display_name: name.trim(),
+        };
+        if (_badgeId && _badgeId.trim()) {
+          updatePayload.badge_id = _badgeId.trim();
+        }
         await insforge.database
           .from("profiles")
-          .update({ badge_id: _badgeId })
+          .update(updatePayload)
           .eq("id", data.user.id);
       } catch {}
     }
@@ -331,6 +440,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Sign out and wipe both remote and local auth store. */
   async function logout(): Promise<void> {
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser?.id) {
+      auditSecurityEvent({
+        actorId: currentUser.id,
+        action: "USER_LOGOUT",
+        eventType: "auth.logout",
+        result: "SUCCESS",
+        metadata: {
+          email: currentUser.email,
+          role: currentUser.role,
+          name: currentUser.name,
+        },
+      }).catch(() => {});
+    }
+
     try {
       localStorage.removeItem("tg_authenticated_session");
       localStorage.removeItem("tg_access_token");
@@ -345,7 +469,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * The user clicks the link → `/reset-password?otp=<code>` → `ResetPasswordPage`.
    */
   async function sendPasswordReset(email: string): Promise<void> {
-    const redirectTo = `${window.location.origin}/reset-password`;
+    const redirectTo = "https://i8yy29ec.insforge.site/reset-password";
     const { error } = await insforge.auth.sendResetPasswordEmail({ email, redirectTo });
     if (error) throw error;
   }
@@ -359,7 +483,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function updatePassword(_newPassword: string): Promise<void> {
     const currentUser = useAuthStore.getState().user;
     if (!currentUser?.email) throw new Error("Not authenticated");
-    const redirectTo = `${window.location.origin}/reset-password`;
+    const redirectTo = "https://i8yy29ec.insforge.site/reset-password";
     const { error } = await insforge.auth.sendResetPasswordEmail({
       email: currentUser.email,
       redirectTo,

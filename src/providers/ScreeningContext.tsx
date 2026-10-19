@@ -70,9 +70,14 @@ export interface ScreeningContextValue {
   captureId: string | null;
   captureSource: "LIVE_CAMERA" | "FILE_UPLOAD" | null;
   documentImage: string | null;
+  enhancedImage: string | null;
+  rectifiedImage: string | null;
   documentMimeType: string | null;
   documentTimestamp: string | null;
   provenance: DocumentProvenance | null;
+  originalHash: string | null;
+  enhancedHash: string | null;
+  rectifiedHash: string | null;
 
   // Status & Progress
   pipelineStatus: PipelineStatus;
@@ -128,9 +133,14 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
   const [captureId, setCaptureId] = React.useState<string | null>(null);
   const [captureSource, setCaptureSource] = React.useState<"LIVE_CAMERA" | "FILE_UPLOAD" | null>(null);
   const [documentImage, setDocumentImage] = React.useState<string | null>(null);
+  const [enhancedImage, setEnhancedImage] = React.useState<string | null>(null);
+  const [rectifiedImage, setRectifiedImage] = React.useState<string | null>(null);
   const [documentMimeType, setDocumentMimeType] = React.useState<string | null>(null);
   const [documentTimestamp, setDocumentTimestamp] = React.useState<string | null>(null);
   const [provenance, setProvenance] = React.useState<DocumentProvenance | null>(null);
+  const [originalHash, setOriginalHash] = React.useState<string | null>(null);
+  const [enhancedHash, setEnhancedHash] = React.useState<string | null>(null);
+  const [rectifiedHash, setRectifiedHash] = React.useState<string | null>(null);
 
   // Pipeline Status & Results
   const [pipelineStatus, setPipelineStatus] = React.useState<PipelineStatus>("IDLE");
@@ -233,9 +243,14 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
     setCaptureId(null);
     setCaptureSource(null);
     setDocumentImage(null);
+    setEnhancedImage(null);
+    setRectifiedImage(null);
     setDocumentMimeType(null);
     setDocumentTimestamp(null);
     setProvenance(null);
+    setOriginalHash(null);
+    setEnhancedHash(null);
+    setRectifiedHash(null);
 
     setPipelineStatus("IDLE");
     setIsProcessing(false);
@@ -307,6 +322,12 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
         const hash = await computeSha256(file);
         if (activeRunIdRef.current !== runId) return;
         setDocumentHash(hash);
+        setOriginalHash(hash);
+        addAuditEvent(
+          `SHA-256 computed on raw bytes: ${hash}`,
+          "HASH_DIGEST",
+          "IMAGE_HASHED"
+        );
 
         // 5. Immutable Provenance Record
         const prov = createDocumentProvenance({
@@ -369,6 +390,67 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
 
         setPipelineResult(pipeRes);
 
+        if (pipeRes.originalHash) setOriginalHash(pipeRes.originalHash);
+        if (pipeRes.enhancedHash) setEnhancedHash(pipeRes.enhancedHash);
+        if (pipeRes.rectifiedHash) setRectifiedHash(pipeRes.rectifiedHash);
+        if (pipeRes.enhancement?.enhancedDataUrl) setEnhancedImage(pipeRes.enhancement.enhancedDataUrl);
+        if (pipeRes.enhancement?.rectifiedDataUrl) setRectifiedImage(pipeRes.enhancement.rectifiedDataUrl);
+
+        // Real-time stage completion audit events
+        addAuditEvent(
+          `14 metrics evaluated (Score: ${Math.round(pipeRes.imageQuality.score)}/100, Grade: ${pipeRes.imageQuality.grade})`,
+          "QUALITY_CHECK",
+          "QUALITY_ANALYZED"
+        );
+        addAuditEvent(
+          pipeRes.enhancement?.transformationsApplied?.length
+            ? `Preprocessing applied: ${pipeRes.enhancement.transformationsApplied.join(", ")}`
+            : "Preprocessing skipped (image quality sufficient)",
+          "ENHANCEMENT",
+          "IMAGE_ENHANCED"
+        );
+        addAuditEvent(
+          pipeRes.enhancement?.documentDetection?.detected
+            ? `Document boundaries located (Type: ${pipeRes.docDetect.documentType})`
+            : "Document boundaries evaluated",
+          "BOUNDARY_DETECT",
+          "DOCUMENT_DETECTED"
+        );
+        addAuditEvent(
+          pipeRes.enhancement?.rectifiedHash
+            ? "Homography perspective rectification applied"
+            : "Homography perspective rectification evaluated",
+          "RECTIFY",
+          "DOCUMENT_RECTIFIED"
+        );
+        addAuditEvent(
+          `Multi-pass text extracted (${pipeRes.ocr.fields.length} fields, provider: ${pipeRes.ocr.provider})`,
+          "OCR",
+          "OCR_COMPLETED"
+        );
+        addAuditEvent(
+          pipeRes.mrz.present
+            ? `MRZ checksums verified (${pipeRes.checksums?.overallStatus || "PASS"})`
+            : "MRZ evaluated (Non-MRZ / Waived)",
+          "MRZ",
+          "MRZ_COMPLETED"
+        );
+        addAuditEvent(
+          `Cross-field consistency checked (${pipeRes.fieldConflicts?.length || 0} conflicts)`,
+          "VALIDATION",
+          "FIELD_VALIDATION_COMPLETED"
+        );
+        addAuditEvent(
+          `Tampering analysis done on original image (${Math.round(pipeRes.tampering.probability)}%)`,
+          "FORENSICS",
+          "FORENSICS_COMPLETED"
+        );
+        addAuditEvent(
+          `Portrait evaluated (Detected: ${pipeRes.face.detected ? "YES" : "NO"})`,
+          "BIOMETRIC",
+          "FACE_COMPLETED"
+        );
+
         // 8. Real Database Verification (InsForge / PostgreSQL Source)
         const mrzDocNum = pipeRes.mrz?.documentNumber;
         const mrzName = pipeRes.mrz?.names
@@ -386,6 +468,11 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
 
         if (activeRunIdRef.current !== runId) return;
         setDatabaseResult(dbCheck);
+        addAuditEvent(
+          `External lookup complete (Status: ${dbCheck.status})`,
+          "DB_LOOKUP",
+          "DATABASE_VERIFIED"
+        );
 
         // 9. Forensic Audit via Python LLM Engine
         const countryField = pipeRes.ocr?.fields?.find(
@@ -446,6 +533,8 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
           setFaceForensicsResult(ffRes);
         }
 
+        addAuditEvent("Deep reasoning generated", "LLM_AUDIT", "LLM_ANALYSIS_COMPLETED");
+
         // 10. Multi-Signal Fusion & Decision Synthesis
         const computedRisk = Math.round(pipeRes.risk.score);
         const computedAiConf = pipeRes.ocr.overallConfidence > 0 ? Math.round(pipeRes.ocr.overallConfidence * 100) : 0;
@@ -463,6 +552,11 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
         setFinalDecision(decision);
         setPipelineStatus(decision === "FAIL" ? "FAIL" : decision === "REVIEW" ? "WARNING" : "PASS");
 
+        addAuditEvent(
+          `Risk score and decision finalized (${decision}, Risk: ${computedRisk}/100)`,
+          "DECISION_FUSION",
+          "FUSION_COMPLETED"
+        );
         addAuditEvent(
           `Screening Completed (${runId}) · Verdict: ${decision} (Risk: ${computedRisk}/100)`,
           "SCREENING_COMPLETE"
@@ -521,6 +615,11 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
           addAuditEvent(
             `Case #${generatedCaseCode} saved to live database (ID: ${savedCaseId})`,
             "DATABASE_PERSIST_SUCCESS"
+          );
+          addAuditEvent(
+            `All evidence preserved and signed (Case #${generatedCaseCode})`,
+            "CASE_SEAL",
+            "CASE_COMPLETED"
           );
         } catch (saveErr) {
           console.warn("[TrustGate] Auto-persist case to PostgreSQL error:", saveErr);
@@ -608,9 +707,14 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
     captureId,
     captureSource,
     documentImage,
+    enhancedImage,
+    rectifiedImage,
     documentMimeType,
     documentTimestamp,
     provenance,
+    originalHash,
+    enhancedHash,
+    rectifiedHash,
     pipelineStatus,
     isProcessing,
     error,

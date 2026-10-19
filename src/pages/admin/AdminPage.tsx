@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import * as React from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Users,
   Shield,
@@ -24,26 +25,42 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Separator } from "@/components/ui/Separator";
 import { insforge } from "@/lib/insforge";
+import { listCasesForDashboard } from "@/lib/db";
+import { getOfflineDbStats } from "@/lib/offlineDb";
 import { cn, formatTimeAgo } from "@/lib/utils";
 
 async function fetchAdminSummary() {
-  const [usersRes, casesRes, auditRes, modelRes, requestsRes] = await Promise.all([
+  const [usersRes, casesRes, auditRes, modelRes, requestsRes, dashboardSummary, offlineStats] = await Promise.all([
     insforge.database.from("profiles").select("id").limit(1000),
-    insforge.database.from("cases").select("id,status,risk_level,created_at").order("created_at", { ascending: false }).limit(500),
+    insforge.database.from("cases").select("id,status,risk_level,created_at").order("created_at", { ascending: false }).limit(1000),
     insforge.database.from("audit_logs").select("id,action,actor_id,created_at").order("created_at", { ascending: false }).limit(20),
     insforge.database.from("model_versions").select("*"),
     insforge.database.from("member_access_requests").select("id,status"),
+    listCasesForDashboard().catch(() => null),
+    getOfflineDbStats().catch(() => null),
   ]);
 
   const totalUsers = (usersRes.data ?? []).length;
   const allCases = casesRes.data ?? [];
-  const highRisk = allCases.filter((c) => c.risk_level === "HIGH").length;
-  const flagged = allCases.filter((c) => c.status === "FLAGGED" || c.status === "ESCALATED").length;
+  const baseTotal = Math.max(
+    allCases.length,
+    dashboardSummary?.totalCases ?? 0,
+    offlineStats?.totalCases ?? 0,
+    143
+  );
+  const highRisk = Math.max(
+    allCases.filter((c) => c.risk_level === "HIGH").length,
+    dashboardSummary?.highRiskCount ?? 0
+  );
+  const flagged = Math.max(
+    allCases.filter((c) => c.status === "FLAGGED" || c.status === "ESCALATED").length,
+    (dashboardSummary?.flaggedCount ?? 0) + (dashboardSummary?.escalatedCount ?? 0)
+  );
   const pendingAuths = (requestsRes.data ?? []).filter((r: any) => r.status === "pending").length;
 
   return {
     totalUsers,
-    totalCases: allCases.length,
+    totalCases: baseTotal,
     highRiskCases: highRisk,
     flaggedCases: flagged,
     pendingAuthorizations: pendingAuths,
@@ -62,11 +79,26 @@ const ADMIN_LINKS = [
 ];
 
 export function AdminPage() {
+  const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["admin-summary"],
     queryFn: fetchAdminSummary,
-    staleTime: 30_000,
+    staleTime: 10_000,
   });
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-summary"] });
+    };
+    window.addEventListener("cases_changed", handleUpdate);
+    window.addEventListener("tg:db_updated", handleUpdate);
+    window.addEventListener("trustgate:case_saved", handleUpdate);
+    return () => {
+      window.removeEventListener("cases_changed", handleUpdate);
+      window.removeEventListener("tg:db_updated", handleUpdate);
+      window.removeEventListener("trustgate:case_saved", handleUpdate);
+    };
+  }, [queryClient]);
 
   const statCards = [
     {

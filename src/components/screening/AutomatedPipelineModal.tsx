@@ -168,7 +168,7 @@ export function AutomatedPipelineModal({
         status: currentStep === 7 && isFinished ? "done" : currentStep === 7 ? "running" : "pending",
         detailLog: [
           `[STEP 7] Generating immutable cryptographic SHA-256 screening ledger record...`,
-          `[DATABASE] Writing record to PostgreSQL (heicn84u.us-east.insforge.app:5432)...`,
+          `[DATABASE] Writing record to PostgreSQL (i8yy29ec.us-east.insforge.app:5432)...`,
           `[CERTIFICATION] Inspection procedure completed. Station: Indo-Nepal ICP Raxaul.`,
         ],
       },

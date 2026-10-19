@@ -458,10 +458,11 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
 /* Command center grid background utility */
 @layer utilities {
   .bg-grid {
-    background-image:
-      linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
-    background-size: 32px 32px;
+    background-image: none;
+  }
+  html.light .bg-grid,
+  html[data-theme="light"] .bg-grid {
+    background-image: none;
   }
   .glass-card {
     background: linear-gradient(180deg, rgba(17, 24, 39, 0.85) 0%, rgba(15, 23, 42, 0.85) 100%);

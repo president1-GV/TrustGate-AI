@@ -113,6 +113,17 @@ export function SettingsPage() {
   const [badgeId, setBadgeId] = React.useState(user?.badgeId ?? "");
   const [station, setStation] = React.useState(user?.station ?? "");
   const [team, setTeam] = React.useState(user?.team ?? "");
+  const [profileSaving, setProfileSaving] = React.useState(false);
+  const [profileSavedMsg, setProfileSavedMsg] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (user) {
+      setDisplayName(user.name ?? "");
+      setBadgeId(user.badgeId ?? "");
+      setStation(user.station ?? "");
+      setTeam(user.team ?? "");
+    }
+  }, [user]);
 
   // Security fields
   const [newPassword, setNewPassword] = React.useState("");
@@ -474,6 +485,59 @@ export function SettingsPage() {
     }
   }
 
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setProfileSaving(true);
+    setProfileSavedMsg(null);
+    try {
+      const trimmedName = displayName.trim() || user.name;
+      const trimmedBadge = badgeId.trim();
+      const trimmedStation = station.trim();
+      const trimmedTeam = team.trim();
+
+      // Persist to InsForge database profiles table if user is in database
+      if (user.id && user.id !== "field-officer-airgap-01") {
+        try {
+          await insforge.database
+            .from("profiles")
+            .update({
+              display_name: trimmedName,
+              badge_id: trimmedBadge || null,
+              station: trimmedStation || null,
+              team: trimmedTeam || null,
+            })
+            .eq("id", user.id);
+        } catch (dbErr) {
+          console.warn("Could not update remote profile, falling back to local session:", dbErr);
+        }
+      }
+
+      // Update active session in Zustand auth store and localStorage
+      const updatedUser = {
+        ...user,
+        name: trimmedName,
+        badgeId: trimmedBadge || undefined,
+        station: trimmedStation || undefined,
+        team: trimmedTeam || undefined,
+      };
+      useAuthStore.getState().setSession(updatedUser);
+      try {
+        localStorage.setItem("tg_authenticated_session", JSON.stringify(updatedUser));
+      } catch {}
+
+      setSavedSection("profile");
+      setProfileSavedMsg("Officer profile updated successfully.");
+      setTimeout(() => {
+        setSavedSection(null);
+        setProfileSavedMsg(null);
+      }, 3000);
+    } catch (err: any) {
+      console.error("Failed to save profile:", err);
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
   function handleSave(sec: SectionId) {
     // In a real app, each section would persist to InsForge profiles/settings table.
     // For the prototype, we show a success toast.
@@ -593,17 +657,27 @@ export function SettingsPage() {
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => handleSave("profile")}
+                    onClick={handleSaveProfile}
+                    disabled={profileSaving}
                   >
-                    {savedSection === "profile" ? (
-                      <><CheckCircle2 className="h-4 w-4" /> Saved</>
+                    {profileSaving ? (
+                      <><Loader2 className="h-4 w-4 animate-spin mr-1.5" /> Saving…</>
+                    ) : savedSection === "profile" ? (
+                      <><CheckCircle2 className="h-4 w-4 mr-1.5 text-emerald-400" /> Saved</>
                     ) : (
-                      <><Save className="h-4 w-4" /> Save Profile</>
+                      <><Save className="h-4 w-4 mr-1.5" /> Save Profile</>
                     )}
                   </Button>
-                  <p className="text-xs text-slate-500">
-                    Profile updates require a page refresh to reflect globally.
-                  </p>
+                  {profileSavedMsg && (
+                    <span className="text-xs text-emerald-400 font-medium animate-fadeIn">
+                      {profileSavedMsg}
+                    </span>
+                  )}
+                  {!profileSavedMsg && (
+                    <p className="text-xs text-slate-500">
+                      Profile updates apply immediately to your active duty terminal.
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1052,7 +1126,7 @@ export function SettingsPage() {
               <CardContent className="pt-5 space-y-4">
                 <div className="grid gap-3">
                   {[
-                    { label: "API Base URL", value: import.meta.env.VITE_INSFORGE_URL ?? "https://heicn84u.us-east.insforge.app" },
+                    { label: "API Base URL", value: import.meta.env.VITE_INSFORGE_URL ?? "https://i8yy29ec.us-east.insforge.app" },
                     { label: "App Version", value: "1.0.0-enterprise" },
                     { label: "Deployment Standard", value: "ICAO-9303 Enterprise Border Security" },
                     { label: "Database Backend", value: "InsForge / Postgres" },

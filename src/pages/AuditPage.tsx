@@ -27,54 +27,16 @@ import { Input } from "@/components/ui/Input";
 import { Separator } from "@/components/ui/Separator";
 import { insforge } from "@/lib/insforge";
 import { cn, formatDate, formatTimeAgo } from "@/lib/utils";
-import type { AuditLogRow } from "@/lib/db";
-
-async function fetchAuditLogs(filters: {
-  search?: string;
-  eventType?: string;
-  limit?: number;
-}): Promise<AuditLogRow[]> {
-  let q: any = insforge.database
-    .from("audit_logs")
-    .select(
-      "id,actor_id,action,case_id,event_type,result,metadata,created_at,actor:profiles!audit_logs_actor_id_fkey(id,display_name)"
-    )
-    .order("created_at", { ascending: false })
-    .limit(filters.limit ?? 200);
-
-  if (filters.eventType && filters.eventType !== "ALL") {
-    q = q.eq("event_type", filters.eventType);
-  }
-
-  const res = await q;
-  if (res.error) throw res.error;
-
-  let rows: AuditLogRow[] = (res.data ?? []).map((a: any) => {
-    const actorArr = Array.isArray(a.actor)
-      ? a.actor
-      : a.actor
-      ? [a.actor]
-      : [];
-    return { ...a, actor: actorArr[0] ?? null } as AuditLogRow;
-  });
-
-  if (filters.search?.trim()) {
-    const s = filters.search.trim().toLowerCase();
-    rows = rows.filter(
-      (r) =>
-        r.action.toLowerCase().includes(s) ||
-        r.event_type.toLowerCase().includes(s) ||
-        (r.actor?.display_name ?? "").toLowerCase().includes(s) ||
-        (r.case_id ?? "").toLowerCase().includes(s)
-    );
-  }
-
-  return rows;
-}
+import { listAuditLogs, type AuditLogRow } from "@/lib/db";
 
 const EVENT_TYPE_OPTIONS = [
   "ALL",
+  "auth.login.success",
+  "auth.login.offline",
+  "auth.logout",
+  "auth.role.switch",
   "screening.completed",
+  "case.risk.override",
   "case.status.cleared",
   "case.status.flagged",
   "case.status.escalated",
@@ -84,6 +46,10 @@ const EVENT_TYPE_OPTIONS = [
 ];
 
 const ACTION_COLOR: Record<string, string> = {
+  USER_LOGIN: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+  USER_LOGOUT: "bg-slate-500/10 text-slate-400 border-slate-500/30",
+  ROLE_SWITCHED: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+  RISK_OVERRIDE: "bg-orange-500/10 text-orange-400 border-orange-500/30",
   CASE_CREATED: "bg-signal-blue/10 text-signal-blue border-signal-blue/30",
   CASE_NOTES_UPDATED: "bg-slate-500/10 text-slate-300 border-slate-500/30",
   REPORT_GENERATED: "bg-signal-purple/10 text-signal-purple border-signal-purple/30",
@@ -155,8 +121,10 @@ function AuditRow({ log }: { log: AuditLogRow }) {
             href={`/cases/${log.case_id}`}
             className="font-mono text-xs text-signal-cyan hover:underline"
           >
-            {log.case_id.slice(0, 8)}…
+            {log.case_code || `${log.case_id.slice(0, 8)}…`}
           </a>
+        ) : log.case_code ? (
+          <span className="font-mono text-xs text-signal-cyan">{log.case_code}</span>
         ) : (
           <span className="text-slate-600 text-xs">—</span>
         )}
@@ -211,9 +179,54 @@ export function AuditPage() {
   >({
     queryKey: ["audit-logs", searchDebounced, eventType],
     queryFn: () =>
-      fetchAuditLogs({ search: searchDebounced, eventType, limit: 200 }),
-    staleTime: 20_000,
+      listAuditLogs({ search: searchDebounced, eventType, limit: 300 }),
+    staleTime: 0,
+    refetchInterval: 3000,
   });
+
+  // Real-time synchronization
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      refetch();
+    };
+
+    window.addEventListener("trustgate:audit_log_added", handleUpdate);
+    window.addEventListener("audit_logs_changed", handleUpdate);
+    window.addEventListener("tg:db_updated", handleUpdate);
+    window.addEventListener("trustgate:case_saved", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    async function setupRealtime() {
+      try {
+        if ((insforge as any).realtime?.connect) {
+          await (insforge as any).realtime.connect();
+          await (insforge as any).realtime.subscribe("audit_logs");
+          (insforge as any).realtime.on("audit_log_created", handleUpdate);
+          (insforge as any).realtime.on("audit_logs_changed", handleUpdate);
+        }
+      } catch (e) {
+        console.info("[TrustGate Audit] Realtime WebSocket operating with active live polling:", e);
+      }
+    }
+    setupRealtime();
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel("trustgate_audit_channel");
+      bc.onmessage = () => handleUpdate();
+    } catch {}
+
+    return () => {
+      window.removeEventListener("trustgate:audit_log_added", handleUpdate);
+      window.removeEventListener("audit_logs_changed", handleUpdate);
+      window.removeEventListener("tg:db_updated", handleUpdate);
+      window.removeEventListener("trustgate:case_saved", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+      if (bc) {
+        try { bc.close(); } catch {}
+      }
+    };
+  }, [refetch]);
 
   const logs = data ?? [];
 

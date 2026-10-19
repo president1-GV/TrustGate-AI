@@ -57,8 +57,8 @@ rey arene. JE 3a`;
     const mrz = await parseMrz(realAadhaarOcr, dummyCanvas);
 
     expect(mrz.present).toBe(false);
-    expect(mrz.rawLines?.length ?? 0).toBe(0);
-    expect(mrz.mismatches?.length ?? 0).toBe(0);
+    expect((mrz.rawLines || []).length).toBe(0);
+    expect((mrz.mismatches || []).length).toBe(0);
   });
 
   it("AADHAAR-02: Validates Aadhaar without requiring expiration date or ICAO MRZ", async () => {

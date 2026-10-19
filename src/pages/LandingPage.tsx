@@ -17,83 +17,131 @@ import {
   Database,
   BrainCircuit,
   ShieldCheck,
+  Sun,
+  Moon,
+  Menu,
+  X,
+  FileCheck,
+  Cpu,
+  Binary,
+  Check,
+  Play,
+  Radio,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/providers/AuthProvider";
+import { useTheme } from "@/providers/ThemeProvider";
+import { OperationalVideoPlayer } from "@/components/landing/OperationalVideoPlayer";
 
-/* ─── Feature Cards ────────────────────────────────────── */
+/* ─── Feature Card Component ────────────────────────────── */
 interface FeatureCardProps {
   icon: React.ComponentType<{ className?: string }>;
   iconClass: string;
   title: string;
   description: string;
+  tag?: string;
 }
-function FeatureCard({ icon: Icon, iconClass, title, description }: FeatureCardProps) {
+
+function FeatureCard({ icon: Icon, iconClass, title, description, tag }: FeatureCardProps) {
   return (
-    <div className="rounded-2xl border border-ink-border bg-ink-card/60 p-6 hover:border-signal-blue/30 hover:bg-ink-raised/60 transition-all">
-      <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4", iconClass)}>
-        <Icon className="h-6 w-6" />
+    <div className="group rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card/60 p-6 hover:border-signal-blue/40 hover:bg-slate-50/80 dark:hover:bg-ink-raised/60 shadow-xs dark:shadow-none transition-all duration-200">
+      <div className="flex items-center justify-between mb-4">
+        <div className={cn("h-11 w-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105", iconClass)}>
+          <Icon className="h-5 w-5" />
+        </div>
+        {tag && (
+          <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">
+            {tag}
+          </span>
+        )}
       </div>
-      <h3 className="text-base font-semibold text-slate-100 mb-2">{title}</h3>
-      <p className="text-sm text-slate-400 leading-relaxed">{description}</p>
+      <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-signal-blue transition-colors">
+        {title}
+      </h3>
+      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+        {description}
+      </p>
     </div>
   );
 }
 
-/* ─── Pipeline Step ────────────────────────────────────── */
-function PipelineStep({ num, label, pass }: { num: number; label: string; pass?: boolean }) {
+/* ─── Stat Metric Card Component ────────────────────────── */
+function StatMetricCard({ value, label, subtext }: { value: string; label: string; subtext?: string }) {
   return (
-    <div className="flex items-center gap-3">
-      <div
-        className={cn(
-          "h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 border",
-          pass
-            ? "bg-risk-low/15 text-risk-low border-risk-low/40"
-            : "bg-signal-blue/15 text-signal-blue border-signal-blue/40"
-        )}
-      >
-        {num}
+    <div className="relative overflow-hidden text-center p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card/60 shadow-xs dark:shadow-none transition-all hover:border-signal-blue/30">
+      <div className="text-3xl sm:text-4xl font-extrabold text-gradient-signal tabular-nums tracking-tight">
+        {value}
       </div>
-      <div className="text-sm font-medium text-slate-200">{label}</div>
-      {pass !== undefined && (
-        <div className="ml-auto">
-          {pass ? (
-            <CheckCircle2 className="h-4 w-4 text-risk-low" />
-          ) : (
-            <div className="h-4 w-4 rounded-full border-2 border-signal-blue/50 border-dashed" />
-          )}
+      <div className="text-xs text-slate-800 dark:text-slate-200 font-bold uppercase tracking-wider mt-2">
+        {label}
+      </div>
+      {subtext && (
+        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+          {subtext}
         </div>
       )}
     </div>
   );
 }
 
-/* ─── Stat Pill ─────────────────────────────────────────── */
-function StatPill({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="text-center px-6 py-4 rounded-2xl border border-ink-border bg-ink-card/60">
-      <div className="text-3xl font-bold text-gradient-signal tabular-nums">{value}</div>
-      <div className="text-xs text-slate-500 uppercase tracking-wide mt-1">{label}</div>
-    </div>
-  );
-}
+/* ─── Interactive Pipeline Stages ───────────────────────── */
+const PIPELINE_STAGES = [
+  { num: 1, name: "Image Quality Analysis", code: "01-quality", desc: "Assesses blur, resolution, glare, shadows, and perspective skew before inference." },
+  { num: 2, name: "Document Type Detection", code: "02-detect", desc: "Identifies document class (Passport, National ID, Aadhaar, Visa) and geometry." },
+  { num: 3, name: "OCR & Field Extraction", code: "03-ocr", desc: "Dual-engine PaddleOCR & Tesseract extracts structured identity fields with confidence scoring." },
+  { num: 4, name: "MRZ Analysis & Validation", code: "04-mrz", desc: "Parses TD1/TD2/TD3 zones with ISO/ICAO 9303 checksum calculation." },
+  { num: 5, name: "Cross-Field Rule Validation", code: "05-rules", desc: "Validates consistency between visual zone text, MRZ metadata, and issuing country rules." },
+  { num: 6, name: "Tampering Detection (ELA)", code: "06-forensics", desc: "Error Level Analysis & JPEG artifact inspection to detect photo swapping and text manipulation." },
+  { num: 7, name: "Face Analysis & Similarity", code: "07-face", desc: "128-D spatial gradient biometric comparison with calibrated ICAO 9303 cosine distance." },
+  { num: 8, name: "Identity Consistency Engine", code: "08-identity", desc: "Cross-correlates biometric, textual, and layout parameters for synthesized veracity." },
+  { num: 9, name: "Explainable Risk Scoring", code: "09-risk", desc: "TrustFusion multi-signal synthesis producing composite 0–100 index with reasoning." },
+];
 
-/* ─── Main Landing Page ─────────────────────────────────── */
+/* ─── Main Institutional Landing Page ───────────────────── */
 export function LandingPage() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { theme, toggleTheme } = useTheme();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [activeStage, setActiveStage] = React.useState(1);
+
+  // Close mobile menu on Escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-grid overflow-x-hidden">
-      {/* ── Nav ── */}
-      <nav className="sticky top-0 z-40 border-b border-ink-border bg-ink/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3 group">
+    <div className="min-h-screen bg-white dark:bg-ink text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-signal-blue/20 selection:text-signal-blue relative">
+      {/* Soft Ambient Illumination (Eliminates harsh graph-paper grid lines, adds institutional depth) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-gradient-to-b from-signal-blue/[0.04] via-sky-400/[0.02] to-transparent dark:from-signal-blue/[0.08] dark:via-transparent rounded-full blur-3xl" />
+        <div className="absolute top-[800px] -right-48 w-[650px] h-[450px] bg-slate-100/60 dark:bg-signal-purple/5 rounded-full blur-3xl" />
+        <div className="absolute top-[1800px] -left-48 w-[600px] h-[400px] bg-sky-50/40 dark:bg-signal-blue/5 rounded-full blur-3xl" />
+      </div>
+
+      {/* ── Top Navigation Bar ── */}
+      <nav
+        aria-label="Main Navigation"
+        className="sticky top-0 z-50 border-b border-slate-200 dark:border-ink-border bg-white/95 dark:bg-ink/90 backdrop-blur-md transition-colors"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+          {/* Brand Mark */}
+          <Link
+            to="/"
+            className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue rounded-lg p-1"
+          >
             <img
               src="/trustgate-logo.png"
-              alt="TrustGate AI"
-              className="h-9 w-9 rounded-xl object-cover shadow-glow flex-shrink-0 border border-signal-blue/40 group-hover:scale-105 transition-transform"
+              alt="TrustGate AI Logo"
+              className="h-9 w-9 rounded-xl object-cover shadow-xs border border-signal-blue/40 group-hover:scale-105 transition-transform"
             />
             <div className="flex flex-col min-w-0">
-              <span className="font-bold tracking-[0.18em] text-gradient-signal text-sm">
+              <span className="font-extrabold tracking-[0.18em] text-slate-900 dark:text-white text-sm leading-tight group-hover:text-signal-blue transition-colors">
                 TRUSTGATE
               </span>
               <span className="text-[10px] tracking-[0.22em] text-signal-cyan font-mono font-semibold leading-none">
@@ -101,85 +149,441 @@ export function LandingPage() {
               </span>
             </div>
           </Link>
-          <div className="hidden md:flex items-center gap-6 text-sm text-slate-400">
-            <a href="#features" className="hover:text-slate-100 transition-colors">Features</a>
-            <a href="#pipeline" className="hover:text-slate-100 transition-colors">How It Works</a>
-            <a href="#architecture" className="hover:text-slate-100 transition-colors">Architecture</a>
-            <a href="#specifications" className="hover:text-slate-100 transition-colors">Specifications</a>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link to="/login">
-              <Button variant="ghost" size="sm">Sign In</Button>
-            </Link>
-            <Link to="/login">
-              <Button variant="primary" size="sm">
-                Get Started <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
 
-      {/* ── Hero ── */}
-      <section className="relative max-w-7xl mx-auto px-6 pt-24 pb-20 text-center">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-signal-blue/6 rounded-full blur-3xl" />
-        </div>
-        <div className="relative">
-          <Badge variant="default" className="mb-6 border-signal-blue/40 text-signal-blue bg-signal-blue/10 px-4 py-1.5">
-            <Shield className="h-3.5 w-3.5 mr-1" />
-            AI-Powered Identity &amp; Document Security Platform
-          </Badge>
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-100 leading-tight">
-            See Beyond
-            <br />
-            <span className="text-gradient-signal">the Document.</span>
-          </h1>
-          <p className="mt-6 text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            AI-assisted border security screening that detects inconsistencies,
-            manipulation, and identity anomalies — before they become security risks.
-          </p>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/login">
-              <Button variant="primary" size="lg" className="shadow-glow">
-                <ScanLine className="h-5 w-5" />
-                Start Screening
-              </Button>
-            </Link>
-            <a href="#pipeline">
-              <Button variant="outline" size="lg">
-                See How It Works
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+          {/* Desktop Navigation Links */}
+          <div className="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600 dark:text-slate-300">
+            <a
+              href="#demo-video"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue rounded flex items-center gap-1.5 text-signal-blue dark:text-signal-cyan font-semibold"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-signal-blue animate-pulse" />
+              Live Demo
+            </a>
+            <a
+              href="#features"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue rounded"
+            >
+              Features
+            </a>
+            <a
+              href="#how-it-works"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue rounded"
+            >
+              How It Works
+            </a>
+            <a
+              href="#architecture"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue rounded"
+            >
+              Architecture
+            </a>
+            <a
+              href="#specifications"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue rounded"
+            >
+              Specifications
+            </a>
+            <a
+              href="#governance"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue rounded"
+            >
+              Governance
             </a>
           </div>
-          <div className="mt-4">
-            <Badge variant="default" className="text-xs bg-risk-low/10 border-risk-low/30 text-risk-low">
-              <ShieldCheck className="h-3 w-3" /> Human-in-the-loop — AI assists officers, not replaces them
-            </Badge>
+
+          {/* Desktop Actions */}
+          <div className="hidden sm:flex items-center gap-2.5">
+            {/* Theme Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="h-9 w-9 rounded-lg border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card/60 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-ink-raised transition-colors cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue"
+              title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4 text-amber-500" />
+              ) : (
+                <Moon className="h-4 w-4 text-signal-blue" />
+              )}
+            </button>
+
+            {isAuthenticated ? (
+              <>
+                <Link to="/dashboard">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium"
+                  >
+                    Dashboard
+                  </Button>
+                </Link>
+                <Link to="/screening">
+                  <Button variant="primary" size="sm" className="font-semibold shadow-xs">
+                    Launch Screening <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium"
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/login">
+                  <Button variant="primary" size="sm" className="font-semibold shadow-xs">
+                    Get Started <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Menu Toggle Button */}
+          <div className="flex sm:hidden items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="h-9 w-9 rounded-lg border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card flex items-center justify-center text-slate-700 dark:text-slate-300"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4 text-amber-500" /> : <Moon className="h-4 w-4 text-signal-blue" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="h-9 w-9 rounded-lg border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              aria-expanded={mobileMenuOpen}
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile Navigation Menu"
+            className="sm:hidden border-b border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card px-6 py-5 shadow-lg animate-in slide-in-from-top-2 duration-150"
+          >
+            <div className="flex flex-col gap-4 text-base font-medium text-slate-800 dark:text-slate-200">
+              <a
+                href="#demo-video"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1 hover:text-signal-blue transition-colors flex items-center gap-2 font-semibold text-signal-blue dark:text-signal-cyan"
+              >
+                <span className="h-2 w-2 rounded-full bg-signal-blue animate-pulse" />
+                Live Demo Video
+              </a>
+              <a
+                href="#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1 hover:text-signal-blue transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#how-it-works"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1 hover:text-signal-blue transition-colors"
+              >
+                How It Works
+              </a>
+              <a
+                href="#architecture"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1 hover:text-signal-blue transition-colors"
+              >
+                Architecture
+              </a>
+              <a
+                href="#specifications"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1 hover:text-signal-blue transition-colors"
+              >
+                Specifications
+              </a>
+              <a
+                href="#governance"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1 hover:text-signal-blue transition-colors"
+              >
+                Governance
+              </a>
+
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2.5">
+                {isAuthenticated ? (
+                  <>
+                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full justify-center">
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Link to="/screening" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="primary" className="w-full justify-center">
+                        Launch Screening <ArrowRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full justify-center">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="primary" className="w-full justify-center">
+                        Get Started <ArrowRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* ── Hero Section ── */}
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-12 sm:pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+          {/* Left Column: Headline & Action */}
+          <div className="lg:col-span-7 text-center lg:text-left">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-signal-blue/40 bg-signal-blue/10 px-3.5 py-1 text-xs font-semibold text-signal-blue mb-5 shadow-xs">
+              <Shield className="h-3.5 w-3.5 text-signal-blue" />
+              <span>AI-POWERED IDENTITY &amp; DOCUMENT SECURITY PLATFORM</span>
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-[1.12]">
+              See Beyond <br />
+              <span className="text-gradient-signal">the Document.</span>
+            </h1>
+
+            <p className="mt-5 text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+              AI-assisted border security screening that detects inconsistencies,
+              manipulation, and identity anomalies — before they become security risks.
+            </p>
+
+            <div className="mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-3.5">
+              <Link to={isAuthenticated ? "/screening" : "/login"}>
+                <Button variant="primary" size="lg" className="shadow-glow font-semibold h-12 px-6">
+                  <ScanLine className="h-5 w-5 mr-1" />
+                  {isAuthenticated ? "Launch Live Screening" : "Start Screening"}
+                </Button>
+              </Link>
+
+              <a href="#demo-video">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-signal-blue/40 hover:border-signal-blue bg-signal-blue/5 hover:bg-signal-blue/10 text-signal-blue dark:text-signal-cyan h-12 px-5 shadow-xs font-semibold flex items-center gap-2"
+                >
+                  <Play className="h-4 w-4 fill-current text-signal-blue" />
+                  Watch Live Demo
+                </Button>
+              </a>
+
+              {isAuthenticated ? (
+                <Link to="/dashboard">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-slate-300 dark:border-ink-border bg-white dark:bg-transparent text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-ink-raised h-12 px-5 shadow-xs font-medium"
+                  >
+                    Cases Console
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </Link>
+              ) : (
+                <a href="#how-it-works">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-slate-300 dark:border-ink-border bg-white dark:bg-transparent text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-ink-raised h-12 px-5 shadow-xs font-medium"
+                  >
+                    How It Works
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </a>
+              )}
+            </div>
+
+            {/* Trust Statement */}
+            <div className="mt-5 flex items-center justify-center lg:justify-start">
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800 dark:text-risk-low bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1 rounded-full">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-risk-low flex-shrink-0" />
+                <span>HUMAN-IN-THE-LOOP — AI ASSISTS OFFICERS, NOT REPLACES THEM</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Right Column: Live Screening Console Demonstration Preview */}
+          <div className="lg:col-span-5 w-full">
+            <div className="relative rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-5 sm:p-6 shadow-panel">
+              {/* Terminal / Specimen Header */}
+              <div className="flex items-center justify-between pb-3.5 mb-3 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="font-mono text-xs font-semibold uppercase text-slate-700 dark:text-slate-300">
+                    SCREENING PIPELINE
+                  </span>
+                </div>
+                <Badge variant="pass" className="text-[10px] font-mono">
+                  VERIFIED GENUINE
+                </Badge>
+              </div>
+
+              {/* Live Operational Video Quick-Banner Link */}
+              <a
+                href="#demo-video"
+                className="flex items-center justify-between px-3 py-2 rounded-xl bg-signal-blue/10 hover:bg-signal-blue/15 border border-signal-blue/30 text-xs font-mono text-signal-blue dark:text-signal-cyan transition-all mb-4 group/videolink"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-signal-blue animate-pulse" />
+                  <span className="font-semibold">WATCH LIVE SCREENING VIDEO</span>
+                </div>
+                <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 group-hover/videolink:text-signal-blue">
+                  <span>8:08 MIN</span>
+                  <ArrowRight className="h-3.5 w-3.5 group-hover/videolink:translate-x-0.5 transition-transform" />
+                </div>
+              </a>
+
+              {/* Specimen Case Metadata */}
+              <div className="grid grid-cols-2 gap-2 text-xs mb-4 p-3 rounded-xl bg-slate-50 dark:bg-ink-raised/60 border border-slate-200/80 dark:border-slate-800/80 font-mono">
+                <div>
+                  <span className="text-slate-500 block text-[10px]">DOCUMENT TYPE</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">TD3 PASSPORT</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[10px]">PROCESSING RUN</span>
+                  <span className="font-semibold text-signal-blue">RUN-2026-LIVE</span>
+                </div>
+              </div>
+
+              {/* Pipeline Live Checks */}
+              <div className="space-y-2.5 mb-5 text-xs">
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40">
+                  <div className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-200">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-risk-low flex-shrink-0" />
+                    <span>Visual OCR Extraction</span>
+                  </div>
+                  <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400">98.4% conf</span>
+                </div>
+
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40">
+                  <div className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-200">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-risk-low flex-shrink-0" />
+                    <span>MRZ Checksum Validation</span>
+                  </div>
+                  <span className="font-mono text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">PASS (TD3)</span>
+                </div>
+
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40">
+                  <div className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-200">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-risk-low flex-shrink-0" />
+                    <span>ELA Tampering Forensics</span>
+                  </div>
+                  <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400">0% anomaly</span>
+                </div>
+
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40">
+                  <div className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-200">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-risk-low flex-shrink-0" />
+                    <span>Biometric Face Verification</span>
+                  </div>
+                  <span className="font-mono text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">MATCH (94%)</span>
+                </div>
+              </div>
+
+              {/* Composite TrustGate Fusion Score Bar */}
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wide">
+                    COMPOSITE RISK INDEX
+                  </div>
+                  <div className="text-xl font-bold text-emerald-700 dark:text-risk-low font-mono">
+                    8 / 100 <span className="text-xs font-normal text-slate-500">(LOW RISK)</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-mono text-slate-500 block uppercase">CRYPTO SEAL</span>
+                  <span className="text-[11px] font-mono text-signal-blue font-semibold">SHA-256 SEALED</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Stats ── */}
-      <section className="max-w-5xl mx-auto px-6 pb-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatPill value="9" label="TrustGate Fusion Engine Stages" />
-          <StatPill value="25" label="Database Tables" />
-          <StatPill value="3" label="RBAC Roles" />
-          <StatPill value="< 5s" label="Avg Processing Time" />
+      {/* ── Section: Stat Metric Cards (Exact 4 Points Preserved) ── */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-14">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-4">
+          <StatMetricCard
+            value="9"
+            label="TrustGate Fusion Engine Stages"
+            subtext="End-to-end sequential pipeline"
+          />
+          <StatMetricCard
+            value="32"
+            label="Database Tables"
+            subtext="PostgreSQL with RLS & Audit Ledger"
+          />
+          <StatMetricCard
+            value="4"
+            label="RBAC Roles"
+            subtext="Officer, Supervisor, Admin, Analyst"
+          />
+          <StatMetricCard
+            value="< 5s"
+            label="Avg Processing Time"
+            subtext="Zero external API dependencies"
+          />
         </div>
       </section>
 
-      {/* ── Problem / Solution ── */}
-      <section className="max-w-7xl mx-auto px-6 pb-20">
+      {/* ── Section: Live Operational Video Briefing (Dynamic & Automatic Showcase) ── */}
+      <section id="demo-video" className="max-w-7xl mx-auto px-4 sm:px-6 pb-20 pt-2 scroll-mt-20">
+        <div className="text-center mb-8 sm:mb-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold tracking-wider font-mono text-signal-blue bg-signal-blue/10 border border-signal-blue/30 mb-3 shadow-xs">
+            <Radio className="h-3.5 w-3.5 text-signal-cyan animate-pulse" />
+            <span>OPERATIONAL SYSTEM DEMONSTRATION</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+            See TrustGate AI in Active Operation
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 mt-3 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+            Full-length demonstration of multi-spectral document forensics, automated MRZ validation,
+            error level tampering detection, and 128-D biometric face verification recorded in real time.
+          </p>
+        </div>
+
+        {/* High-Tech Operational Video Player */}
+        <OperationalVideoPlayer />
+      </section>
+
+      {/* ── Section: Problem vs Solution (Exact Points Preserved) ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="rounded-2xl border border-risk-high/20 bg-risk-high/5 p-8">
-            <Badge variant="high" className="mb-4">The Problem</Badge>
-            <h2 className="text-2xl font-bold text-slate-100 mb-4">
+          {/* Problem Card */}
+          <div className="rounded-2xl border border-rose-200 dark:border-risk-high/30 bg-rose-50/60 dark:bg-risk-high/5 p-7 sm:p-8 shadow-xs">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 mb-4">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              The Problem
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">
               Fake identities slip through manual screening
             </h2>
-            <ul className="space-y-3 text-sm text-slate-300 leading-relaxed">
+            <ul className="space-y-3.5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
               {[
                 "High-volume border checkpoints under time pressure",
                 "Human fatigue leads to missed document anomalies",
@@ -188,19 +592,26 @@ export function LandingPage() {
                 "Face swaps and photo replacements go undetected",
                 "No explainable AI trail for officer decision support",
               ].map((item) => (
-                <li key={item} className="flex items-start gap-2.5">
-                  <AlertTriangle className="h-4 w-4 text-risk-high mt-0.5 flex-shrink-0" />
-                  {item}
+                <li key={item} className="flex items-start gap-3">
+                  <div className="h-5 w-5 rounded-full bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <AlertTriangle className="h-3 w-3 text-rose-600 dark:text-rose-400" />
+                  </div>
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
           </div>
-          <div className="rounded-2xl border border-risk-low/20 bg-risk-low/5 p-8">
-            <Badge variant="pass" className="mb-4">The Solution</Badge>
-            <h2 className="text-2xl font-bold text-slate-100 mb-4">
+
+          {/* Solution Card */}
+          <div className="rounded-2xl border border-emerald-200 dark:border-risk-low/30 bg-emerald-50/60 dark:bg-risk-low/5 p-7 sm:p-8 shadow-xs">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 mb-4">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              The Solution
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">
               TrustGate AI — 9-stage intelligent screening
             </h2>
-            <ul className="space-y-3 text-sm text-slate-300 leading-relaxed">
+            <ul className="space-y-3.5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
               {[
                 "Automated image quality, OCR, and MRZ analysis",
                 "Pixel-level tampering detection with heatmap overlays",
@@ -209,9 +620,11 @@ export function LandingPage() {
                 "Explainable risk scoring with per-finding drill-down",
                 "Full audit trail with human-in-the-loop officer review",
               ].map((item) => (
-                <li key={item} className="flex items-start gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-risk-low mt-0.5 flex-shrink-0" />
-                  {item}
+                <li key={item} className="flex items-start gap-3">
+                  <div className="h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-700 dark:text-emerald-400" />
+                  </div>
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
@@ -219,205 +632,288 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── Features ── */}
-      <section id="features" className="max-w-7xl mx-auto px-6 pb-20">
+      {/* ── Section: Features / Capabilities (Exact 9 Points Preserved) ── */}
+      <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
         <div className="text-center mb-12">
-          <Badge variant="default" className="mb-4 border-signal-blue/40 text-signal-blue bg-signal-blue/10">
-            Capabilities
+          <Badge variant="default" className="mb-3 border-signal-blue/40 text-signal-blue bg-signal-blue/10">
+            Platform Capabilities
           </Badge>
-          <h2 className="text-3xl font-bold text-slate-100">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
             Intelligence Behind Every Verification
           </h2>
-          <p className="text-slate-400 mt-3 max-w-xl mx-auto">
-            A full-stack identity forensics platform built on open-source AI and a
-            production-grade backend.
+          <p className="text-slate-600 dark:text-slate-400 mt-3 max-w-2xl mx-auto text-base">
+            A full-stack identity forensics platform built on open-source AI and a production-grade backend.
           </p>
         </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           <FeatureCard
             icon={Eye}
             iconClass="bg-signal-blue/15 text-signal-blue"
+            tag="Inference"
             title="OCR Field Extraction"
             description="PaddleOCR / Tesseract extracts name, DOB, nationality, document number, issue/expiry dates with per-field confidence scores."
           />
           <FeatureCard
             icon={Fingerprint}
             iconClass="bg-signal-cyan/15 text-signal-cyan"
+            tag="Standard"
             title="MRZ Validation"
             description="Machine-readable zone parsing with check-digit verification and pixel-level OCR/MRZ cross-field consistency checking."
           />
           <FeatureCard
             icon={AlertTriangle}
-            iconClass="bg-risk-high/15 text-risk-high"
+            iconClass="bg-rose-500/15 text-rose-600 dark:text-risk-high"
+            tag="Forensics"
             title="Tampering Detection"
             description="ELA-based forensic analysis detects photo replacement, text alterations, JPEG compression inconsistencies, and cloning artifacts."
           />
           <FeatureCard
             icon={Activity}
-            iconClass="bg-signal-purple/15 text-signal-purple"
+            iconClass="bg-purple-500/15 text-purple-600 dark:text-purple-400"
+            tag="Biometrics"
             title="Face Analysis"
             description="Open-source face detection, quality scoring, similarity comparison, and pose estimation — no paid APIs required."
           />
           <FeatureCard
             icon={BrainCircuit}
-            iconClass="bg-risk-medium/15 text-risk-medium"
+            iconClass="bg-amber-500/15 text-amber-600 dark:text-risk-medium"
+            tag="TrustFusion"
             title="Explainable Risk Scoring"
             description="Multi-signal risk engine combining image quality, OCR, MRZ, tampering, face, and consistency signals into a 0–100 score with human-readable explanations."
           />
           <FeatureCard
             icon={ShieldCheck}
-            iconClass="bg-risk-low/15 text-risk-low"
+            iconClass="bg-emerald-500/15 text-emerald-700 dark:text-risk-low"
+            tag="Governance"
             title="Human-in-the-Loop"
             description="Officers review all evidence before decisions. AI overrides are logged with reasons. Final authority stays with authorized personnel — always."
           />
           <FeatureCard
             icon={Database}
-            iconClass="bg-slate-500/15 text-slate-300"
+            iconClass="bg-slate-500/15 text-slate-700 dark:text-slate-300"
+            tag="Database"
             title="Production Backend"
-            description="InsForge Postgres with 25-table schema, row-level security, RBAC, immutable audit logs, and configurable data retention policies."
+            description="InsForge Postgres with 32-table schema, row-level security, RBAC, immutable audit logs, and configurable data retention policies."
           />
           <FeatureCard
             icon={Lock}
             iconClass="bg-signal-blue/15 text-signal-blue"
+            tag="Security"
             title="Security First"
             description="HTTPS-only, parameterized queries, JWT auth, RLS enforcement, MIME validation, PII minimization, and INSERT-only audit ledger."
           />
           <FeatureCard
             icon={Globe}
             iconClass="bg-signal-cyan/15 text-signal-cyan"
+            tag="Deployment"
             title="Edge-Ready Architecture"
             description="Designed for future deployment at border checkpoints with offline OCR/MRZ capability and central analytics synchronization."
           />
         </div>
       </section>
 
-      {/* ── Pipeline ── */}
-      <section id="pipeline" className="max-w-7xl mx-auto px-6 pb-20">
-        <div className="text-center mb-12">
-          <Badge variant="default" className="mb-4 border-signal-cyan/40 text-signal-cyan bg-signal-cyan/10">
-            TRUSTFUSION RISK ENGINE
-          </Badge>
-          <h2 className="text-3xl font-bold text-slate-100">How It Works</h2>
-          <p className="text-slate-400 mt-3 max-w-xl mx-auto">
-            A 9-stage sequential pipeline that processes every document from raw image
-            to explainable risk decision in under 5 seconds.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          <div className="rounded-2xl border border-ink-border bg-ink-card/60 p-6 space-y-3">
-            <PipelineStep num={1} label="Image Quality Analysis" pass />
-            <div className="w-px h-3 bg-ink-border ml-4" />
-            <PipelineStep num={2} label="Document Type Detection" pass />
-            <div className="w-px h-3 bg-ink-border ml-4" />
-            <PipelineStep num={3} label="OCR & Field Extraction" pass />
-            <div className="w-px h-3 bg-ink-border ml-4" />
-            <PipelineStep num={4} label="MRZ Analysis & Validation" pass />
-            <div className="w-px h-3 bg-ink-border ml-4" />
-            <PipelineStep num={5} label="Cross-Field Rule Validation" pass />
-            <div className="w-px h-3 bg-ink-border ml-4" />
-            <PipelineStep num={6} label="Tampering Detection (ELA)" />
-            <div className="w-px h-3 bg-ink-border ml-4" />
-            <PipelineStep num={7} label="Face Analysis & Similarity" />
-            <div className="w-px h-3 bg-ink-border ml-4" />
-            <PipelineStep num={8} label="Identity Consistency Engine" />
-            <div className="w-px h-3 bg-ink-border ml-4" />
-            <PipelineStep num={9} label="Explainable Risk Scoring" />
+      {/* ── Section: How It Works / TrustFusion Pipeline (Exact 9 Stages Preserved) ── */}
+      <section id="how-it-works" className="relative py-20 bg-slate-50/70 dark:bg-ink-card/25 border-y border-slate-200/80 dark:border-ink-border/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <Badge variant="default" className="mb-3 border-signal-cyan/40 text-signal-cyan bg-signal-cyan/10">
+              TrustFusion Risk Engine
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+              How It Works
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 mt-3 max-w-xl mx-auto text-base">
+              A 9-stage sequential pipeline that processes every document from raw image to explainable risk decision in under 5 seconds.
+            </p>
           </div>
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-risk-high/20 bg-risk-high/5 p-5">
-              <div className="text-xs font-semibold uppercase tracking-wide text-risk-high mb-2">
-                Example Finding — HIGH RISK
-              </div>
-              <div className="font-semibold text-slate-100 mb-1">
-                MRZ Check Digit Mismatch
-              </div>
-              <div className="text-xs text-slate-400 leading-relaxed">
-                Document Number OCR: <code className="text-signal-cyan">A12345678</code> ·
-                MRZ: <code className="text-risk-high">A12345679</code>
-              </div>
-              <div className="mt-2 text-xs text-slate-500">
-                Severity: CRITICAL · Model: rule-validator-v1 ·
-                Recommendation: Request secondary manual verification
-              </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left: The 9 Pipeline Steps */}
+            <div className="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-5 sm:p-6 shadow-xs space-y-2">
+              {PIPELINE_STAGES.map((stg) => {
+                const isSelected = activeStage === stg.num;
+                return (
+                  <button
+                    key={stg.num}
+                    type="button"
+                    onClick={() => setActiveStage(stg.num)}
+                    className={cn(
+                      "w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer",
+                      isSelected
+                        ? "border-signal-blue bg-signal-blue/10 dark:bg-signal-blue/15 text-slate-900 dark:text-white"
+                        : "border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-ink-raised/60 text-slate-700 dark:text-slate-300"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          "h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold font-mono",
+                          isSelected
+                            ? "bg-signal-blue text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        )}
+                      >
+                        0{stg.num}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold">{stg.name}</div>
+                        <div className="text-[11px] font-mono text-slate-500">{stg.code}</div>
+                      </div>
+                    </div>
+                    <ChevronRight className={cn("h-4 w-4 transition-transform", isSelected ? "text-signal-blue translate-x-1" : "text-slate-400")} />
+                  </button>
+                );
+              })}
             </div>
-            <div className="rounded-2xl border border-risk-medium/20 bg-risk-medium/5 p-5">
-              <div className="text-xs font-semibold uppercase tracking-wide text-risk-medium mb-2">
-                Example Finding — TAMPERING
+
+            {/* Right: Stage Inspector & 3 Realistic Example Findings */}
+            <div className="lg:col-span-6 space-y-4">
+              {/* Active Stage Inspector Box */}
+              <div className="rounded-2xl border border-signal-blue/30 bg-sky-50/50 dark:bg-signal-blue/5 p-5 shadow-xs">
+                <div className="flex items-center gap-2 text-xs font-mono font-bold text-signal-blue uppercase mb-2">
+                  <Cpu className="h-4 w-4" />
+                  <span>Stage 0{activeStage} Specification</span>
+                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  {PIPELINE_STAGES[activeStage - 1].name}
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                  {PIPELINE_STAGES[activeStage - 1].desc}
+                </p>
               </div>
-              <div className="font-semibold text-slate-100 mb-1">
-                Photo Replacement Suspected
+
+              {/* Example 1: HIGH RISK (Exact points preserved) */}
+              <div className="rounded-2xl border border-rose-200 dark:border-risk-high/30 bg-rose-50/70 dark:bg-risk-high/5 p-5 shadow-xs">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                    Example Finding — HIGH RISK
+                  </div>
+                  <Badge variant="high">CRITICAL</Badge>
+                </div>
+                <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm mb-1">
+                  MRZ Check Digit Mismatch
+                </div>
+                <div className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-mono">
+                  Document Number OCR: <span className="text-sky-700 dark:text-signal-cyan font-bold bg-sky-100/70 dark:bg-sky-950/50 px-1.5 py-0.5 rounded">A12345678</span> ·
+                  MRZ: <span className="text-rose-700 dark:text-rose-400 font-bold bg-rose-100/70 dark:bg-rose-950/50 px-1.5 py-0.5 rounded">A12345679</span>
+                </div>
+                <div className="mt-2.5 pt-2.5 border-t border-rose-200/60 dark:border-rose-900/40 text-[11px] text-slate-500 dark:text-slate-400">
+                  Severity: CRITICAL · Model: rule-validator-v1 · Recommendation: Request secondary manual verification
+                </div>
               </div>
-              <div className="text-xs text-slate-400 leading-relaxed">
-                Texture inconsistency in PHOTO region. JPEG compression grid differs
-                from surrounding document area. Probability: 88%.
+
+              {/* Example 2: TAMPERING (Exact points preserved) */}
+              <div className="rounded-2xl border border-amber-200 dark:border-risk-medium/30 bg-amber-50/70 dark:bg-risk-medium/5 p-5 shadow-xs">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                    Example Finding — TAMPERING
+                  </div>
+                  <Badge variant="medium">WARNING</Badge>
+                </div>
+                <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm mb-1">
+                  Photo Replacement Suspected
+                </div>
+                <div className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Texture inconsistency in PHOTO region. JPEG compression grid differs from surrounding document area. Probability: 88%.
+                </div>
+                <div className="mt-2.5 pt-2.5 border-t border-amber-200/60 dark:border-amber-900/40 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  Region: PHOTO · Model: ela-tamper-v1 · Confidence: 92%
+                </div>
               </div>
-              <div className="mt-2 text-xs text-slate-500">
-                Region: PHOTO · Model: ela-tamper-v1 ·
-                Confidence: 92%
-              </div>
-            </div>
-            <div className="rounded-2xl border border-risk-low/20 bg-risk-low/5 p-5">
-              <div className="text-xs font-semibold uppercase tracking-wide text-risk-low mb-2">
-                Example Finding — PASS
-              </div>
-              <div className="font-semibold text-slate-100 mb-1">
-                Genuine Document — Score: 8/100
-              </div>
-              <div className="text-xs text-slate-400 leading-relaxed">
-                All 7 validation rules passed. MRZ composite valid. Face similarity 93%.
-                No tampering indicators. Proceed with clearance workflow.
+
+              {/* Example 3: PASS (Exact points preserved) */}
+              <div className="rounded-2xl border border-emerald-200 dark:border-risk-low/30 bg-emerald-50/70 dark:bg-risk-low/5 p-5 shadow-xs">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+                    Example Finding — PASS
+                  </div>
+                  <Badge variant="pass">PASSED</Badge>
+                </div>
+                <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm mb-1">
+                  Genuine Document — Score: 8/100
+                </div>
+                <div className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  All 7 validation rules passed. MRZ composite valid. Face similarity 93%. No tampering indicators. Proceed with clearance workflow.
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Architecture ── */}
-      <section id="architecture" className="max-w-7xl mx-auto px-6 pb-20">
+      {/* ── Section: Architecture (Exact 3 Pillars Preserved) ── */}
+      <section id="architecture" className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
         <div className="text-center mb-12">
-          <Badge variant="default" className="mb-4 border-signal-purple/40 text-signal-purple bg-signal-purple/10">
-            Architecture
+          <Badge variant="default" className="mb-3 border-purple-500/40 text-purple-600 dark:text-purple-400 bg-purple-500/10">
+            System Architecture
           </Badge>
-          <h2 className="text-3xl font-bold text-slate-100">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
             Scalable from Prototype to Production
           </h2>
+          <p className="text-slate-600 dark:text-slate-400 mt-3 max-w-xl mx-auto text-base">
+            Modern full-stack security platform architecture built with decoupled client inference and hardened BaaS infrastructure.
+          </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
               icon: Layers,
               iconClass: "bg-signal-blue/15 text-signal-blue",
-              title: "Frontend",
-              items: ["React 18 + Vite + TypeScript", "Tailwind CSS + shadcn/ui", "TanStack Query + Zustand", "React Hook Form + Zod", "Recharts + Framer Motion"],
+              title: "Frontend Client",
+              subtitle: "Interactive Screening Interface",
+              items: [
+                "React 18 + Vite + TypeScript",
+                "Tailwind CSS + shadcn/ui",
+                "TanStack Query + Zustand",
+                "React Hook Form + Zod",
+                "Recharts + Framer Motion",
+              ],
             },
             {
               icon: Server,
               iconClass: "bg-signal-cyan/15 text-signal-cyan",
               title: "Backend (InsForge)",
-              items: ["Postgres + 25-table schema", "Row-Level Security (RLS)", "RBAC: Officer / Supervisor / Admin", "Immutable audit_logs table", "InsForge Auth + JWT"],
+              subtitle: "Hardened Data Platform",
+              items: [
+                "Postgres + 32-table schema",
+                "Row-Level Security (RLS)",
+                "RBAC: Officer / Supervisor / Admin / Analyst",
+                "Immutable audit_logs ledger",
+                "InsForge Auth + JWT tokens",
+              ],
             },
             {
               icon: BrainCircuit,
-              iconClass: "bg-signal-purple/15 text-signal-purple",
+              iconClass: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
               title: "TrustGate Fusion Engine",
-              items: ["Tesseract.js OCR (local)", "ELA tampering detection", "Rule-based MRZ validation", "Face analysis (local)", "Explainable risk engine"],
+              subtitle: "Multi-Engine Forensic AI",
+              items: [
+                "Tesseract.js & PaddleOCR (local)",
+                "ELA tampering detection",
+                "Rule-based MRZ validation",
+                "128-D Face biometrics (local)",
+                "Explainable risk engine",
+              ],
             },
           ].map((col) => {
             const Icon = col.icon;
             return (
               <div
                 key={col.title}
-                className="rounded-2xl border border-ink-border bg-ink-card/60 p-6"
+                className="rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs hover:border-signal-blue/40 transition-colors"
               >
-                <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4", col.iconClass)}>
-                  <Icon className="h-6 w-6" />
+                <div className={cn("h-11 w-11 rounded-xl flex items-center justify-center mb-4", col.iconClass)}>
+                  <Icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-semibold text-slate-100 mb-3">{col.title}</h3>
-                <ul className="space-y-2">
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg">{col.title}</h3>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-4">{col.subtitle}</div>
+                <ul className="space-y-2.5">
                   {col.items.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm text-slate-400">
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-600 mt-0.5 flex-shrink-0" />
-                      {item}
+                    <li key={item} className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400">
+                      <ChevronRight className="h-3.5 w-3.5 text-signal-blue mt-0.5 flex-shrink-0" />
+                      <span>{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -427,31 +923,33 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── Enterprise Specifications ── */}
-      <section id="specifications" className="max-w-7xl mx-auto px-6 pb-20">
-        <div className="rounded-2xl border border-signal-blue/20 bg-signal-blue/5 p-8 md:p-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <div>
-              <Badge variant="default" className="mb-4 border-signal-blue/40 text-signal-blue bg-signal-blue/10">
+      {/* ── Section: Specifications (Exact 10 Items Preserved) ── */}
+      <section id="specifications" className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
+        <div className="rounded-2xl border border-signal-blue/30 dark:border-signal-blue/20 bg-gradient-to-br from-sky-50/70 via-white to-blue-50/40 dark:from-signal-blue/5 dark:via-ink-card/40 dark:to-signal-blue/5 p-6 sm:p-10 shadow-xs">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-5">
+              <Badge variant="default" className="mb-3 border-signal-blue/40 text-signal-blue bg-signal-blue/10">
                 Security Architecture &amp; Capabilities
               </Badge>
-              <h2 className="text-3xl font-bold text-slate-100 mb-4">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mb-4 tracking-tight">
                 Engineered for Mission-Critical Border Security
               </h2>
-              <p className="text-slate-400 leading-relaxed mb-6">
+              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6">
                 TrustGate AI delivers comprehensive real-time document intelligence, tamper detection, MRZ validation,
                 face matching, and explainable AI decision support for authorized personnel and border checkpoints.
               </p>
-              <div className="flex flex-wrap gap-3">
-                <Link to="/login">
-                  <Button variant="primary" size="lg" className="shadow-glow">
+              <div>
+                <Link to={isAuthenticated ? "/screening" : "/login"}>
+                  <Button variant="primary" size="lg" className="shadow-glow font-semibold">
                     Launch Dashboard
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>
                 </Link>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+
+            {/* The 10 Specifications Badges (Exact 10 Preserved) */}
+            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { label: "Document Forgery Detection", done: true },
                 { label: "MRZ Check Digit Validation", done: true },
@@ -466,14 +964,18 @@ export function LandingPage() {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-start gap-2.5 text-xs text-slate-300 rounded-lg border border-ink-border/60 bg-ink-card/30 p-3"
+                  className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200/90 dark:border-ink-border bg-white dark:bg-ink-card/60 p-3 shadow-2xs"
                 >
                   {item.done ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-risk-low mt-0.5 flex-shrink-0" />
+                    <div className="h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center flex-shrink-0">
+                      <Check className="h-3 w-3 text-emerald-700 dark:text-emerald-400" />
+                    </div>
                   ) : (
-                    <div className="h-3.5 w-3.5 rounded-full border border-slate-600 mt-0.5 flex-shrink-0" />
+                    <div className="h-5 w-5 rounded-full border border-dashed border-slate-400 dark:border-slate-600 flex items-center justify-center flex-shrink-0">
+                      <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                    </div>
                   )}
-                  {item.label}
+                  <span className="font-semibold">{item.label}</span>
                 </div>
               ))}
             </div>
@@ -481,24 +983,87 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="max-w-3xl mx-auto px-6 pb-24 text-center">
-        <h2 className="text-3xl font-bold text-slate-100 mb-4">
+      {/* ── Section: Security & Governance (Institutional Standards) ── */}
+      <section id="governance" className="relative py-20 bg-slate-50/70 dark:bg-ink-card/25 border-y border-slate-200/80 dark:border-ink-border/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <Badge variant="default" className="mb-3 border-emerald-500/40 text-emerald-700 dark:text-risk-low bg-emerald-500/10">
+              Governance &amp; Evidence Integrity
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+              Institutional Oversight Standards
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 mt-3 max-w-2xl mx-auto text-base">
+              Every analysis run is bound to strict data provenance, cryptographic signatures, and human-in-the-loop escalation gates.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs">
+              <div className="h-10 w-10 rounded-xl bg-signal-blue/15 text-signal-blue flex items-center justify-center mb-3">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-1.5">Human Authority</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                AI provides evidentiary assistance and risk synthesis; final clearance and rejection remains exclusively with authorized personnel.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs">
+              <div className="h-10 w-10 rounded-xl bg-signal-cyan/15 text-signal-cyan flex items-center justify-center mb-3">
+                <Binary className="h-5 w-5" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-1.5">SHA-256 Provenance</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                All documents, crops, live camera frames, and model inferences are cryptographically hashed and sealed into immutable audit records.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs">
+              <div className="h-10 w-10 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3">
+                <Lock className="h-5 w-5" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-1.5">PII Minimization</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Zero biometric data or personal identity parameters are logged to public endpoints or browser storage without access controls.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/15 text-emerald-700 dark:text-risk-low flex items-center justify-center mb-3">
+                <FileCheck className="h-5 w-5" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-1.5">Zero Mock Fallbacks</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Inconclusive or unavailable signals report honest null status codes rather than fabricated confidence percentages.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section: Ready to Screen CTA ── */}
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 pb-24 text-center">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight mb-4">
           Ready to screen your first document?
         </h2>
-        <p className="text-slate-400 mb-8">
+        <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-xl mx-auto text-base leading-relaxed">
           Sign in as an officer and run live document &amp; biometric screening in under 60 seconds.
           Full pipeline runs locally on device with zero external dependencies.
         </p>
-        <div className="flex flex-wrap gap-3 justify-center">
+        <div className="flex flex-wrap gap-3.5 justify-center">
           <Link to="/login">
-            <Button variant="primary" size="lg" className="shadow-glow">
+            <Button variant="primary" size="lg" className="shadow-glow font-semibold h-12 px-6">
               Get Started
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </Link>
           <Link to="/login">
-            <Button variant="outline" size="lg">
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-slate-300 dark:border-ink-border bg-white dark:bg-transparent text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-ink-raised h-12 px-6 shadow-xs font-medium"
+            >
               Sign In
             </Button>
           </Link>
@@ -506,35 +1071,72 @@ export function LandingPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-ink-border bg-ink-card/40">
-        <div className="max-w-7xl mx-auto px-6 py-10">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <img
-                src="/trustgate-logo.png"
-                alt="TrustGate AI"
-                className="h-8 w-8 rounded-lg object-cover shadow-glow flex-shrink-0 border border-signal-blue/40"
-              />
-              <div>
-                <div className="font-bold tracking-[0.18em] text-gradient-signal text-xs">
-                  TRUSTGATE AI
-                </div>
-                <div className="text-[10px] text-slate-500 tracking-wide">
-                  AI-Assisted Security Intelligence Platform
+      <footer className="border-t border-slate-200 dark:border-ink-border bg-slate-50/70 dark:bg-ink-card/40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-10">
+            {/* Brand Info */}
+            <div className="md:col-span-5">
+              <div className="flex items-center gap-3 mb-3">
+                <img
+                  src="/trustgate-logo.png"
+                  alt="TrustGate AI"
+                  className="h-8 w-8 rounded-lg object-cover shadow-xs border border-signal-blue/40"
+                />
+                <div>
+                  <div className="font-extrabold tracking-[0.18em] text-slate-900 dark:text-white text-xs">
+                    TRUSTGATE AI
+                  </div>
+                  <div className="text-[10px] text-slate-500 tracking-wide font-mono">
+                    AI-Assisted Identity Screening Platform
+                  </div>
                 </div>
               </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm leading-relaxed mb-4">
+                Institutional-grade document verification and forensic risk analysis designed to augment border screening personnel.
+              </p>
+              <div className="inline-flex items-center gap-2 text-[11px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>SYSTEM STATUS: OPERATIONAL</span>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-5 text-xs text-slate-500">
-              <Link to="/login" className="hover:text-slate-300 transition-colors">Sign In</Link>
-              <Link to="/login" className="hover:text-slate-300 transition-colors">Get Started</Link>
-              <a href="#features" className="hover:text-slate-300 transition-colors">Features</a>
-              <a href="#architecture" className="hover:text-slate-300 transition-colors">Architecture</a>
-              <a href="#specifications" className="hover:text-slate-300 transition-colors">Specifications</a>
+
+            {/* Quick Links Column 1: Platform */}
+            <div className="md:col-span-3">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200 mb-3">
+                Platform
+              </div>
+              <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                <li><a href="#demo-video" className="hover:text-signal-blue transition-colors text-signal-blue font-medium flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-signal-blue animate-pulse" />Live Video Briefing</a></li>
+                <li><a href="#features" className="hover:text-signal-blue transition-colors">Forensic Capabilities</a></li>
+                <li><a href="#how-it-works" className="hover:text-signal-blue transition-colors">TrustFusion Risk Engine</a></li>
+                <li><a href="#architecture" className="hover:text-signal-blue transition-colors">Multi-Engine Architecture</a></li>
+                <li><a href="#specifications" className="hover:text-signal-blue transition-colors">Specifications Matrix</a></li>
+              </ul>
+            </div>
+
+            {/* Quick Links Column 2: Governance & Access */}
+            <div className="md:col-span-4">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200 mb-3">
+                Access &amp; Security
+              </div>
+              <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                <li><Link to="/login" className="hover:text-signal-blue transition-colors">Authorized Personnel Sign In</Link></li>
+                <li><Link to="/screening" className="hover:text-signal-blue transition-colors">Live Inspection Console</Link></li>
+                <li><Link to="/dashboard" className="hover:text-signal-blue transition-colors">Operational Case Management</Link></li>
+                <li><a href="#governance" className="hover:text-signal-blue transition-colors">Human-in-the-Loop Governance</a></li>
+              </ul>
             </div>
           </div>
-          <div className="mt-8 pt-6 border-t border-ink-border/60 text-center text-xs text-slate-600">
-            AI-generated screening assistance. Final determination remains with authorized personnel.
-            This is a prototype for demonstration purposes.
+
+          {/* Bottom Copyright & Disclaimer */}
+          <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left text-xs text-slate-500">
+            <div>
+              &copy; {new Date().getFullYear()} TRUSTGATE AI. All rights reserved.
+            </div>
+            <div className="max-w-md text-[11px] leading-relaxed text-slate-500">
+              AI-generated screening assistance. Final determination remains with authorized personnel.
+              Designed for official border checkpoint decision support.
+            </div>
           </div>
         </div>
       </footer>

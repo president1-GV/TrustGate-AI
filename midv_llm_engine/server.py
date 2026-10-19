@@ -37,6 +37,7 @@ from midv_llm_engine.dataset import (
 from midv_llm_engine.trainer import train_model
 
 from ai.paddleocr.engine import PaddleOcrEngine, calculate_sha256
+from ai.paddleocr.ocr_service import PaddleOcrService
 from ai.document_forensics.tampering import DocumentForensicsEngine
 from ai.deepfake_detection.detector import DeepfakePresentationAttackDetector
 
@@ -58,6 +59,7 @@ app.add_middleware(
 
 # Engine Singletons
 ocr_engine = PaddleOcrEngine()
+ocr_service = PaddleOcrService()
 forensics_engine = DocumentForensicsEngine()
 deepfake_detector = DeepfakePresentationAttackDetector()
 
@@ -85,6 +87,9 @@ class OcrRequest(BaseModel):
     image_hash: Optional[str] = None
     capture_source: str = "UPLOAD"
     text_hint: Optional[str] = None
+    enhanced_image_base64: Optional[str] = None
+    rectified_image_base64: Optional[str] = None
+    document_type_hint: Optional[str] = None
 
 class ForensicsRequest(BaseModel):
     image_base64: str
@@ -261,17 +266,134 @@ def verify_document(payload: Dict[str, Any]):
 @app.post("/api/v1/ocr")
 def process_ocr(req: OcrRequest):
     try:
+        t0 = time.perf_counter()
         img = decode_image(req.image_base64)
         raw_bytes = req.image_base64.encode("utf-8")
         computed_hash = req.image_hash or calculate_sha256(raw_bytes)
-        return ocr_engine.recognize_document(
+
+        # PASS 1: Original Image
+        pass1_res = ocr_service.process_document(
             image_input=img,
             document_id=req.document_id,
             processing_run_id=req.processing_run_id,
             image_hash=computed_hash,
             capture_source=req.capture_source,
+            document_type_hint=req.document_type_hint,
             custom_text_hint=req.text_hint
         )
+
+        passes = [
+            {
+                "pass_name": "PASS_1_ORIGINAL",
+                "image_source": "ORIGINAL",
+                "source_image_hash": computed_hash,
+                "confidence": pass1_res.get("confidence", 0.0),
+                "text": pass1_res.get("text", ""),
+                "fields_count": len([f for f in pass1_res.get("structured_fields", {}).values() if f])
+            }
+        ]
+
+        conflicts = []
+        best_res = pass1_res
+
+        # PASS 2: Enhanced Image (if provided)
+        if req.enhanced_image_base64:
+            try:
+                enh_img = decode_image(req.enhanced_image_base64)
+                enh_hash = calculate_sha256(req.enhanced_image_base64.encode("utf-8"))
+                pass2_res = ocr_service.process_document(
+                    image_input=enh_img,
+                    document_id=req.document_id,
+                    processing_run_id=req.processing_run_id,
+                    image_hash=enh_hash,
+                    capture_source=req.capture_source,
+                    document_type_hint=req.document_type_hint,
+                    custom_text_hint=req.text_hint
+                )
+                passes.append({
+                    "pass_name": "PASS_2_ENHANCED",
+                    "image_source": "ENHANCED",
+                    "source_image_hash": enh_hash,
+                    "confidence": pass2_res.get("confidence", 0.0),
+                    "text": pass2_res.get("text", ""),
+                    "fields_count": len([f for f in pass2_res.get("structured_fields", {}).values() if f])
+                })
+
+                # Cross-check fields for OCR_CONFLICT
+                sf1 = pass1_res.get("structured_fields", {})
+                sf2 = pass2_res.get("structured_fields", {})
+                for k in ["document_number", "full_name", "date_of_birth", "expiry_date"]:
+                    v1 = sf1.get(k)
+                    v2 = sf2.get(k)
+                    if v1 and v2 and str(v1).strip().upper() != str(v2).strip().upper():
+                        conflicts.append({
+                            "field": k,
+                            "value_a": str(v1),
+                            "value_b": str(v2),
+                            "source_a": "ORIGINAL",
+                            "source_b": "ENHANCED",
+                            "confidence": min(pass1_res.get("confidence", 0.9), pass2_res.get("confidence", 0.9)),
+                            "reason": f"Discrepancy detected between raw original and enhanced image OCR for field '{k}'"
+                        })
+
+                if pass2_res.get("confidence", 0.0) > best_res.get("confidence", 0.0):
+                    best_res = pass2_res
+            except Exception as e_pass2:
+                print(f"[OCR] Pass 2 notice: {e_pass2}")
+
+        # PASS 3: Rectified Image (if provided)
+        if req.rectified_image_base64:
+            try:
+                rect_img = decode_image(req.rectified_image_base64)
+                rect_hash = calculate_sha256(req.rectified_image_base64.encode("utf-8"))
+                pass3_res = ocr_service.process_document(
+                    image_input=rect_img,
+                    document_id=req.document_id,
+                    processing_run_id=req.processing_run_id,
+                    image_hash=rect_hash,
+                    capture_source=req.capture_source,
+                    document_type_hint=req.document_type_hint,
+                    custom_text_hint=req.text_hint
+                )
+                passes.append({
+                    "pass_name": "PASS_3_RECTIFIED",
+                    "image_source": "RECTIFIED",
+                    "source_image_hash": rect_hash,
+                    "confidence": pass3_res.get("confidence", 0.0),
+                    "text": pass3_res.get("text", ""),
+                    "fields_count": len([f for f in pass3_res.get("structured_fields", {}).values() if f])
+                })
+
+                if pass3_res.get("confidence", 0.0) > best_res.get("confidence", 0.0):
+                    best_res = pass3_res
+            except Exception as e_pass3:
+                print(f"[OCR] Pass 3 notice: {e_pass3}")
+
+        total_latency = round((time.perf_counter() - t0) * 1000, 2)
+
+        return {
+            "document_id": req.document_id,
+            "processing_run_id": req.processing_run_id,
+            "image_hash": computed_hash,
+            "model_id": ocr_service.model_id,
+            "model_version": ocr_service.model_version,
+            "raw_text": best_res.get("text", ""),
+            "text": best_res.get("text", ""),
+            "lines": pass1_res.get("lines_count", 0),
+            "bounding_boxes": best_res.get("bounding_boxes", []),
+            "confidence": best_res.get("confidence", 0.0),
+            "confidence_mean": best_res.get("confidence", 0.0),
+            "confidence_metrics": best_res.get("confidence_metrics", {}),
+            "extracted_fields": best_res.get("structured_fields", {}),
+            "field_provenance": best_res.get("field_provenance", []),
+            "document_type_detected": best_res.get("document_type_detected", "UNKNOWN_DOCUMENT"),
+            "passes": passes,
+            "conflicts": conflicts,
+            "ocr_conflict": len(conflicts) > 0,
+            "status": "OCR_CONFLICT" if len(conflicts) > 0 else (best_res.get("status", "PASS")),
+            "latency_ms": total_latency,
+            "capture_source": req.capture_source
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
