@@ -35,6 +35,25 @@ export function generateProcessId(): string {
   return `AUTH-${dateStr}-${code}`;
 }
 
+export function generateUuid(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 /**
  * Create or retrieve an active member access request in the database.
  */
@@ -113,7 +132,7 @@ export async function createMemberAccessRequest(params: {
   if (error || !inserted) {
     console.warn("Failed inserting member_access_request to remote DB:", error?.message);
     const fallbackReq: MemberAccessRequest = {
-      id: `local-${Date.now()}`,
+      id: generateUuid(),
       user_id: params.userId || null,
       email: cleanEmail,
       display_name: params.displayName,
@@ -259,7 +278,7 @@ export async function admitMemberRequest(
   try {
     const rpcRes = await insforge.database.rpc("admit_member_access", {
       p_request_id: requestId,
-      p_admin_id: validAdminUuid || adminId || null,
+      p_admin_id: validAdminUuid || null,
     });
     if (!rpcRes.error && rpcRes.data) {
       updatedReq = rpcRes.data as MemberAccessRequest;
@@ -281,8 +300,8 @@ export async function admitMemberRequest(
         approved_at: timestamp,
         updated_at: timestamp,
       };
-      if (adminId) {
-        updatePayload.approved_by = validAdminUuid || adminId;
+      if (validAdminUuid) {
+        updatePayload.approved_by = validAdminUuid;
       }
 
       const { data, error } = await insforge.database
@@ -298,6 +317,9 @@ export async function admitMemberRequest(
         : [];
       if (!error && items.length > 0) {
         updatedReq = items[0] as MemberAccessRequest;
+        if (adminId && !updatedReq.approved_by) {
+          updatedReq.approved_by = adminId;
+        }
       } else if (error) {
         remoteError = error.message;
       }
@@ -313,7 +335,7 @@ export async function admitMemberRequest(
     if (match) {
       match.status = "approved";
       match.approved_at = timestamp;
-      match.approved_by = validAdminUuid || adminId || null;
+      match.approved_by = adminId || validAdminUuid || null;
       match.updated_at = timestamp;
       updatedReq = match;
     } else if (typeof localStorage !== "undefined") {
@@ -325,7 +347,7 @@ export async function admitMemberRequest(
             if (row.id === requestId || row.process_id === requestId) {
               row.status = "approved";
               row.approved_at = timestamp;
-              row.approved_by = validAdminUuid || adminId || null;
+              row.approved_by = adminId || validAdminUuid || null;
               row.updated_at = timestamp;
               updatedReq = row;
               break;
@@ -395,7 +417,7 @@ export async function denyMemberRequest(
     const rpcRes = await insforge.database.rpc("deny_member_access", {
       p_request_id: requestId,
       p_reason: rejectionReason,
-      p_admin_id: validAdminUuid || adminId || null,
+      p_admin_id: validAdminUuid || null,
     });
     if (!rpcRes.error && rpcRes.data) {
       updatedReq = rpcRes.data as MemberAccessRequest;
@@ -418,8 +440,8 @@ export async function denyMemberRequest(
         approved_at: timestamp,
         updated_at: timestamp,
       };
-      if (adminId) {
-        updatePayload.approved_by = validAdminUuid || adminId;
+      if (validAdminUuid) {
+        updatePayload.approved_by = validAdminUuid;
       }
 
       const { data, error } = await insforge.database
@@ -435,6 +457,9 @@ export async function denyMemberRequest(
         : [];
       if (!error && items.length > 0) {
         updatedReq = items[0] as MemberAccessRequest;
+        if (adminId && !updatedReq.approved_by) {
+          updatedReq.approved_by = adminId;
+        }
       } else if (error) {
         remoteError = error.message;
       }
@@ -451,7 +476,7 @@ export async function denyMemberRequest(
       match.status = "rejected";
       match.rejection_reason = rejectionReason;
       match.approved_at = timestamp;
-      match.approved_by = validAdminUuid || adminId || null;
+      match.approved_by = adminId || validAdminUuid || null;
       match.updated_at = timestamp;
       updatedReq = match;
     } else if (typeof localStorage !== "undefined") {
@@ -464,7 +489,7 @@ export async function denyMemberRequest(
               row.status = "rejected";
               row.rejection_reason = rejectionReason;
               row.approved_at = timestamp;
-              row.approved_by = validAdminUuid || adminId || null;
+              row.approved_by = adminId || validAdminUuid || null;
               row.updated_at = timestamp;
               updatedReq = row;
               break;
@@ -518,15 +543,23 @@ export function subscribeToAccessRequests(callback: (payload: any) => void): () 
   let active = true;
 
   try {
-    insforge.realtime.connect().then(() => {
-      if (!active) return;
-      insforge.realtime.subscribe("access_requests").catch((err) => {
-        console.warn("Could not subscribe to access_requests realtime channel:", err);
+    const conn = insforge.realtime.connect();
+    const connPromise =
+      conn && typeof (conn as any).then === "function"
+        ? (conn as Promise<any>)
+        : Promise.resolve(conn);
+
+    connPromise
+      .then(() => {
+        if (!active) return;
+        insforge.realtime.subscribe("access_requests").catch((err: any) => {
+          console.warn("Could not subscribe to access_requests realtime channel:", err);
+        });
+        insforge.realtime.on("access_request_updated", callback);
+      })
+      .catch((err: any) => {
+        console.warn("Could not connect to insforge.realtime:", err);
       });
-      insforge.realtime.on("access_request_updated", callback);
-    }).catch((err) => {
-      console.warn("Could not connect to insforge.realtime:", err);
-    });
   } catch (err) {
     console.warn("Realtime subscription setup exception:", err);
   }

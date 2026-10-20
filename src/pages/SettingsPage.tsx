@@ -109,8 +109,20 @@ export function SettingsPage() {
   const [reduceMotion, setReduceMotion] = React.useState(false);
 
   // Profile fields
+  const fallbackBadge =
+    user?.badgeId ||
+    (user?.role === "admin"
+      ? "ADM-001"
+      : user?.role === "supervisor"
+      ? "SUP-4402"
+      : user?.role === "analyst"
+      ? "FOR-1109"
+      : user?.role === "officer"
+      ? "FO-8921"
+      : "");
+
   const [displayName, setDisplayName] = React.useState(user?.name ?? "");
-  const [badgeId, setBadgeId] = React.useState(user?.badgeId ?? "");
+  const [badgeId, setBadgeId] = React.useState(fallbackBadge);
   const [station, setStation] = React.useState(user?.station ?? "");
   const [team, setTeam] = React.useState(user?.team ?? "");
   const [profileSaving, setProfileSaving] = React.useState(false);
@@ -119,7 +131,18 @@ export function SettingsPage() {
   React.useEffect(() => {
     if (user) {
       setDisplayName(user.name ?? "");
-      setBadgeId(user.badgeId ?? "");
+      const b =
+        user.badgeId ||
+        (user.role === "admin"
+          ? "ADM-001"
+          : user.role === "supervisor"
+          ? "SUP-4402"
+          : user.role === "analyst"
+          ? "FOR-1109"
+          : user.role === "officer"
+          ? "FO-8921"
+          : "");
+      setBadgeId(b);
       setStation(user.station ?? "");
       setTeam(user.team ?? "");
     }
