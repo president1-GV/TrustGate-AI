@@ -1127,7 +1127,7 @@ export function SettingsPage() {
                 <div className="grid gap-3">
                   {[
                     { label: "API Base URL", value: import.meta.env.VITE_INSFORGE_URL ?? "https://i8yy29ec.us-east.insforge.app" },
-                    { label: "App Version", value: "1.0.0-enterprise" },
+                    { label: "App Version", value: "2.0.0 Enterprise" },
                     { label: "Deployment Standard", value: "ICAO-9303 Enterprise Border Security" },
                     { label: "Database Backend", value: "InsForge / Postgres" },
                     { label: "Auth Provider", value: "InsForge Auth" },

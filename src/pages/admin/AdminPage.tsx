@@ -334,7 +334,7 @@ export function AdminPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[
               { label: "Platform", value: "TrustGate AI Billion" },
-              { label: "Version", value: "1.0.0-enterprise" },
+              { label: "Version", value: "2.0.0 Enterprise" },
               { label: "Deployment Standard", value: "ICAO-9303 Enterprise" },
               { label: "Backend", value: "InsForge" },
               { label: "Database", value: "Postgres (RLS enforced)" },
