@@ -3,26 +3,33 @@ import { resolveSpecimenUrl } from "./specimenResolver";
 
 /**
  * Validate required environment variables at startup.
- * Throws a clear error in development if VITE_INSFORGE_URL or VITE_INSFORGE_ANON_KEY
- * are missing — prevents silent misconfiguration from connecting to the wrong backend.
+ * Deliberately does NOT fall back to hardcoded values — a misconfigured
+ * deployment must fail loudly, not silently connect to a live backend.
+ *
+ * SECURITY NOTE: The ANON_KEY (public key) is intentionally included in the
+ * client-side bundle; it is designed to be public. The service-role key must
+ * NEVER appear in client code. Neither key should be hardcoded here.
  */
-const ACTIVE_BACKEND_URL = "https://i8yy29ec.us-east.insforge.app";
-const ACTIVE_ANON_KEY = "anon_1c1ac97b969d1f89dcaa2fe5c5d971b282ef827ce8fec10ce27284935bf044e5";
-
-function assertEnvVars(): { baseUrl: string; anonKey: string } {
-  let baseUrl = import.meta.env.VITE_INSFORGE_URL as string | undefined;
-  let anonKey = import.meta.env.VITE_INSFORGE_ANON_KEY as string | undefined;
+function getEnvConfig(): { baseUrl: string; anonKey: string } {
+  const baseUrl = import.meta.env.VITE_INSFORGE_URL as string | undefined;
+  const anonKey = import.meta.env.VITE_INSFORGE_ANON_KEY as string | undefined;
 
   if (!baseUrl || baseUrl.trim() === "") {
-    baseUrl = ACTIVE_BACKEND_URL;
+    throw new Error(
+      "[TrustGate] VITE_INSFORGE_URL is required. " +
+        "Copy .env.example to .env and set your InsForge project URL."
+    );
   }
-  if (!anonKey || anonKey.trim() === "" || anonKey === "anon_27914c780a8b5aaa2eefe84c15f15c4bf1d4a95bbcdcac6ae7f6a0ae3469a89e") {
-    anonKey = ACTIVE_ANON_KEY;
+  if (!anonKey || anonKey.trim() === "") {
+    throw new Error(
+      "[TrustGate] VITE_INSFORGE_ANON_KEY is required. " +
+        "Copy .env.example to .env and set your InsForge anonymous key."
+    );
   }
   return { baseUrl, anonKey };
 }
 
-const { baseUrl, anonKey } = assertEnvVars();
+const { baseUrl, anonKey } = getEnvConfig();
 
 export const insforge: InsForgeClient = createClient({ baseUrl, anonKey });
 
@@ -52,12 +59,30 @@ export function isTokenExpired(token: string | null | undefined): boolean {
   }
 }
 
-// Auto-restore access token from localStorage only if valid and not expired
-if (typeof window !== "undefined" && window.localStorage) {
+// Auto-restore access token from sessionStorage (preferred) or localStorage (legacy) at startup.
+// SECURITY: sessionStorage is tab-scoped and not persistent — preferred over localStorage for tokens.
+if (typeof window !== "undefined") {
   try {
-    const savedToken = window.localStorage.getItem("tg_access_token");
+    // Check sessionStorage first
+    let savedToken = window.sessionStorage?.getItem("tg_access_token") ?? null;
+
+    // Migrate from localStorage if token exists there but not in sessionStorage
+    if (!savedToken) {
+      const legacyToken = window.localStorage?.getItem("tg_access_token") ?? null;
+      if (legacyToken) {
+        try {
+          window.sessionStorage.setItem("tg_access_token", legacyToken);
+          window.localStorage.removeItem("tg_access_token");
+          savedToken = legacyToken;
+        } catch {
+          savedToken = legacyToken; // Use in-memory even if migration fails
+        }
+      }
+    }
+
     if (savedToken) {
       if (isTokenExpired(savedToken)) {
+        window.sessionStorage.removeItem("tg_access_token");
         window.localStorage.removeItem("tg_access_token");
         insforge.setAccessToken(null);
       } else {
@@ -76,11 +101,13 @@ export async function ensureAuthenticatedClient(): Promise<string | null> {
     // 1. Check in-memory user
     const { data: userRes, error: userErr } = await insforge.auth.getCurrentUser();
     if (!userErr && userRes?.user) {
-      const token = typeof window !== "undefined" && typeof window.localStorage?.getItem === "function"
-        ? window.localStorage.getItem("tg_access_token")
+      // SECURITY: Prefer sessionStorage, fall back to localStorage (legacy migration)
+      const token = typeof window !== "undefined"
+        ? (window.sessionStorage?.getItem("tg_access_token") ?? window.localStorage?.getItem("tg_access_token") ?? null)
         : null;
       if (token && isTokenExpired(token)) {
         if (typeof window !== "undefined") {
+          window.sessionStorage.removeItem("tg_access_token");
           window.localStorage.removeItem("tg_access_token");
         }
         insforge.setAccessToken(null);
@@ -90,25 +117,37 @@ export async function ensureAuthenticatedClient(): Promise<string | null> {
     }
   } catch {}
 
-  // 2. Check localStorage
-  if (typeof window !== "undefined" && typeof window.localStorage?.getItem === "function") {
-    const savedToken = window.localStorage.getItem("tg_access_token");
+  // 2. Check sessionStorage (preferred) then localStorage (legacy)
+  if (typeof window !== "undefined") {
+    const savedToken = window.sessionStorage?.getItem("tg_access_token")
+      ?? window.localStorage?.getItem("tg_access_token")
+      ?? null;
     if (savedToken) {
       if (isTokenExpired(savedToken)) {
+        window.sessionStorage.removeItem("tg_access_token");
         window.localStorage.removeItem("tg_access_token");
         insforge.setAccessToken(null);
         return null;
       }
       insforge.setAccessToken(savedToken);
+      // Migrate to sessionStorage if only in localStorage
+      if (!window.sessionStorage?.getItem("tg_access_token") && window.localStorage?.getItem("tg_access_token")) {
+        try {
+          window.sessionStorage.setItem("tg_access_token", savedToken);
+          window.localStorage.removeItem("tg_access_token");
+        } catch {}
+      }
       try {
         const { data: u, error } = await insforge.auth.getCurrentUser();
         if (!error && u?.user) {
           return savedToken;
         }
         // Token was rejected by the server
+        window.sessionStorage.removeItem("tg_access_token");
         window.localStorage.removeItem("tg_access_token");
         insforge.setAccessToken(null);
       } catch {
+        window.sessionStorage.removeItem("tg_access_token");
         window.localStorage.removeItem("tg_access_token");
         insforge.setAccessToken(null);
       }
@@ -261,7 +300,10 @@ export async function fetchSecureBlobUrl(bucket: string, key: string): Promise<s
     const headers: Record<string, string> = {
       "x-api-key": anonKey,
     };
-    const savedToken = typeof window !== "undefined" ? window.localStorage.getItem("tg_access_token") : null;
+    // SECURITY: Read token from sessionStorage first (preferred)
+    const savedToken = typeof window !== "undefined"
+      ? (window.sessionStorage?.getItem("tg_access_token") ?? window.localStorage?.getItem("tg_access_token"))
+      : null;
     if (savedToken && !isTokenExpired(savedToken)) {
       headers["Authorization"] = `Bearer ${savedToken}`;
     }
@@ -296,10 +338,10 @@ export async function uploadScreeningDocument(
 }> {
   const BUCKET = "documents";
   const code = caseCode || genCaseCode();
-  const safeRandom = typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const key = `cases/${code}/documents/capture-${Date.now()}-${safeRandom}.jpg`;
+  // 3. Math.random() fallback removed — crypto.randomUUID is universally available
+  // in all supported browsers (Chrome 92+, Firefox 95+, Safari 15.4+)
+  const uuid = crypto.randomUUID();
+  const key = `cases/${code}/documents/capture-${Date.now()}-${uuid}.jpg`;
 
   const { data, error } = await insforge.storage
     .from(BUCKET)

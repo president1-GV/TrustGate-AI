@@ -155,6 +155,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside
         className="fixed left-0 top-0 bottom-0 z-30 flex flex-col border-r border-ink-border bg-ink-card/80 backdrop-blur-xl no-print print:hidden"
         style={{ width: SIDEBAR_WIDTH }}
+        aria-label="Application navigation"
       >
         {/* Brand */}
         <Link
@@ -177,7 +178,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto" aria-label="Main navigation">
           {visibleNav.map((item) => {
             const Icon = item.icon;
             return (
@@ -241,8 +242,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* ── Main content ── */}
       <div className="app-shell-main min-h-screen flex flex-col min-w-0 max-w-[calc(100vw-240px)] overflow-x-hidden md:ml-[240px] print:!ml-0 print:!max-w-none print:!w-full print:!overflow-visible">
+        {/* Skip to main content — accessibility anchor */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-signal-blue focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold"
+        >
+          Skip to main content
+        </a>
         {/* Header */}
-        <header className="sticky top-0 z-20 h-16 border-b border-ink-border bg-ink/70 backdrop-blur-xl flex items-center px-6 gap-4 no-print print:hidden">
+        <header className="sticky top-0 z-20 h-16 border-b border-ink-border bg-ink/70 backdrop-blur-xl flex items-center px-6 gap-4 no-print print:hidden" role="banner" aria-label="Application header">
           <div className="flex-1 flex items-center gap-4">
             <div className="flex items-center gap-2.5">
               <span className="inline-flex items-center gap-2 text-[11px] font-mono uppercase px-3 py-1.5 rounded-lg bg-signal-blue/15 text-signal-cyan border border-signal-blue/30 shadow-sm">
@@ -374,6 +382,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       type="button"
                       onClick={handleLogout}
                       className="w-full flex items-center gap-3 px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      aria-label="Sign out of TrustGate AI"
                     >
                       <LogOut className="h-4 w-4" />
                       Logout
@@ -390,7 +399,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <SystemConnectivityBar />
         </div>
 
-        <main className="flex-1 p-6 min-w-0 max-w-full overflow-x-hidden print:!p-0 print:!m-0 print:!max-w-none print:!w-full print:!overflow-visible">{children}</main>
+        <main id="main-content" className="flex-1 p-6 min-w-0 max-w-full overflow-x-hidden print:!p-0 print:!m-0 print:!max-w-none print:!w-full print:!overflow-visible" role="main">{children}</main>
       </div>
     </div>
   );

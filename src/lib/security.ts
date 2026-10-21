@@ -235,7 +235,36 @@ export function sanitizeTextInput(
 ): string {
   if (value === null || value === undefined) return "";
   const s = String(value).trim();
-  return s.slice(0, maxLength);
+  // Strip null bytes and control characters (except newlines/tabs which are legitimate in notes)
+  return s.replace(/\0/g, "").replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "").slice(0, maxLength);
+}
+
+/**
+ * Validate an email address with a strict RFC-5321 compatible pattern.
+ * Returns null if valid, or an error message if invalid.
+ */
+export function validateEmail(email: unknown): string | null {
+  if (!email || typeof email !== "string") return "Email is required.";
+  const trimmed = email.trim();
+  if (trimmed.length > 254) return "Email address is too long.";
+  // Strict pattern: local@domain.tld
+  const EMAIL_RE = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+  if (!EMAIL_RE.test(trimmed)) return "Invalid email address format.";
+  return null;
+}
+
+/**
+ * Validate a password meets minimum security requirements.
+ * Returns null if valid, or a descriptive error message.
+ */
+export function validatePasswordStrength(password: unknown): string | null {
+  if (!password || typeof password !== "string") return "Password is required.";
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (password.length > 128) return "Password is too long (max 128 characters).";
+  if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter.";
+  if (!/[a-z]/.test(password)) return "Password must contain at least one lowercase letter.";
+  if (!/[0-9]/.test(password)) return "Password must contain at least one number.";
+  return null;
 }
 
 // ─── Authorization Helpers ───────────────────────────────────────────────────
@@ -521,6 +550,7 @@ export function sanitizeFilename(name: string): string {
 /**
  * Sanitize errors before surfacing to the UI or API responses.
  * Prevents database schema disclosure, SQLSTATE leak, and internal system path leaks.
+ * Stack traces, file paths, module names, and internal keys are all stripped.
  */
 export function sanitizeErrorMessage(error: unknown): string {
   if (!error) return "An internal operational error occurred.";
@@ -540,16 +570,32 @@ export function sanitizeErrorMessage(error: unknown): string {
   }
 
   // Auth and credential disclosure prevention
-  if (/jwt|token|bearer|secret|anon-key|auth-header/i.test(raw)) {
+  if (/jwt|token|bearer|secret|anon.?key|auth.?header/i.test(raw)) {
     return "Authentication credentials or session expired. Please re-authenticate.";
   }
 
-  // File system path leakage prevention
-  if (/[a-zA-Z]:\\[^ \n\r\t]+|\/(?:home|etc|var|usr|Users)\/[^ \n\r\t]+/i.test(raw)) {
+  // File system path leakage prevention (Windows & Unix)
+  if (/[a-zA-Z]:\\[^ \n\r\t]+|\/(?:home|etc|var|usr|Users|app|opt|srv)\/[^ \n\r\t]+/i.test(raw)) {
     return "A secure system resource error occurred.";
   }
 
-  // Return clean, length-bounded message
-  return raw.trim().slice(0, 160);
+  // Stack trace pattern — strip anything that looks like a JS stack
+  if (/\s+at\s+\w+\s*\(/.test(raw) || /\s+at\s+https?:\/\//.test(raw)) {
+    return "An internal application error occurred. Please refresh and try again.";
+  }
+
+  // Internal module / import path leakage
+  if (/node_modules|webpack:|vite:|@vite|chunk-[A-Z0-9]+\.js/i.test(raw)) {
+    return "An internal build artifact error occurred.";
+  }
+
+  // Network / CORS disclosure
+  if (/CORS|cross.origin|Access-Control|preflight|net::ERR_/i.test(raw)) {
+    return "A network connectivity error occurred. Please check your connection.";
+  }
+
+  // Return clean, length-bounded message — strip any newlines (no multiline leaks)
+  return raw.replace(/\n|\r/g, " ").trim().slice(0, 160);
 }
+
 

@@ -13,10 +13,23 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 
 const registerSchema = z
   .object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    badge_id: z.string().optional(),
-    email: z.string().email("Please enter a valid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    name: z
+      .string()
+      .min(2, "Name must be at least 2 characters")
+      .max(120, "Name must be under 120 characters")
+      .regex(/^[a-zA-Z\s.\-']+$/, "Name contains invalid characters"),
+    badge_id: z.string().max(32, "Badge ID must be under 32 characters").optional(),
+    email: z
+      .string()
+      .email("Please enter a valid email address")
+      .max(254, "Email address is too long"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .max(128, "Password is too long")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
     confirm: z.string().min(8, "Please confirm your password"),
   })
   .refine((d) => d.password === d.confirm, {

@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useAuthStore } from "@/store/auth";
 import { cn } from "@/lib/utils";
-import { insforge, ensureAuthenticatedClient, fetchSecureBlobUrl } from "@/lib/insforge";
+import { insforge, ensureAuthenticatedClient, fetchSecureBlobUrl, genCaseCode } from "@/lib/insforge";
 import { saveReport, fetchLiveAuditLogs, fetchCaseDetails, type CaseDetailBundle } from "@/lib/db";
 import { verifyWithMidvLlm, type MidvVerificationResult } from "@/lib/midvService";
 import { useScreeningContext } from "@/providers/ScreeningContext";
@@ -1680,7 +1680,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
     setDocImageLoadFailed(false);
     setBiometricVerification(null);
     if (caseId === "NEW_INGESTION") {
-      const newId = "TG-LIVE-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.floor(1000 + Math.random() * 9000);
+      const newId = genCaseCode();
       setCurrentCaseId(newId);
       setUploadedFileUrl(null);
       setCapturedFaceUrl(null);

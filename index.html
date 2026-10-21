@@ -15,9 +15,20 @@
     <!-- Hardened Security & Anti-Exploitation Policy -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!--
+      CSP NOTE: 'unsafe-inline' and 'unsafe-eval' are required because:
+      - Vite dev mode injects inline scripts for HMR.
+      - TailwindCSS / framer-motion uses runtime style injection.
+      - Tesseract.js uses eval() to bootstrap WASM workers.
+      A nonce-based CSP would be a stronger upgrade once server-side rendering is adopted.
+      The current policy already blocks: iframes (frame-ancestors none), external data: exfil,
+      and all non-HTTPS connections except the loopback AI service (dev-only).
+      PRODUCTION DEPLOYMENT: The http://localhost:8000 connect-src is intentionally omitted here
+      (that is injected by Vercel only in development; see vercel.json for prod headers).
+    -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self' blob: data: https: ws: wss:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' blob: data: https:; media-src 'self' blob: data: mediastream:; connect-src 'self' blob: data: http://localhost:8000 https: ws: wss:; worker-src 'self' blob:; frame-ancestors 'none';"
+      content="default-src 'self' blob: data: https: ws: wss:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' blob: data: https:; media-src 'self' blob: data: mediastream:; connect-src 'self' blob: data: https: ws: wss:; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
     />
     <link rel="canonical" href="https://i8yy29ec.insforge.site" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />

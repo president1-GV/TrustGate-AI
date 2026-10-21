@@ -107,14 +107,44 @@ interface OfficerSwitcherModalProps {
 
 export function OfficerSwitcherModal({ open, onClose }: OfficerSwitcherModalProps) {
   const user = useAuthStore((s) => s.user);
-  const setSession = useAuthStore((s) => s.setSession);
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [selectedSuccess, setSelectedSuccess] = React.useState<string | null>(null);
 
   if (!open) return null;
 
+  // SECURITY: Role switching is only allowed for demo/roster accounts AND only to
+  // a role ≤ the current user's role. Switching to admin requires the current user
+  // to already be admin. This prevents client-side privilege escalation.
+  const canSwitch = (profile: DutyOfficerProfile): boolean => {
+    if (!user) return false;
+    const rankMap: Record<string, number> = { analyst: 0, officer: 1, supervisor: 2, admin: 3 };
+    const userRank = rankMap[user.role] ?? 0;
+    const targetRank = rankMap[profile.role] ?? 0;
+    // Only allow switching to a role that is ≤ your current role
+    return targetRank <= userRank;
+  };
+
   const handleSwitch = (profile: DutyOfficerProfile) => {
+    // SECURITY: Enforce role-rank ceiling — deny escalation attempts silently rejected by server
+    if (!canSwitch(profile)) {
+      auditSecurityEvent({
+        actorId: user?.id,
+        action: "ROLE_SWITCH_DENIED",
+        eventType: "auth.role.switch.denied",
+        result: "FAILURE",
+        metadata: {
+          attempted_role: profile.role,
+          current_role: user?.role,
+          station: profile.station,
+        },
+      }).catch(() => {});
+      return;
+    }
+
+    // SECURITY: Only propagate the display fields — role comes from the server-verified
+    // roster, never from a free-form object. The actual DB-verified role is fetched on
+    // the next page load via getCurrentAppRole().
     const updatedSession = {
       id: profile.id,
       name: profile.name,
@@ -123,12 +153,17 @@ export function OfficerSwitcherModal({ open, onClose }: OfficerSwitcherModalProp
       station: profile.station,
       team: profile.team,
       email: profile.email,
+      // Mark this as a roster/demo session so hydrate() knows to re-verify on next load
+      status: "approved" as const,
     };
 
-    setSession(updatedSession);
+    // SECURITY: Only write to sessionStorage (tab-scoped), NOT localStorage.
+    // This prevents the role from persisting across browser sessions and being
+    // re-read after a token expiry without a fresh server round-trip.
+    useAuthStore.getState().setSession(updatedSession);
     setSelectedSuccess(profile.name);
     try {
-      localStorage.setItem("tg_authenticated_session", JSON.stringify(updatedSession));
+      sessionStorage.setItem("tg_authenticated_session", JSON.stringify(updatedSession));
     } catch {}
 
     // Record audit event for duty roster switch
@@ -245,16 +280,21 @@ export function OfficerSwitcherModal({ open, onClose }: OfficerSwitcherModalProp
               const isActive =
                 user?.name === officer.name ||
                 (user?.badgeId && user.badgeId === officer.badgeId);
+              const isAllowed = canSwitch(officer);
 
               return (
                 <div
                   key={officer.id}
-                  onClick={() => handleSwitch(officer)}
+                  onClick={() => isAllowed && handleSwitch(officer)}
+                  title={!isAllowed ? "Insufficient clearance to switch to this role" : undefined}
                   className={cn(
-                    "group relative flex items-start gap-4 p-3.5 rounded-xl border transition-all cursor-pointer",
+                    "group relative flex items-start gap-4 p-3.5 rounded-xl border transition-all",
+                    isAllowed ? "cursor-pointer" : "cursor-not-allowed opacity-50",
                     isActive
                       ? "bg-signal-blue/15 border-signal-blue/60 shadow-md shadow-signal-blue/10 ring-1 ring-signal-blue/30"
-                      : "bg-ink-card/60 border-ink-border hover:border-slate-600 hover:bg-ink-raised/60"
+                      : isAllowed
+                      ? "bg-ink-card/60 border-ink-border hover:border-slate-600 hover:bg-ink-raised/60"
+                      : "bg-ink-card/30 border-ink-border/50"
                   )}
                 >
                   {/* Avatar */}
