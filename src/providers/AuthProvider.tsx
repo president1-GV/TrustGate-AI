@@ -34,29 +34,16 @@ function sanitizeSession<T extends Record<string, any>>(session: T): T {
 
   if (name === "Officer Sarah Chen" || name === "Sarah Chen") {
     name = "Officer";
-    badgeId = "FO-8921";
+    if (badgeId === "TG-OFF-702") badgeId = undefined;
   } else if (name === "Supervisor Marcus Vance" || name === "Marcus Vance") {
     name = "Supervisor";
-    badgeId = "SUP-4402";
+    if (badgeId === "TG-SUP-104") badgeId = undefined;
   } else if (name === "Chief Security Officer" && session.email === "admin@trustgate.ai") {
     name = "Admin";
-    badgeId = "ADM-001";
+    if (badgeId === "TG-SEC-001") badgeId = undefined;
   } else if (name === "Border Intelligence Analyst" && session.email === "analyst@trustgate.ai") {
     name = "Analyst";
-    badgeId = "FOR-1109";
-  }
-
-  // Canonical demo badge fallback
-  if (!badgeId || badgeId === "TG-SEC-001" || badgeId === "TG-OFF-702" || badgeId === "TG-SUP-104" || badgeId === "TG-ANA-409") {
-    if (session.email === "admin@trustgate.ai" || session.role === "admin") {
-      badgeId = "ADM-001";
-    } else if (session.email === "supervisor@trustgate.ai" || session.role === "supervisor") {
-      badgeId = "SUP-4402";
-    } else if (session.email === "analyst@trustgate.ai" || session.role === "analyst") {
-      badgeId = "FOR-1109";
-    } else if (session.email === "officer@trustgate.ai" || session.role === "officer") {
-      badgeId = "FO-8921";
-    }
+    if (badgeId === "TG-ANA-409") badgeId = undefined;
   }
 
   const sanitized = {
@@ -200,33 +187,12 @@ async function hydrate(
       }
     }
 
-    const demoBadgeMap: Record<string, string> = {
-      "admin@trustgate.ai": "ADM-001",
-      "supervisor@trustgate.ai": "SUP-4402",
-      "officer@trustgate.ai": "FO-8921",
-      "analyst@trustgate.ai": "FOR-1109",
-      "airgap.officer@trustgate.defense.gov": "AIRGAP-001",
-    };
-    const defaultRoleBadge =
-      role === "admin"
-        ? "ADM-001"
-        : role === "supervisor"
-        ? "SUP-4402"
-        : role === "analyst"
-        ? "FOR-1109"
-        : "FO-8921";
-
-    const resolvedBadgeId =
-      p.badge_id ||
-      (u.email ? demoBadgeMap[u.email.toLowerCase().trim()] : undefined) ||
-      (isDemoAccount ? defaultRoleBadge : undefined);
-
     const sessionObj = {
       id: u.id,
       email: u.email ?? "",
       name: resolvedName,
       role,
-      badgeId: resolvedBadgeId,
+      badgeId: isDemoAccount ? undefined : (p.badge_id ?? undefined),
       station: p.station ?? undefined,
       team: p.team ?? undefined,
       status: userStatus,
@@ -372,32 +338,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Direct access to air-gapped offline station or demo fallback. */
   function loginOffline(role: AppRole = "admin", email?: string): void {
-    const demoMeta: Record<string, { name: string; station: string; badgeId: string }> = {
+    const demoMeta: Record<string, { name: string; station: string }> = {
       "officer@trustgate.ai": {
         name: "Officer",
         station: "Indo-Nepal ICP Raxaul · Lane 03",
-        badgeId: "FO-8921",
       },
       "supervisor@trustgate.ai": {
         name: "Supervisor",
         station: "Northern Command HQ · Field Supervisor",
-        badgeId: "SUP-4402",
       },
       "admin@trustgate.ai": {
         name: "Admin",
         station: "Border Defense National Cyber Command",
-        badgeId: "ADM-001",
       },
       "analyst@trustgate.ai": {
         name: "Analyst",
         station: "Central Intelligence & Analytics Division",
-        badgeId: "FOR-1109",
       },
     };
 
     const matched = email ? demoMeta[email.toLowerCase()] : undefined;
     const defaultName = role === "admin" ? "Admin" : role === "supervisor" ? "Supervisor" : role === "analyst" ? "Analyst" : "Officer";
-    const defaultBadgeId = role === "admin" ? "ADM-001" : role === "supervisor" ? "SUP-4402" : role === "analyst" ? "FOR-1109" : "FO-8921";
 
     const actorId =
       role === "officer"
@@ -413,7 +374,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: email || (role === "admin" ? "admin@trustgate.ai" : role === "supervisor" ? "supervisor@trustgate.ai" : role === "analyst" ? "analyst@trustgate.ai" : "officer@trustgate.ai"),
       name: matched?.name || defaultName,
       role,
-      badgeId: matched?.badgeId || defaultBadgeId,
+      badgeId: undefined,
       station: matched?.station || "Indo-Nepal ICP Raxaul · Terminal 01 (Offline)",
       team: "Border Defense Rapid Response",
       status: "approved" as const,

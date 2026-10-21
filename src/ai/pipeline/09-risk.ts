@@ -15,10 +15,6 @@ function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
 
-export function safeNum(v: unknown, fallback = 0): number {
-  return typeof v === "number" && Number.isFinite(v) ? v : fallback;
-}
-
 export async function computeRisk(input: {
   imageQuality: ImageQualityResult;
   docDetect: DocDetectResult;
@@ -29,15 +25,7 @@ export async function computeRisk(input: {
   face: FaceResult;
   identity: IdentityConsistencyResult;
 }): Promise<RiskResult> {
-  const safeInput = input || ({} as any);
-  const imageQuality = safeInput.imageQuality || ({} as any);
-  const docDetect = safeInput.docDetect || ({} as any);
-  const ocr = safeInput.ocr || ({} as any);
-  const mrz = safeInput.mrz || ({} as any);
-  const validation = safeInput.validation || ({} as any);
-  const tampering = safeInput.tampering || ({} as any);
-  const face = safeInput.face || ({} as any);
-  const identity = safeInput.identity || ({} as any);
+  const { imageQuality, docDetect, ocr, mrz, validation, tampering, face, identity } = input;
 
   const weights = {
     imageQuality: 0.10,
@@ -51,9 +39,7 @@ export async function computeRisk(input: {
     identityScore: 0.18,
   };
 
-  const rawTextUpper = (typeof ocr.rawText === "string" ? ocr.rawText : "").toUpperCase();
-  const ocrFields = Array.isArray(ocr.fields) ? ocr.fields : [];
-
+  const rawTextUpper = (ocr.rawText || "").toUpperCase();
   const isAadhaar =
     docDetect.documentType === "aadhaar" ||
     rawTextUpper.includes("AADHAAR") ||
@@ -65,20 +51,19 @@ export async function computeRisk(input: {
     rawTextUpper.includes("MERI PEHCHAN") ||
     rawTextUpper.includes("आधार") ||
     rawTextUpper.includes("भारत सरकार") ||
-    ocrFields.some((f: any) => f?.fieldName === "ISSUING_AUTHORITY" && f?.fieldValue?.includes("UIDAI")) ||
-    (ocrFields.some((f: any) => f?.fieldName === "NATIONALITY" && f?.fieldValue === "IND") &&
-      ocrFields.some((f: any) => f?.fieldName === "DOCUMENT_NUMBER" && /\d{4}/.test(f?.fieldValue || "")));
+    ocr.fields.some((f) => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
+    (ocr.fields.some((f) => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
+      ocr.fields.some((f) => f.fieldName === "DOCUMENT_NUMBER" && /\d{4}/.test(f.fieldValue || "")));
 
   const mrzValid = isAadhaar
     ? 100
-    : Boolean(mrz.present && mrz.compositeValid)
+    : mrz.present && mrz.compositeValid
       ? 100
-      : Boolean(mrz.present)
+      : mrz.present
         ? 40
         : 0;
 
-  const validationIssues = Array.isArray(validation.issues) ? validation.issues : [];
-  const notExpiredIssue = validationIssues.find((i: any) => i?.ruleCode === "not_expired");
+  const notExpiredIssue = validation.issues.find((i) => i.ruleCode === "not_expired");
   const expiryValid = isAadhaar
     ? 100
     : !notExpiredIssue || notExpiredIssue.severity === "PASS"
@@ -87,22 +72,16 @@ export async function computeRisk(input: {
         ? 0
         : 50;
 
-  const rawDocConf = safeNum(docDetect.confidence, 0);
-  const docDetectConf = clamp(rawDocConf <= 1 && rawDocConf >= 0 ? rawDocConf * 100 : rawDocConf, 0, 100);
-
-  const rawOcrConf = safeNum(ocr.overallConfidence, 0);
-  const ocrConf = clamp(rawOcrConf <= 1 && rawOcrConf >= 0 ? rawOcrConf * 100 : rawOcrConf, 0, 100);
-
   const components: Record<string, number> = {
-    imageQuality: clamp(safeNum(imageQuality.score, 0), 0, 100),
-    docDetectConf,
-    ocrConf,
-    mrzValid: clamp(safeNum(mrzValid, 0), 0, 100),
-    expiryValid: clamp(safeNum(expiryValid, 0), 0, 100),
-    tamperingProb: clamp(safeNum(tampering.probability, 0), 0, 100),
-    faceQuality: Boolean(face.detected) ? clamp(safeNum(face.quality, 0), 0, 100) : 0,
-    faceSimilarity: Boolean(face.detected) ? clamp(safeNum(face.similarity, 0), 0, 100) : 0,
-    identityScore: clamp(safeNum(identity.score, 0), 0, 100),
+    imageQuality: imageQuality.score,
+    docDetectConf: docDetect.confidence * 100,
+    ocrConf: ocr.overallConfidence * 100,
+    mrzValid,
+    expiryValid,
+    tamperingProb: tampering.probability,
+    faceQuality: face.detected ? (face.quality ?? 0) : 0,
+    faceSimilarity: face.detected ? (face.similarity ?? 0) : 0,
+    identityScore: identity.score,
   };
 
   const factors: RiskFactor[] = [];
@@ -115,7 +94,7 @@ export async function computeRisk(input: {
     weights.expiryValid * (100 - components.expiryValid) +
     weights.tamperingProb * components.tamperingProb +
     weights.faceQuality * (100 - components.faceQuality) +
-    weights.faceSimilarity * (face.detected && typeof face.similarity === "number" && Number.isFinite(face.similarity) ? (100 - components.faceSimilarity) : (face.detected ? 20 : 50)) +
+    weights.faceSimilarity * (face.detected && face.similarity != null ? (100 - components.faceSimilarity) : (face.detected ? 20 : 50)) +
     weights.identityScore * (100 - components.identityScore);
 
   const totalWeights =
@@ -129,13 +108,12 @@ export async function computeRisk(input: {
     weights.faceSimilarity +
     weights.identityScore;
 
-  const safeTotalWeights = totalWeights > 0 ? totalWeights : 1;
-  let rawScore = safeNum(clamp(safeNum(rawSum, 0) / safeTotalWeights, 0, 100), 50);
+  let rawScore = clamp(rawSum / totalWeights, 0, 100);
 
   const isBiometricMismatch =
     face.identityMatchStatus === "MISMATCH" ||
     face.resultLabel === "MISMATCH" ||
-    (typeof face.similarity === "number" && Number.isFinite(face.similarity) && face.similarity < 60);
+    (face.similarity != null && face.similarity < 60);
 
   // If biometric mismatch is verified between live face and document portrait, enforce high risk
   if (isBiometricMismatch) {
@@ -143,7 +121,7 @@ export async function computeRisk(input: {
   }
 
   // If the document is classified as unknown, enforce high risk
-  if (((docDetect.documentType === "unknown" || !docDetect.documentType) && !isAadhaar) || (!isAadhaar && safeNum(docDetect.confidence, 0) < 0.4)) {
+  if ((docDetect.documentType === "unknown" && !isAadhaar) || (!isAadhaar && docDetect.confidence < 0.4)) {
     rawScore = Math.max(rawScore, 88);
   }
 
@@ -153,15 +131,15 @@ export async function computeRisk(input: {
   }
 
   // If critical validation issues occurred
-  if (safeNum(validation.summaryCritical, 0) > 0) {
+  if (validation.summaryCritical > 0) {
     rawScore = Math.max(rawScore, 85);
   }
 
   factors.push({
     code: "image_quality",
     weight: weights.imageQuality * 100,
-    contribution: safeNum(weights.imageQuality * (100 - components.imageQuality), 0),
-    explanation: `Image quality score ${safeNum(components.imageQuality, 0).toFixed(0)}/100 — ${
+    contribution: weights.imageQuality * (100 - components.imageQuality),
+    explanation: `Image quality score ${components.imageQuality.toFixed(0)}/100 — ${
       components.imageQuality >= 70 ? "clear, suitable for downstream analysis" : "reduced fidelity may impact extraction accuracy"
     }.`,
   });
@@ -169,26 +147,25 @@ export async function computeRisk(input: {
   factors.push({
     code: "doc_detect",
     weight: weights.docDetectConf * 100,
-    contribution: safeNum(weights.docDetectConf * (100 - components.docDetectConf), 0),
-    explanation: (docDetect.documentType === "unknown" || !docDetect.documentType) && !isAadhaar
-      ? `Document classifier failed to identify standard credential format (${safeNum(components.docDetectConf, 0).toFixed(0)}% confidence).`
-      : `Document classifier confidence ${safeNum(components.docDetectConf, 0).toFixed(0)}% — type="${isAadhaar ? "aadhaar" : (docDetect.documentType || "unknown")}".`,
+    contribution: weights.docDetectConf * (100 - components.docDetectConf),
+    explanation: docDetect.documentType === "unknown" && !isAadhaar
+      ? `Document classifier failed to identify standard credential format (${components.docDetectConf.toFixed(0)}% confidence).`
+      : `Document classifier confidence ${components.docDetectConf.toFixed(0)}% — type="${isAadhaar ? "aadhaar" : docDetect.documentType}".`,
   });
 
-  const ocrCount = ocrFields.length;
   factors.push({
     code: "ocr_confidence",
     weight: weights.ocrConf * 100,
-    contribution: safeNum(weights.ocrConf * (100 - components.ocrConf), 0),
-    explanation: ocrCount > 0
-      ? `OCR confidence ${safeNum(components.ocrConf, 0).toFixed(0)}% — ${ocrCount} field(s) extracted.`
+    contribution: weights.ocrConf * (100 - components.ocrConf),
+    explanation: ocr.fields.length > 0
+      ? `OCR confidence ${components.ocrConf.toFixed(0)}% — ${ocr.fields.length} field(s) extracted.`
       : "No visual text fields identified by OCR engine.",
   });
 
   factors.push({
     code: "mrz_validity",
     weight: weights.mrzValid * 100,
-    contribution: safeNum(weights.mrzValid * (100 - components.mrzValid), 0),
+    contribution: weights.mrzValid * (100 - components.mrzValid),
     explanation: isAadhaar
       ? "Republic of India Aadhaar smart card format verified (ICAO MRZ not required)."
       : mrz.present
@@ -201,42 +178,39 @@ export async function computeRisk(input: {
   factors.push({
     code: "expiry_status",
     weight: weights.expiryValid * 100,
-    contribution: safeNum(weights.expiryValid * (100 - components.expiryValid), 0),
+    contribution: weights.expiryValid * (100 - components.expiryValid),
     explanation: isAadhaar
       ? "Aadhaar credential is a permanent lifelong document with no expiration date."
       : notExpiredIssue?.message || "Expiry date not evaluated.",
   });
 
-  const tamperingRegions = Array.isArray(tampering.regions) ? tampering.regions : [];
   factors.push({
     code: "tampering_risk",
     weight: weights.tamperingProb * 100,
-    contribution: safeNum(weights.tamperingProb * components.tamperingProb, 0),
-    explanation: tamperingRegions.length > 0
-      ? `Tampering probability ${safeNum(components.tamperingProb, 0).toFixed(0)}% — ${tampering.severity || "SUSPICIOUS"} severity with ${tamperingRegions.length} anomalous region(s).`
+    contribution: weights.tamperingProb * components.tamperingProb,
+    explanation: tampering.regions.length > 0
+      ? `Tampering probability ${components.tamperingProb.toFixed(0)}% — ${tampering.severity} severity with ${tampering.regions.length} anomalous region(s).`
       : "ELA analysis found no pixel alteration anomalies.",
   });
 
-  const faceSimVal = typeof face.similarity === "number" && Number.isFinite(face.similarity) ? face.similarity : null;
   factors.push({
     code: "face_analysis",
     weight: weights.faceSimilarity * 100,
-    contribution: isBiometricMismatch ? 25 : safeNum(weights.faceSimilarity * (100 - components.faceSimilarity), 0),
+    contribution: isBiometricMismatch ? 25 : weights.faceQuality * (100 - components.faceQuality),
     explanation: isBiometricMismatch
-      ? `Biometric mismatch flagged: Live subject features diverge from document portrait (${faceSimVal != null ? `${faceSimVal}% similarity` : "mismatch detected"}).`
-      : face.detected && faceSimVal != null
-      ? `Biometric comparison verified (${faceSimVal}% similarity, portrait quality ${safeNum(components.faceQuality, 0).toFixed(0)}/100).`
+      ? `Biometric mismatch flagged: Live subject features diverge from document portrait (${face.similarity != null ? `${face.similarity}% similarity` : "mismatch detected"}).`
+      : face.detected && face.similarity != null
+      ? `Biometric comparison verified (${face.similarity}% similarity, portrait quality ${components.faceQuality.toFixed(0)}/100).`
       : face.detected
-      ? `Portrait quality ${safeNum(components.faceQuality, 0).toFixed(0)}/100 (awaiting live camera biometric comparison).`
+      ? `Portrait quality ${components.faceQuality.toFixed(0)}/100 (awaiting live camera biometric comparison).`
       : "No facial portrait detected in current document.",
   });
 
-  const identityAssertions = Array.isArray(identity.perField) ? identity.perField.length : 0;
   factors.push({
     code: "identity_consistency",
     weight: weights.identityScore * 100,
-    contribution: safeNum(weights.identityScore * (100 - components.identityScore), 0),
-    explanation: `Cross-field identity consistency score ${safeNum(components.identityScore, 0).toFixed(0)}/100 across ${identityAssertions} assertions.`,
+    contribution: weights.identityScore * (100 - components.identityScore),
+    explanation: `Cross-field identity consistency score ${components.identityScore.toFixed(0)}/100 across ${identity.perField?.length ?? 0} assertions.`,
   });
 
   let level: RiskResult["level"];
@@ -247,7 +221,7 @@ export async function computeRisk(input: {
   let recommendedAction: string;
   if (isBiometricMismatch) {
     recommendedAction = "Biometric mismatch detected between document portrait and live passenger. Immediate supervisor escalation required.";
-  } else if ((docDetect.documentType === "unknown" || !docDetect.documentType) && !isAadhaar) {
+  } else if (docDetect.documentType === "unknown" && !isAadhaar) {
     recommendedAction = "Reject non-credential submission. Request valid government-issued identity credential.";
   } else if (level === "LOW") {
     recommendedAction = isAadhaar
@@ -259,10 +233,8 @@ export async function computeRisk(input: {
     recommendedAction = "Manual secondary verification required. Flag case.";
   }
 
-  const finalScore = safeNum(Math.round(rawScore), 50);
-
   return {
-    score: clamp(finalScore, 0, 100),
+    score: Math.round(rawScore),
     level,
     recommendedAction,
     engineVersion: "explainable-v1",

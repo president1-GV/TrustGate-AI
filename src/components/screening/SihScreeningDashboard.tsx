@@ -1244,9 +1244,8 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
         rules: wRules ? rulesScore : 0,
       };
 
-      const safeScore = (v: unknown, fallback = 0): number => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
       const calculatedFusedRisk = weightSum > 0
-        ? Math.round((safeScore(bd.docAuth) * 0.25 + safeScore(bd.field) * 0.20 + safeScore(bd.tamper) * 0.20 + safeScore(bd.face) * 0.25 + safeScore(bd.rules) * 0.10) / weightSum)
+        ? Math.round((bd.docAuth + bd.field + bd.tamper + bd.face + bd.rules) / weightSum)
         : rowRisk;
 
       const finalRisk = biometricVerification?.status === "MISMATCH"
@@ -1315,9 +1314,8 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
         rules: wRules ? rulesRisk : 0,
       };
 
-      const safeScore = (v: unknown, fallback = 0): number => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
       const calculatedFusedRisk = weightSum > 0
-        ? Math.round((safeScore(bd.docAuth) * 0.25 + safeScore(bd.field) * 0.20 + safeScore(bd.tamper) * 0.20 + safeScore(bd.face) * 0.25 + safeScore(bd.rules) * 0.10) / weightSum)
+        ? Math.round((bd.docAuth + bd.field + bd.tamper + bd.face + bd.rules) / weightSum)
         : pipeRisk;
 
       const finalRisk = biometricVerification?.status === "MISMATCH"

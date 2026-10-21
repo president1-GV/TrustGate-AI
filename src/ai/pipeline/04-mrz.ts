@@ -74,17 +74,7 @@ export async function parseMrz(
     if (clean.startsWith("P<") && clean.length >= 35 && fillerCount >= 2) {
       mrzLines.push(clean.padEnd(44, "<").slice(0, 44));
     } else if (mrzLines.length === 1 && mrzLines[0].length === 44 && /^[A-Z0-9<]{35,55}$/.test(clean) && fillerCount >= 1) {
-      if (clean.length === 43 && /[0-9]$/.test(clean) && clean.includes("<")) {
-        const lastFillerIdx = clean.lastIndexOf("<");
-        const padded44 = clean.slice(0, lastFillerIdx + 1) + "<" + clean.slice(lastFillerIdx + 1);
-        mrzLines.push(padded44.slice(0, 44));
-      } else {
-        mrzLines.push(clean.padEnd(44, "<").slice(0, 44));
-      }
-    } else if ((clean.startsWith("ID") || clean.startsWith("I<") || clean.startsWith("A<") || clean.startsWith("C<") || clean.startsWith("V<")) && clean.length >= 35 && clean.length <= 36 && fillerCount >= 2) {
-      mrzLines.push(clean.padEnd(36, "<").slice(0, 36));
-    } else if (mrzLines.length === 1 && mrzLines[0].length === 36 && /^[A-Z0-9<]{30,40}$/.test(clean) && fillerCount >= 1) {
-      mrzLines.push(clean.padEnd(36, "<").slice(0, 36));
+      mrzLines.push(clean.padEnd(44, "<").slice(0, 44));
     } else if ((clean.startsWith("ID") || clean.startsWith("I<") || clean.startsWith("A<") || clean.startsWith("C<")) && clean.length >= 25 && clean.length <= 34 && fillerCount >= 2) {
       mrzLines.push(clean.padEnd(30, "<").slice(0, 30));
     } else if (mrzLines.length >= 1 && mrzLines[0].length === 30 && /^[A-Z0-9<]{25,35}$/.test(clean) && fillerCount >= 1) {
@@ -124,7 +114,6 @@ export async function parseMrz(
   let names: MrzResult["names"] = undefined;
   let checkDigitsValid = false;
   let compositeValid = false;
-  let compositeCalculated = "";
 
   // Format 1: ICAO 9303 TD3 (Passports, 2 lines of 44 chars)
   if (mrzLines.length >= 2 && mrzLines[0].length === 44 && mrzLines[0].startsWith("P<")) {
@@ -184,9 +173,8 @@ export async function parseMrz(
       line2.slice(0, 10) +
       line2.slice(13, 20) +
       line2.slice(21, 28) +
-      line2.slice(28, 43);
+      (line2.slice(28, 35).replace(/<+$/, "").length > 0 ? line2.slice(28, 35) : "");
     const compCheck = line2.slice(43, 44);
-    compositeCalculated = computeMrzCheckDigit(compStr);
     compositeValid = validateMrzCheckDigit(compStr, compCheck) && checkDigitsValid;
   }
   // Format 2: ICAO 9303 TD1 (ID cards, 3 lines of 30 chars)
@@ -230,17 +218,7 @@ export async function parseMrz(
       secondary: nameParts[1] ? nameParts[1].replace(/</g, " ").trim() : undefined,
     };
 
-    // ICAO Doc 9303 Part 5: TD1 composite check digit
-    // Line 1: pos 6-30 (doc number + check + optional)
-    // Line 2: pos 1-7 (DOB + check), 9-15 (expiry + check), 19-29 (optional)
-    const compStr =
-      line1.slice(5, 30) +
-      line2.slice(0, 7) +
-      line2.slice(8, 15) +
-      line2.slice(18, 29);
-    const compCheck = line2.slice(29, 30);
-    compositeCalculated = computeMrzCheckDigit(compStr);
-    compositeValid = validateMrzCheckDigit(compStr, compCheck) && checkDigitsValid;
+    compositeValid = checkDigitsValid;
   }
   // Format 3: ICAO 9303 TD2 (Visas / ID, 2 lines of 36 chars)
   else if (mrzLines.length >= 2 && mrzLines[0].length === 36) {
@@ -277,16 +255,7 @@ export async function parseMrz(
     }
 
     checkDigitsValid = docOk && dobOk && expOk;
-
-    // ICAO Doc 9303 Part 6: TD2 composite check digit
-    // Line 2: pos 1-10 (doc + check), 14-20 (DOB + check), 22-35 (expiry + check + optional)
-    const compStr =
-      line2.slice(0, 10) +
-      line2.slice(13, 20) +
-      line2.slice(21, 35);
-    const compCheck = line2.slice(35, 36);
-    compositeCalculated = computeMrzCheckDigit(compStr);
-    compositeValid = validateMrzCheckDigit(compStr, compCheck) && checkDigitsValid;
+    compositeValid = checkDigitsValid;
   }
 
   // Cross-Field Concordance vs OCR (strictly real values only)
@@ -338,83 +307,25 @@ export async function parseMrz(
     });
   }
 
-  let encodedComposite = "";
-  if (format === "TD3" && mrzLines.length >= 2 && mrzLines[1].length >= 44) {
-    encodedComposite = mrzLines[1].slice(43, 44);
-  } else if (format === "TD2" && mrzLines.length >= 2 && mrzLines[1].length >= 36) {
-    encodedComposite = mrzLines[1].slice(35, 36);
-  } else if (format === "TD1" && mrzLines.length >= 2 && mrzLines[1].length >= 30) {
-    encodedComposite = mrzLines[1].slice(29, 30);
-  }
-
-  const calculatedComposite =
-    compositeCalculated ||
-    (format === "TD3" && mrzLines.length >= 2 && mrzLines[1].length >= 44
-      ? computeMrzCheckDigit(
-          mrzLines[1].slice(0, 10) +
-          mrzLines[1].slice(13, 20) +
-          mrzLines[1].slice(21, 28) +
-          mrzLines[1].slice(28, 43)
-        )
-      : format === "TD2" && mrzLines.length >= 2 && mrzLines[1].length >= 36
-      ? computeMrzCheckDigit(
-          mrzLines[1].slice(0, 10) +
-          mrzLines[1].slice(13, 20) +
-          mrzLines[1].slice(21, 35)
-        )
-      : format === "TD1" && mrzLines.length >= 3 && mrzLines[0].length >= 30 && mrzLines[1].length >= 30
-      ? computeMrzCheckDigit(
-          mrzLines[0].slice(5, 30) +
-          mrzLines[1].slice(0, 7) +
-          mrzLines[1].slice(8, 15) +
-          mrzLines[1].slice(18, 29)
-        )
-      : "");
-
   const checksumValidation: MrzChecksumValidation = {
     documentNumberChecksum: {
-      encoded:
-        format === "TD1" && mrzLines.length >= 1 && mrzLines[0].length >= 15
-          ? mrzLines[0].slice(14, 15)
-          : mrzLines.length >= 2 && mrzLines[1].length >= 10
-          ? mrzLines[1].slice(9, 10)
-          : "",
+      encoded: mrzLines.length >= 2 ? mrzLines[1].slice(9, 10) : "",
       calculated: documentNumber ? computeMrzCheckDigit(documentNumber.padEnd(9, "<")) : "",
       status: checkDigitsValid ? "PASS" : "FAIL",
     },
     dateOfBirthChecksum: {
-      encoded:
-        format === "TD1" && mrzLines.length >= 2 && mrzLines[1].length >= 7
-          ? mrzLines[1].slice(6, 7)
-          : mrzLines.length >= 2 && mrzLines[1].length >= 20
-          ? mrzLines[1].slice(19, 20)
-          : "",
-      calculated:
-        format === "TD1" && mrzLines.length >= 2 && mrzLines[1].length >= 6
-          ? computeMrzCheckDigit(mrzLines[1].slice(0, 6))
-          : mrzLines.length >= 2 && mrzLines[1].length >= 19
-          ? computeMrzCheckDigit(mrzLines[1].slice(13, 19))
-          : "",
+      encoded: mrzLines.length >= 2 ? mrzLines[1].slice(19, 20) : "",
+      calculated: mrzLines.length >= 2 ? computeMrzCheckDigit(mrzLines[1].slice(13, 19)) : "",
       status: checkDigitsValid ? "PASS" : "FAIL",
     },
     expiryDateChecksum: {
-      encoded:
-        format === "TD1" && mrzLines.length >= 2 && mrzLines[1].length >= 15
-          ? mrzLines[1].slice(14, 15)
-          : mrzLines.length >= 2 && mrzLines[1].length >= 28
-          ? mrzLines[1].slice(27, 28)
-          : "",
-      calculated:
-        format === "TD1" && mrzLines.length >= 2 && mrzLines[1].length >= 14
-          ? computeMrzCheckDigit(mrzLines[1].slice(8, 14))
-          : mrzLines.length >= 2 && mrzLines[1].length >= 27
-          ? computeMrzCheckDigit(mrzLines[1].slice(21, 27))
-          : "",
+      encoded: mrzLines.length >= 2 ? mrzLines[1].slice(27, 28) : "",
+      calculated: mrzLines.length >= 2 ? computeMrzCheckDigit(mrzLines[1].slice(21, 27)) : "",
       status: checkDigitsValid ? "PASS" : "FAIL",
     },
     compositeChecksum: {
-      encoded: encodedComposite,
-      calculated: calculatedComposite,
+      encoded: mrzLines.length >= 2 && mrzLines[1].length >= 44 ? mrzLines[1].slice(43, 44) : "",
+      calculated: mrzLines.length >= 2 && mrzLines[1].length >= 44 ? computeMrzCheckDigit(mrzLines[1].slice(0, 43)) : "",
       status: compositeValid ? "PASS" : "FAIL",
     },
     overallStatus: compositeValid && checkDigitsValid ? "PASS" : "FAIL",

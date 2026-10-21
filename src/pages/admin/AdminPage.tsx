@@ -40,7 +40,7 @@ async function fetchAdminSummary() {
     getOfflineDbStats().catch(() => null),
   ]);
 
-  const totalUsers = Math.max((usersRes.data ?? []).length, 10);
+  const totalUsers = (usersRes.data ?? []).length;
   const allCases = casesRes.data ?? [];
   const baseTotal = Math.max(
     allCases.length,

@@ -137,18 +137,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     .join("")
     .toUpperCase() ?? "U";
 
-  const userBadgeId =
-    user?.badgeId ||
-    (user?.role === "admin"
-      ? "ADM-001"
-      : user?.role === "supervisor"
-      ? "SUP-4402"
-      : user?.role === "analyst"
-      ? "FOR-1109"
-      : user?.role === "officer"
-      ? "FO-8921"
-      : undefined);
-
   return (
     <div className="min-h-screen w-full overflow-x-hidden">
       {/* ── Sidebar ── */}
@@ -227,9 +215,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <span className="text-[10px] uppercase font-mono font-bold tracking-wider px-1.5 py-0.5 rounded bg-signal-blue/15 text-signal-cyan border border-signal-blue/30">
                     {user.role}
                   </span>
-                  {userBadgeId && (
+                  {user.badgeId && (
                     <span className="text-[10px] font-mono text-slate-400 truncate">
-                      {userBadgeId}
+                      {user.badgeId}
                     </span>
                   )}
                 </div>
@@ -304,11 +292,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="text-sm text-slate-200 hidden lg:inline">
                   {user?.name ?? "User"}
                 </span>
-                {userBadgeId && (
-                  <span className="hidden xl:inline font-mono text-[11px] px-1.5 py-0.5 rounded bg-signal-blue/15 text-signal-cyan border border-signal-blue/30 font-semibold tracking-wider">
-                    {userBadgeId}
-                  </span>
-                )}
                 <ChevronRight className="h-3.5 w-3.5 text-slate-500 rotate-90" />
               </Button>
 
@@ -321,25 +304,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   />
                   <div className="absolute right-0 mt-2 w-64 z-20 glass-card rounded-card shadow-panel border border-ink-border py-2">
                     <div className="px-4 py-3 border-b border-ink-border mb-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="text-sm font-medium text-slate-100 truncate">
-                          {user?.name ?? "User"}
-                        </div>
-                        {userBadgeId && (
-                          <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-signal-blue/20 text-signal-cyan border border-signal-blue/40 font-semibold tracking-wider flex-shrink-0">
-                            {userBadgeId}
-                          </span>
-                        )}
+                      <div className="text-sm font-medium text-slate-100">
+                        {user?.name ?? "User"}
                       </div>
-                      <div className="text-xs text-slate-400 truncate mt-0.5">{user?.email}</div>
-                      <div className="mt-2.5 flex items-center justify-between gap-2 pt-2 border-t border-ink-border/50">
-                        <Badge variant="default" className="text-[10px] uppercase font-semibold">
+                      <div className="text-xs text-slate-400 truncate">{user?.email}</div>
+                      <div className="mt-1">
+                        <Badge variant="default" className="text-[10px] uppercase">
                           {user?.role ?? "officer"}
                         </Badge>
-                        <div className="text-[11px] font-mono flex items-center gap-1.5 text-slate-400">
-                          <span className="text-[10px] text-slate-500 uppercase tracking-wider">Badge:</span>
-                          <span className="text-signal-cyan font-bold text-[11px]">{userBadgeId || "—"}</span>
-                        </div>
                       </div>
                     </div>
                     <Link
