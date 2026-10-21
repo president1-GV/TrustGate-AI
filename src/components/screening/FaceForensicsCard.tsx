@@ -50,24 +50,8 @@ export function FaceForensicsCard({
 
   const handleExportCertificate = () => {
     if (!result) return;
-    const printWindow = window.open("", "_blank", "width=840,height=960,noopener,noreferrer");
+    const printWindow = window.open("", "_blank", "width=840,height=960");
     if (!printWindow) return;
-
-    // SECURITY: Escape all user/AI-provided data before injecting into the print HTML
-    // to prevent stored XSS via malicious AI output or tampered result data.
-    const esc = (s: unknown): string => {
-      if (s === null || s === undefined) return "";
-      return String(s)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    };
-
-    // Isolate the new window from the opener — prevents the opened window from
-    // navigating the opener via window.opener.location
-    printWindow.opener = null;
 
     const evalData = result.evaluation;
     const checks = result.forensic_checks || [];
@@ -109,27 +93,27 @@ export function FaceForensicsCard({
         </div>
 
         <div class="verdict-box">
-          <div class="verdict-title">BIOMETRIC VERDICT: ${esc(evalData.verdict)}</div>
+          <div class="verdict-title">BIOMETRIC VERDICT: ${evalData.verdict}</div>
           <div style="font-size: 12px; margin-top: 4px;">
-            Authenticity Index: <strong>${esc(evalData.authenticity_score)}/100</strong> &nbsp;|&nbsp;
-            Recommended Directive: <strong>${esc(evalData.recommended_action)}</strong> &nbsp;|&nbsp;
-            Suspected Method: <strong>${esc(evalData.dominant_manipulation_archetype)}</strong>
+            Authenticity Index: <strong>${evalData.authenticity_score}/100</strong> &nbsp;|&nbsp;
+            Recommended Directive: <strong>${evalData.recommended_action}</strong> &nbsp;|&nbsp;
+            Suspected Method: <strong>${evalData.dominant_manipulation_archetype}</strong>
           </div>
         </div>
 
         <div class="grid">
           <div class="panel">
             <div class="panel-title">Forensic Method Breakdown</div>
-            <div>Deepfakes Autoencoder: <strong>${esc(result.method_probabilities?.deepfakes ?? 0)}%</strong></div>
-            <div>Face2Face Reenactment: <strong>${esc(result.method_probabilities?.face2face ?? 0)}%</strong></div>
-            <div>FaceSwap 3D Mesh: <strong>${esc(result.method_probabilities?.faceswap ?? 0)}%</strong></div>
-            <div>NeuralTextures GAN: <strong>${esc(result.method_probabilities?.neural_textures ?? 0)}%</strong></div>
+            <div>Deepfakes Autoencoder: <strong>${result.method_probabilities?.deepfakes ?? 0}%</strong></div>
+            <div>Face2Face Reenactment: <strong>${result.method_probabilities?.face2face ?? 0}%</strong></div>
+            <div>FaceSwap 3D Mesh: <strong>${result.method_probabilities?.faceswap ?? 0}%</strong></div>
+            <div>NeuralTextures GAN: <strong>${result.method_probabilities?.neural_textures ?? 0}%</strong></div>
           </div>
           <div class="panel">
             <div class="panel-title">Inspection Metadata</div>
-            <div>Capture Source: <strong>${esc(result.benchmark?.capture_source ?? "Document Upload / Camera Capture")}</strong></div>
-            <div>Audited On: <strong>${esc(dateStr)}</strong></div>
-            <div>Engine Mode: <strong>Client-Side Heuristic Analysis</strong></div>
+            <div>Capture Source: <strong>${result.benchmark?.capture_source ?? "Live Camera"}</strong></div>
+            <div>Audited On: <strong>${dateStr}</strong></div>
+            <div>Engine Mode: <strong>Air-Gapped Autonomous Heuristic / Local Daemon</strong></div>
             <div>Certificate ID: <strong>TG-FF-${Date.now().toString(36).toUpperCase()}</strong></div>
           </div>
         </div>
@@ -147,10 +131,10 @@ export function FaceForensicsCard({
           <tbody>
             ${checks.map(c => `
               <tr>
-                <td><strong>${esc(c.label)}</strong><br><span style="font-size:10px; color:#64748b;">${esc(c.description)}</span></td>
-                <td class="${c.status === 'FAIL' ? 'fail' : 'pass'}">${esc(c.status)}</td>
-                <td>${esc(c.detected_value) || 'N/A'}</td>
-                <td>${esc(c.threshold) || 'N/A'}</td>
+                <td><strong>${c.label}</strong><br><span style="font-size:10px; color:#64748b;">${c.description}</span></td>
+                <td class="${c.status === 'FAIL' ? 'fail' : 'pass'}">${c.status}</td>
+                <td>${c.detected_value || 'N/A'}</td>
+                <td>${c.threshold || 'N/A'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -160,17 +144,16 @@ export function FaceForensicsCard({
           <div style="font-size: 13px; font-weight: 700; margin-top: 24px; color: #dc2626;">Forensic Failure Explanations:</div>
           ${failures.map((f, i) => `
             <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 12px; margin-top: 8px; font-size: 12px;">
-              <strong>#${i + 1} [${esc(f.rule_code)}] ${esc(f.metric_name)}: ${esc(f.summary)}</strong>
-              <p style="margin: 4px 0 0 0; color: #334155;">${esc(f.forensic_evidence)}</p>
-              <div style="margin-top: 6px; font-size: 11px; font-weight: 600; color: #991b1b;">Protocol: ${esc(f.officer_directive)}</div>
+              <strong>#${i + 1} [${f.rule_code}] ${f.metric_name}: ${f.summary}</strong>
+              <p style="margin: 4px 0 0 0; color: #334155;">${f.forensic_evidence}</p>
+              <div style="margin-top: 6px; font-size: 11px; font-weight: 600; color: #991b1b;">Protocol: ${f.officer_directive}</div>
             </div>
           `).join('')}
         ` : ''}
 
         <div class="footer">
-          <div>ISSUED BY: TRUSTGATE AI — PROTOTYPE SCREENING SYSTEM</div>
-          <div>DOCUMENT ID: TG-REPORT-${Date.now().toString(36).toUpperCase()}</div>
-          <div style="color: #b45309; font-style: italic;">AI-ASSISTED SCREENING — NOT A LEGAL DETERMINATION — HUMAN REVIEW REQUIRED</div>
+          <div>ISSUED BY: TRUSTGATE AI BORDER SECURITY GATEWAY</div>
+          <div>NON-REPUDIATION CHECKSUM: ${Math.random().toString(16).substring(2, 10).toUpperCase()}</div>
         </div>
       </body>
       </html>

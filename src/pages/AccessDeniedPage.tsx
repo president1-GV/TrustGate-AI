@@ -1,53 +1,38 @@
-import { Link, useNavigate } from "react-router-dom";
-import { ShieldAlert, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { useAuthStore } from "@/store/auth";
 
 export function AccessDeniedPage() {
   const navigate = useNavigate();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-ink dark:to-slate-950 text-slate-900 dark:text-slate-100 relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-amber-500/5 rounded-full blur-3xl" />
       </div>
-      <main
-        className="max-w-md w-full text-center rounded-2xl border border-slate-200 dark:border-ink-border bg-white/95 dark:bg-ink-card/90 backdrop-blur-md shadow-panel p-10 relative z-10"
-        role="main"
-        aria-labelledby="access-denied-title"
-      >
-        <div className="mx-auto h-20 w-20 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-6" aria-hidden="true">
+      <div className="max-w-md w-full text-center rounded-2xl border border-slate-200 dark:border-ink-border bg-white/95 dark:bg-ink-card/90 backdrop-blur-md shadow-panel p-10 relative z-10">
+        <div className="mx-auto h-20 w-20 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-6">
           <ShieldAlert className="h-10 w-10 text-amber-400" />
         </div>
-        <h1 id="access-denied-title" className="text-5xl font-bold tracking-tight text-gradient-signal mb-2 tabular-nums">
+        <h1 className="text-5xl font-bold tracking-tight text-gradient-signal mb-2 tabular-nums">
           403
         </h1>
         <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
           Access Denied
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-          Your current security clearance does not permit access to this section.
-          Contact a supervisor or administrator if you believe this is an error.
+          Your current security clearance does not permit access to this section. Contact a supervisor if you believe this is an error.
         </p>
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-signal-blue/40 to-transparent mb-8" aria-hidden="true" />
-        <div className="flex flex-col gap-3">
-          <Button
-            variant="primary"
-            size="lg"
-            className="w-full"
-            onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            {isAuthenticated ? "Go to Dashboard" : "Return to Home"}
-          </Button>
-          {isAuthenticated && (
-            <Link to="/cases" className="text-xs text-signal-blue hover:underline transition-colors">
-              View your assigned cases
-            </Link>
-          )}
-        </div>
-      </main>
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-signal-blue/40 to-transparent mb-8" />
+        <Button
+          variant="primary"
+          size="lg"
+          className="w-full"
+          onClick={() => navigate("/")}
+        >
+          Return to Command Center
+        </Button>
+      </div>
     </div>
   );
 }

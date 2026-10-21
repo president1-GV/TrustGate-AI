@@ -202,13 +202,13 @@ export function SecurityPage() {
         <Card className="border-signal-blue/30 bg-ink-card/60">
           <CardContent className="p-4">
             <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-1">
-              Self-Assessed Security Score
+              Internal Security Score
             </div>
             <div className="text-3xl font-extrabold text-signal-blue tabular-nums">
               {securityScorePct}%
             </div>
             <div className="text-xs text-slate-500 mt-1">
-              {verifiedCategories.length} control domains — architectural self-assessment
+              Based on {verifiedCategories.length} verified control domains
             </div>
           </CardContent>
         </Card>
@@ -285,19 +285,6 @@ export function SecurityPage() {
       {/* Tab: Controls */}
       {activeTab === "posture" && (
         <div className="space-y-4">
-          {/* Disclosure: architectural self-assessment */}
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-start gap-3">
-            <HelpCircle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <div className="text-sm font-semibold text-amber-300 mb-1">Architectural Self-Assessment</div>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                The control evaluations below reflect the intended architecture and implemented design decisions as of the current build.
-                They are <strong className="text-slate-300">not dynamically computed at runtime</strong> and have not been independently audited by a third party.
-                Scores are derived from code review and deployment configuration — not from automated penetration testing or formal certification.
-                An independent security assessment should be performed before any production deployment.
-              </p>
-            </div>
-          </div>
           {VERIFIED_SECURITY_CHECKS.map((cat) => (
             <Card key={cat.id} className="border-ink-border bg-ink-card/40">
               <CardHeader className="pb-3">

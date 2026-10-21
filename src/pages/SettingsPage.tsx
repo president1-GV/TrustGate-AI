@@ -545,9 +545,7 @@ export function SettingsPage() {
       };
       useAuthStore.getState().setSession(updatedUser);
       try {
-        // SECURITY: Write to sessionStorage (tab-scoped), remove from localStorage
-        sessionStorage.setItem("tg_authenticated_session", JSON.stringify(updatedUser));
-        localStorage.removeItem("tg_authenticated_session");
+        localStorage.setItem("tg_authenticated_session", JSON.stringify(updatedUser));
       } catch {}
 
       setSavedSection("profile");

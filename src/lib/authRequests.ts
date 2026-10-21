@@ -109,31 +109,17 @@ export async function createMemberAccessRequest(params: {
 
   const processId = generateProcessId();
 
-  // SECURITY: Sanitize all user-supplied fields — max lengths enforced to prevent oversized payloads
-  const sanitizedDisplayName = params.displayName.trim().slice(0, 120);
-  const sanitizedBadgeId = (params.badgeId?.trim() || null)?.slice(0, 32) ?? null;
-  const sanitizedStation = stationName.slice(0, 200);
-  const sanitizedRole = roleName.slice(0, 32);
-
-  // SECURITY: Truncate and sanitize the user-agent. Never store the raw full UA string —
-  // it can be used for browser fingerprinting or contain injected content.
-  const rawUa = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  // Extract only the browser/OS identifier — strip any custom strings beyond 60 chars
-  const safeDeviceInfo = rawUa
-    .replace(/[^\w\s./();,:-]/g, "") // strip non-standard chars
-    .slice(0, 60) || "Workstation Terminal";
-
   const payload = {
     email: cleanEmail,
-    display_name: sanitizedDisplayName,
-    badge_id: sanitizedBadgeId,
-    station: sanitizedStation,
-    requested_role: sanitizedRole,
+    display_name: params.displayName.trim(),
+    badge_id: params.badgeId?.trim() || null,
+    station: stationName,
+    requested_role: roleName,
     process_id: processId,
     status: "pending",
     user_id: params.userId || null,
     ip_address: "10.24.112.45 (Govt Intranet)",
-    device_info: safeDeviceInfo,
+    device_info: typeof navigator !== "undefined" ? `${navigator.userAgent.slice(0, 80)}` : "Workstation Terminal",
   };
 
   const { data, error } = await insforge.database
