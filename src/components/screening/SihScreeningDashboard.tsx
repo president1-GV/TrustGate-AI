@@ -31,6 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useAuthStore } from "@/store/auth";
+import { resolveUserBatchId } from "@/lib/personaBadges";
 import { cn } from "@/lib/utils";
 import { insforge, ensureAuthenticatedClient, fetchSecureBlobUrl } from "@/lib/insforge";
 import { saveReport, fetchLiveAuditLogs, fetchCaseDetails, type CaseDetailBundle } from "@/lib/db";
@@ -351,7 +352,7 @@ const MOCK_GATEWAY_SCENARIOS = [
 
 export function SihScreeningDashboard() {
   const user = useAuthStore((s) => s.user);
-  const officerId = user?.badgeId || "SSB-8842-N";
+  const officerId = user?.badgeId || user?.batchId || resolveUserBatchId(user);
 
   const {
     mode,
@@ -2092,7 +2093,7 @@ OPTICAL & BIOMETRIC MEASUREMENTS:
                 <div className="text-slate-400 text-[11px]">Offline Local TensorRT Engine</div>
               </div>
               <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
-                <span className="text-slate-500 font-mono text-[10px]">OFFICER BADGE</span>
+                <span className="text-slate-500 font-mono text-[10px]">OFFICER BADGE / BATCH ID</span>
                 <div className="font-bold text-signal-cyan font-mono text-sm">{officerId}</div>
                 <div className="text-slate-400 text-[11px]">Security Clearance: Level 4 Top Border Inspector</div>
               </div>

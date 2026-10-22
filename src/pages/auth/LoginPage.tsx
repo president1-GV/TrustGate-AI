@@ -341,10 +341,10 @@ export function LoginPage() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: "Officer", email: "officer@trustgate.ai", desc: "Screening & Verification" },
-                { label: "Supervisor", email: "supervisor@trustgate.ai", desc: "All Cases & Risk Override" },
-                { label: "Admin", email: "admin@trustgate.ai", desc: "Full Access & Security Center" },
-                { label: "Analyst", email: "analyst@trustgate.ai", desc: "Read-only Analytics" },
+                { label: "Officer", email: "officer@trustgate.ai", batchId: "FO-8921", desc: "Screening & Verification" },
+                { label: "Supervisor", email: "supervisor@trustgate.ai", batchId: "SUP-4402", desc: "All Cases & Risk Override" },
+                { label: "Admin", email: "admin@trustgate.ai", batchId: "ADM-001", desc: "Full Access & Security Center" },
+                { label: "Analyst", email: "analyst@trustgate.ai", batchId: "FOR-1109", desc: "Read-only Analytics" },
               ].map((persona) => (
                 <button
                   key={persona.label}
@@ -354,8 +354,13 @@ export function LoginPage() {
                   className="p-2.5 text-left rounded-xl bg-slate-50 dark:bg-ink-card/70 hover:bg-slate-100/90 dark:hover:bg-signal-blue/15 border border-slate-200/90 dark:border-slate-800 hover:border-signal-blue/40 transition-all group relative cursor-pointer disabled:opacity-50"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-signal-blue dark:group-hover:text-signal-cyan transition-colors">
-                      {persona.label}
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-signal-blue dark:group-hover:text-signal-cyan transition-colors">
+                        {persona.label}
+                      </span>
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-signal-blue/10 text-signal-blue dark:text-signal-cyan border border-signal-blue/20">
+                        {persona.batchId}
+                      </span>
                     </div>
                     {quickLoggingIn === persona.email ? (
                       <Loader2 className="h-3 w-3 animate-spin text-signal-blue" />

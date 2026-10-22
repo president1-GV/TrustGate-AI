@@ -170,7 +170,7 @@ export function SystemConnectivityBar() {
   };
 
   return (
-    <div className="border-b border-ink-border bg-ink-card/60 px-6 py-2 flex items-center justify-between gap-3 flex-wrap text-xs">
+    <div className="border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-6 py-2 flex items-center justify-between gap-3 flex-wrap text-xs">
       {/* Left: System Status Badges */}
       <div className="flex items-center gap-2.5 flex-wrap">
         {/* Network & Air-Gap status */}
@@ -178,8 +178,8 @@ export function SystemConnectivityBar() {
           className={cn(
             "flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold border transition-all shadow-xs",
             effectiveOnline
-              ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/40"
-              : "bg-amber-500/20 text-amber-900 dark:text-amber-300 border-amber-500/50"
+              ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/40"
+              : "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/50"
           )}
         >
           {effectiveOnline ? (
@@ -198,7 +198,7 @@ export function SystemConnectivityBar() {
         </div>
 
         {/* Real-time Local Database */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold bg-sky-500/15 text-sky-800 dark:text-sky-300 border border-sky-500/40 shadow-xs">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/40 shadow-xs">
           <Database className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
           <span>REALTIME LOCAL DB</span>
           <span className="px-1.5 py-0.5 rounded bg-sky-600 text-white font-bold text-[10px]">
@@ -212,7 +212,7 @@ export function SystemConnectivityBar() {
         </div>
 
         {/* Active Engine */}
-        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold bg-indigo-500/15 text-indigo-800 dark:text-indigo-300 border border-indigo-500/40 shadow-xs">
+        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/40 shadow-xs">
           <Cpu className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
           <span>
             {engineStatus.isDaemonRunning
@@ -223,7 +223,7 @@ export function SystemConnectivityBar() {
         </div>
 
         {/* Ground Truth Benchmark Badge */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-200/90 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xs">
+        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-cyan-400" />
           <span>ICAO 9303 · MIDV-2020 · FF++</span>
         </div>

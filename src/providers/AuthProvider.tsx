@@ -3,6 +3,7 @@ import { insforge, getCurrentAppRole, ensureAuthenticatedClient, isTokenExpired,
 import { useAuthStore } from "@/store/auth";
 import { createMemberAccessRequest } from "@/lib/authRequests";
 import { auditSecurityEvent, AUTHORITATIVE_SYSTEM_ACTOR_ID } from "@/lib/security";
+import { resolveUserBatchId, DEMO_BATCH_IDS } from "@/lib/personaBadges";
 
 interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
@@ -34,22 +35,23 @@ function sanitizeSession<T extends Record<string, any>>(session: T): T {
 
   if (name === "Officer Sarah Chen" || name === "Sarah Chen") {
     name = "Officer";
-    if (badgeId === "TG-OFF-702") badgeId = undefined;
+    if (badgeId === "TG-OFF-702" || !badgeId) badgeId = DEMO_BATCH_IDS.officer;
   } else if (name === "Supervisor Marcus Vance" || name === "Marcus Vance") {
     name = "Supervisor";
-    if (badgeId === "TG-SUP-104") badgeId = undefined;
+    if (badgeId === "TG-SUP-104" || !badgeId) badgeId = DEMO_BATCH_IDS.supervisor;
   } else if (name === "Chief Security Officer" && session.email === "admin@trustgate.ai") {
     name = "Admin";
-    if (badgeId === "TG-SEC-001") badgeId = undefined;
+    if (badgeId === "TG-SEC-001" || !badgeId) badgeId = DEMO_BATCH_IDS.admin;
   } else if (name === "Border Intelligence Analyst" && session.email === "analyst@trustgate.ai") {
     name = "Analyst";
-    if (badgeId === "TG-ANA-409") badgeId = undefined;
+    if (badgeId === "TG-ANA-409" || !badgeId) badgeId = DEMO_BATCH_IDS.analyst;
   }
 
   const sanitized = {
     ...session,
     name,
-    badgeId,
+    badgeId: (badgeId || session.batchId || resolveUserBatchId({ role: session.role, email: session.email, badgeId })),
+    batchId: (badgeId || session.batchId || resolveUserBatchId({ role: session.role, email: session.email, badgeId })),
   };
 
   try {
@@ -192,7 +194,8 @@ async function hydrate(
       email: u.email ?? "",
       name: resolvedName,
       role,
-      badgeId: isDemoAccount ? undefined : (p.badge_id ?? undefined),
+      badgeId: (p.badge_id && p.badge_id.trim()) || resolveUserBatchId({ role, email: u.email }),
+      batchId: (p.badge_id && p.badge_id.trim()) || resolveUserBatchId({ role, email: u.email }),
       station: p.station ?? undefined,
       team: p.team ?? undefined,
       status: userStatus,
@@ -374,7 +377,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: email || (role === "admin" ? "admin@trustgate.ai" : role === "supervisor" ? "supervisor@trustgate.ai" : role === "analyst" ? "analyst@trustgate.ai" : "officer@trustgate.ai"),
       name: matched?.name || defaultName,
       role,
-      badgeId: undefined,
+      badgeId: resolveUserBatchId({ role, email }),
+      batchId: resolveUserBatchId({ role, email }),
       station: matched?.station || "Indo-Nepal ICP Raxaul · Terminal 01 (Offline)",
       team: "Border Defense Rapid Response",
       status: "approved" as const,

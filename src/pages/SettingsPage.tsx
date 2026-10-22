@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/Label";
 import { Separator } from "@/components/ui/Separator";
 import { useAuth, useAuthStore } from "@/providers/AuthProvider";
 import { useTheme } from "@/providers/ThemeProvider";
+import { resolveUserBatchId } from "@/lib/personaBadges";
 import { insforge } from "@/lib/insforge";
 import { sweepExpiredCasesOffline } from "@/lib/offlineDb";
 import { cn } from "@/lib/utils";
@@ -110,7 +111,7 @@ export function SettingsPage() {
 
   // Profile fields
   const [displayName, setDisplayName] = React.useState(user?.name ?? "");
-  const [badgeId, setBadgeId] = React.useState(user?.badgeId ?? "");
+  const [badgeId, setBadgeId] = React.useState(user?.badgeId ?? resolveUserBatchId(user));
   const [station, setStation] = React.useState(user?.station ?? "");
   const [team, setTeam] = React.useState(user?.team ?? "");
   const [profileSaving, setProfileSaving] = React.useState(false);
@@ -119,7 +120,7 @@ export function SettingsPage() {
   React.useEffect(() => {
     if (user) {
       setDisplayName(user.name ?? "");
-      setBadgeId(user.badgeId ?? "");
+      setBadgeId(user.badgeId ?? resolveUserBatchId(user));
       setStation(user.station ?? "");
       setTeam(user.team ?? "");
     }
@@ -517,6 +518,7 @@ export function SettingsPage() {
         ...user,
         name: trimmedName,
         badgeId: trimmedBadge || undefined,
+        batchId: trimmedBadge || undefined,
         station: trimmedStation || undefined,
         team: trimmedTeam || undefined,
       };
@@ -626,12 +628,12 @@ export function SettingsPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="badgeId">Badge / Officer ID</Label>
+                    <Label htmlFor="badgeId">Badge / Batch ID</Label>
                     <Input
                       id="badgeId"
                       value={badgeId}
                       onChange={(e) => setBadgeId(e.target.value)}
-                      placeholder="e.g. OF-04821"
+                      placeholder="e.g. ADM-001 or FO-8921"
                     />
                   </div>
                   <div className="space-y-1.5">

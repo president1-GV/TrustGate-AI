@@ -277,8 +277,8 @@ export function OfficerSwitcherModal({ open, onClose }: OfficerSwitcherModalProp
                       <span className="text-sm font-bold text-slate-100 group-hover:text-signal-cyan transition-colors">
                         {officer.name}
                       </span>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">
-                        {officer.badgeId}
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-signal-blue/15 border border-signal-blue/30 text-signal-cyan font-bold">
+                        BATCH: {officer.badgeId}
                       </span>
                       <span
                         className={cn(

@@ -154,7 +154,7 @@ export function AdminUsersPage() {
                 <thead>
                   <tr className="text-[10px] uppercase tracking-wide text-slate-500 border-b border-ink-border">
                     <th className="text-left font-medium px-5 py-3">User</th>
-                    <th className="text-left font-medium px-5 py-3">Badge ID</th>
+                    <th className="text-left font-medium px-5 py-3">Badge / Batch ID</th>
                     <th className="text-left font-medium px-5 py-3">Station</th>
                     <th className="text-left font-medium px-5 py-3">Team</th>
                     <th className="text-left font-medium px-5 py-3">Role</th>
@@ -188,7 +188,7 @@ export function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-5 py-3.5 font-mono text-xs text-slate-300">
-                        {u.badge_id ?? "—"}
+                        {u.badge_id ? <span className="px-2 py-0.5 rounded bg-signal-blue/15 text-signal-cyan border border-signal-blue/30 font-bold">{u.badge_id}</span> : "—"}
                       </td>
                       <td className="px-5 py-3.5 text-slate-300">{u.station ?? "—"}</td>
                       <td className="px-5 py-3.5 text-slate-300">{u.team ?? "—"}</td>

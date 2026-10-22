@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { resolveUserBatchId } from "@/lib/personaBadges";
 import { SystemConnectivityBar } from "@/components/layout/SystemConnectivityBar";
 
 const SIDEBAR_WIDTH = 240;
@@ -137,6 +138,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     .join("")
     .toUpperCase() ?? "U";
 
+  const userBadgeId = resolveUserBatchId(user);
+
   return (
     <div className="min-h-screen w-full overflow-x-hidden">
       {/* ── Sidebar ── */}
@@ -215,9 +218,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <span className="text-[10px] uppercase font-mono font-bold tracking-wider px-1.5 py-0.5 rounded bg-signal-blue/15 text-signal-cyan border border-signal-blue/30">
                     {user.role}
                   </span>
-                  {user.badgeId && (
-                    <span className="text-[10px] font-mono text-slate-400 truncate">
-                      {user.badgeId}
+                  {userBadgeId && (
+                    <span className="text-[10px] font-mono text-signal-cyan font-bold truncate bg-signal-blue/10 px-1.5 py-0.5 rounded border border-signal-blue/20">
+                      {userBadgeId}
                     </span>
                   )}
                 </div>
@@ -289,9 +292,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="h-7 w-7 rounded-full bg-gradient-to-br from-signal-blue/60 to-signal-purple/60 flex items-center justify-center text-[11px] font-bold text-white">
                   {initials}
                 </div>
-                <span className="text-sm text-slate-200 hidden lg:inline">
+                <span className="text-sm text-slate-200 hidden lg:inline font-medium">
                   {user?.name ?? "User"}
                 </span>
+                {userBadgeId && (
+                  <span className="hidden xl:inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded-md bg-signal-blue/15 text-signal-cyan border border-signal-blue/30 font-bold tracking-wider">
+                    <span className="text-slate-400 text-[10px] font-normal">BATCH:</span>{userBadgeId}
+                  </span>
+                )}
                 <ChevronRight className="h-3.5 w-3.5 text-slate-500 rotate-90" />
               </Button>
 
@@ -304,14 +312,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   />
                   <div className="absolute right-0 mt-2 w-64 z-20 glass-card rounded-card shadow-panel border border-ink-border py-2">
                     <div className="px-4 py-3 border-b border-ink-border mb-1">
-                      <div className="text-sm font-medium text-slate-100">
-                        {user?.name ?? "User"}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-sm font-semibold text-slate-100 truncate">
+                          {user?.name ?? "User"}
+                        </div>
+                        <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-signal-blue/20 text-signal-cyan border border-signal-blue/40 font-bold tracking-wider flex-shrink-0">
+                          {userBadgeId}
+                        </span>
                       </div>
-                      <div className="text-xs text-slate-400 truncate">{user?.email}</div>
-                      <div className="mt-1">
-                        <Badge variant="default" className="text-[10px] uppercase">
+                      <div className="text-xs text-slate-400 truncate mt-0.5">{user?.email}</div>
+                      <div className="mt-2.5 flex items-center justify-between gap-2 pt-2 border-t border-ink-border/50">
+                        <Badge variant="default" className="text-[10px] uppercase font-semibold">
                           {user?.role ?? "officer"}
                         </Badge>
+                        <div className="text-[11px] font-mono flex items-center gap-1.5 text-slate-300">
+                          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Batch ID:</span>
+                          <span className="text-signal-cyan font-bold text-[11px] bg-signal-blue/15 px-1.5 py-0.5 rounded border border-signal-blue/30">{userBadgeId}</span>
+                        </div>
                       </div>
                     </div>
                     <Link

@@ -10,6 +10,7 @@ interface AuthState {
     name?: string;
     role: AppRole;
     badgeId?: string;
+    batchId?: string;
     station?: string;
     team?: string;
     status?: "pending" | "approved" | "rejected";
