@@ -225,7 +225,7 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-blue-100 selection:text-blue-900 relative font-sans">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-signal-blue/20 selection:text-slate-900 dark:selection:text-white relative font-sans">
       {/* ── Top Navigation Bar ── */}
       <nav
         aria-label="Main Navigation"
@@ -897,7 +897,7 @@ export function LandingPage() {
       <section id="how-it-works" className="relative py-20 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <Badge variant="default" className="mb-3 border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 font-bold uppercase tracking-wider text-[11px]">
+            <Badge variant="default" className="mb-3 border-signal-blue/30 bg-signal-blue/10 text-signal-blue font-bold uppercase tracking-wider text-[11px]">
               TrustFusion Risk Engine
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -1067,7 +1067,7 @@ export function LandingPage() {
       {/* ── Section: Architecture (Exact 3 Pillars Preserved) ── */}
       <section id="architecture" className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 pb-20 border-t border-slate-100 dark:border-slate-800/80">
         <div className="text-center mb-12">
-          <Badge variant="default" className="mb-3 border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 font-bold uppercase tracking-wider text-[11px]">
+          <Badge variant="default" className="mb-3 border-signal-blue/30 bg-signal-blue/10 text-signal-blue font-bold uppercase tracking-wider text-[11px]">
             System Architecture
           </Badge>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -1160,7 +1160,7 @@ export function LandingPage() {
         <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 sm:p-10 shadow-xs">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-5">
-              <Badge variant="default" className="mb-3 border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 font-bold uppercase tracking-wider text-[11px]">
+              <Badge variant="default" className="mb-3 border-signal-blue/30 bg-signal-blue/10 text-signal-blue font-bold uppercase tracking-wider text-[11px]">
                 Security Architecture &amp; Capabilities
               </Badge>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mb-4 tracking-tight">

@@ -691,15 +691,15 @@ export function OperationalVideoPlayer() {
         <div className="flex flex-wrap items-center justify-between gap-2 px-1">
           <div className="flex items-center gap-2.5">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600 dark:bg-cyan-400"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-signal-blue opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-signal-blue"></span>
             </span>
             <h3 className="text-xs sm:text-sm font-mono font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-100">
               Interactive Forensic Milestones (Click to Jump)
             </h3>
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border border-slate-700 dark:border-slate-300 text-xs font-mono font-bold shadow-xs">
-            <span className="text-cyan-400 dark:text-blue-600 font-extrabold">{VIDEO_CHAPTERS.length}</span>
+            <span className="text-signal-blue font-extrabold">{VIDEO_CHAPTERS.length}</span>
             <span className="font-bold tracking-wide">Key Screening Chapters</span>
           </div>
         </div>
@@ -718,8 +718,8 @@ export function OperationalVideoPlayer() {
                 className={cn(
                   "p-3.5 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group shadow-xs",
                   isActive
-                    ? "bg-blue-50/90 dark:bg-blue-950/60 border-blue-600 dark:border-cyan-400 text-slate-900 dark:text-white shadow-md ring-2 ring-blue-500/20"
-                    : "bg-white dark:bg-slate-900/90 border-slate-300 dark:border-slate-800 hover:border-blue-500 dark:hover:border-cyan-400 hover:bg-blue-50/30 dark:hover:bg-slate-800/80 text-slate-900 dark:text-slate-100"
+                    ? "bg-signal-blue/10 dark:bg-signal-blue/15 border-signal-blue text-slate-900 dark:text-white shadow-md ring-2 ring-signal-blue/25"
+                    : "bg-white dark:bg-slate-900/90 border-slate-300 dark:border-slate-800 hover:border-signal-blue hover:bg-signal-blue/5 dark:hover:bg-slate-800/80 text-slate-900 dark:text-slate-100"
                 )}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
@@ -728,8 +728,8 @@ export function OperationalVideoPlayer() {
                       className={cn(
                         "h-6 w-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors shadow-2xs",
                         isActive
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-cyan-400 group-hover:bg-blue-50"
+                          ? "bg-signal-blue text-white shadow-glow"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:text-signal-blue group-hover:bg-signal-blue/10"
                       )}
                     >
                       <Icon className="h-3.5 w-3.5" />
@@ -738,8 +738,8 @@ export function OperationalVideoPlayer() {
                       className={cn(
                         "text-[11px] font-mono font-bold tracking-tight",
                         isActive
-                          ? "text-blue-700 dark:text-cyan-300 font-extrabold"
-                          : "text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-cyan-400"
+                          ? "text-signal-blue font-extrabold"
+                          : "text-slate-800 dark:text-slate-200 group-hover:text-signal-blue"
                       )}
                     >
                       {ch.category}
@@ -749,7 +749,7 @@ export function OperationalVideoPlayer() {
                     className={cn(
                       "font-mono text-[11px] font-bold px-2 py-0.5 rounded-md border",
                       isActive
-                        ? "bg-blue-600 border-blue-600 text-white shadow-xs font-extrabold"
+                        ? "bg-signal-blue border-signal-blue text-white shadow-glow font-extrabold"
                         : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                     )}
                   >
@@ -757,7 +757,7 @@ export function OperationalVideoPlayer() {
                   </span>
                 </div>
 
-                <div className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors mb-1.5 leading-snug">
+                <div className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-signal-blue transition-colors mb-1.5 leading-snug">
                   {ch.label}
                 </div>
 
@@ -780,14 +780,14 @@ export function OperationalVideoPlayer() {
         </div>
         <div className="flex items-center gap-2 sm:gap-3 text-slate-800 dark:text-slate-200 font-mono text-xs font-bold flex-wrap">
           <span className="px-2.5 py-1 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xs">
-            RESOLUTION: <span className="text-blue-600 dark:text-cyan-400">1080P</span>
+            RESOLUTION: <span className="text-signal-blue">1080P</span>
           </span>
           <span className="hidden sm:inline text-slate-400">•</span>
           <span className="px-2.5 py-1 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xs">
             LATENCY: <span className="text-emerald-600 dark:text-emerald-400">&lt; 5s PER RUN</span>
           </span>
           <span className="hidden sm:inline text-slate-400">•</span>
-          <span className="px-2.5 py-1 rounded bg-blue-600 text-white dark:bg-cyan-400 dark:text-slate-950 font-extrabold shadow-2xs">
+          <span className="px-2.5 py-1 rounded bg-signal-blue text-white font-extrabold shadow-glow">
             100% DEVICE-LOCAL AI
           </span>
         </div>
