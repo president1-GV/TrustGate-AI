@@ -1156,11 +1156,11 @@ export function LandingPage() {
       </section>
 
       {/* ── Section: Specifications (Exact 10 Items Preserved) ── */}
-      <section id="specifications" className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
-        <div className="rounded-2xl border border-signal-blue/30 dark:border-signal-blue/20 bg-gradient-to-br from-sky-50/70 via-white to-blue-50/40 dark:from-signal-blue/5 dark:via-ink-card/40 dark:to-signal-blue/5 p-6 sm:p-10 shadow-xs">
+      <section id="specifications" className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-20 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 sm:p-10 shadow-xs">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-5">
-              <Badge variant="default" className="mb-3 border-signal-blue/40 text-signal-blue bg-signal-blue/10">
+              <Badge variant="default" className="mb-3 border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 font-bold uppercase tracking-wider text-[11px]">
                 Security Architecture &amp; Capabilities
               </Badge>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mb-4 tracking-tight">
@@ -1275,50 +1275,59 @@ export function LandingPage() {
       </section>
 
       {/* ── Section: Ready to Screen CTA ── */}
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 pb-24 text-center">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight mb-4">
-          Ready to screen your first document?
-        </h2>
-        <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-xl mx-auto text-base leading-relaxed">
-          Sign in as an officer and run live document &amp; biometric screening in under 60 seconds.
-          Full pipeline runs locally on device with zero external dependencies.
-        </p>
-        <div className="flex flex-wrap gap-3.5 justify-center">
-          <Link to="/login">
-            <Button variant="primary" size="lg" className="shadow-glow font-bold h-12 px-6">
-              Get Started
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </Link>
-          <Link to="/login">
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-slate-300 dark:border-ink-border bg-white dark:bg-transparent text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-ink-raised h-12 px-6 shadow-xs font-semibold"
-            >
-              Sign In
-            </Button>
-          </Link>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-24 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="relative rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-14 text-center shadow-xs overflow-hidden">
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-blue-600 to-transparent" />
+          
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 mb-5 shadow-2xs">
+            <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-cyan-400" />
+            <span>HUMAN-IN-THE-LOOP SCREENING · 100% LOCAL PROCESSING</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight mb-4">
+            Ready to screen your first document?
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed font-normal">
+            Sign in as an authorized officer and run live document &amp; biometric screening in under 60 seconds.
+            The complete neural inspection pipeline executes locally on device with zero external dependencies.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center items-center">
+            <Link to={isAuthenticated ? "/screening" : "/login"}>
+              <Button variant="primary" size="lg" className="shadow-xs font-bold h-12 px-7 text-sm bg-blue-600 hover:bg-blue-700 text-white">
+                Get Started
+                <ArrowRight className="h-4 w-4 ml-1.5" />
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 h-12 px-7 shadow-2xs font-semibold text-sm"
+              >
+                Sign In
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-slate-200 dark:border-ink-border bg-slate-50/70 dark:bg-ink-card/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-10">
+      <footer className="border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
             {/* Brand Info */}
             <div className="md:col-span-5">
               <div className="flex items-center gap-3 mb-3">
                 <img
                   src="/trustgate-logo.png"
                   alt="TrustGate AI"
-                  className="h-8 w-8 rounded-lg object-cover shadow-xs border border-signal-blue/40"
+                  className="h-9 w-9 rounded-xl object-cover shadow-xs border border-slate-200 dark:border-slate-700"
                 />
                 <div>
-                  <div className="font-extrabold tracking-[0.18em] text-slate-900 dark:text-white text-xs">
+                  <div className="font-extrabold tracking-[0.16em] text-slate-900 dark:text-white text-sm">
                     TRUSTGATE AI
                   </div>
-                  <div className="text-[10px] text-slate-500 tracking-wide font-mono">
+                  <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-0.5">
                     AI-Assisted Identity Screening Platform
                   </div>
                 </div>
@@ -1326,7 +1335,7 @@ export function LandingPage() {
               <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm leading-relaxed mb-4">
                 Institutional-grade document verification and forensic risk analysis designed to augment border screening personnel.
               </p>
-              <div className="inline-flex items-center gap-2 text-[11px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+              <div className="inline-flex items-center gap-2 text-xs font-mono font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>SYSTEM STATUS: OPERATIONAL</span>
               </div>
@@ -1361,13 +1370,13 @@ export function LandingPage() {
           </div>
 
           {/* Bottom Copyright & Disclaimer */}
-          <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left text-xs text-slate-500">
+          <div className="pt-8 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left text-xs text-slate-500 dark:text-slate-400">
             <div>
               &copy; {new Date().getFullYear()} TRUSTGATE AI. All rights reserved.
             </div>
-            <div className="max-w-md text-[11px] leading-relaxed text-slate-500">
-              AI-generated screening assistance. Final determination remains with authorized personnel.
-              Designed for official border checkpoint decision support.
+            <div className="max-w-xl text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 font-medium">
+              Ethical AI Governance: TrustGate AI operates strictly as an evidentiary decision-support tool.
+              Final clearance and identity admissibility determinations remain strictly with authorized screening officers.
             </div>
           </div>
         </div>
