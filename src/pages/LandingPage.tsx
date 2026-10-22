@@ -27,6 +27,7 @@ import {
   Check,
   Play,
   Radio,
+  CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -46,18 +47,18 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon: Icon, iconClass, title, description, tag }: FeatureCardProps) {
   return (
-    <div className="group rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card/60 p-6 hover:border-signal-blue/40 hover:bg-slate-50/80 dark:hover:bg-ink-raised/60 shadow-xs dark:shadow-none transition-all duration-200">
+    <div className="group relative rounded-2xl border border-slate-200/90 dark:border-ink-border bg-white dark:bg-ink-card/70 p-6 hover:border-signal-blue/50 hover:bg-slate-50/90 dark:hover:bg-ink-raised/80 shadow-xs hover:shadow-lg hover:shadow-signal-blue/5 hover:-translate-y-0.5 transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
-        <div className={cn("h-11 w-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105", iconClass)}>
+        <div className={cn("h-11 w-11 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-xs", iconClass)}>
           <Icon className="h-5 w-5" />
         </div>
         {tag && (
-          <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 group-hover:border-signal-blue/30 transition-colors">
             {tag}
           </span>
         )}
       </div>
-      <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-signal-blue transition-colors">
+      <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-signal-blue transition-colors">
         {title}
       </h3>
       <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -68,18 +69,35 @@ function FeatureCard({ icon: Icon, iconClass, title, description, tag }: Feature
 }
 
 /* ─── Stat Metric Card Component ────────────────────────── */
-function StatMetricCard({ value, label, subtext }: { value: string; label: string; subtext?: string }) {
+function StatMetricCard({
+  value,
+  label,
+  subtext,
+  badge,
+}: {
+  value: string;
+  label: string;
+  subtext?: string;
+  badge?: string;
+}) {
   return (
-    <div className="relative overflow-hidden text-center p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card/60 shadow-xs dark:shadow-none transition-all hover:border-signal-blue/30">
-      <div className="text-3xl sm:text-4xl font-extrabold text-gradient-signal tabular-nums tracking-tight">
+    <div className="group relative overflow-hidden text-center p-5 sm:p-6 rounded-2xl border border-slate-200/90 dark:border-ink-border bg-white dark:bg-ink-card/70 shadow-xs hover:shadow-md hover:border-signal-blue/40 transition-all duration-300 hover:-translate-y-0.5">
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-signal-blue/30 to-transparent group-hover:via-signal-blue transition-all" />
+      <div className="text-3xl sm:text-4xl font-black text-gradient-signal tabular-nums tracking-tight group-hover:scale-105 transition-transform">
         {value}
       </div>
-      <div className="text-xs text-slate-800 dark:text-slate-200 font-bold uppercase tracking-wider mt-2">
+      <div className="text-xs text-slate-900 dark:text-slate-200 font-bold uppercase tracking-wider mt-2.5">
         {label}
       </div>
       {subtext && (
-        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
           {subtext}
+        </div>
+      )}
+      {badge && (
+        <div className="mt-2 inline-flex items-center gap-1 text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-signal-blue/10 text-signal-blue dark:text-signal-cyan border border-signal-blue/20">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          {badge}
         </div>
       )}
     </div>
@@ -88,15 +106,105 @@ function StatMetricCard({ value, label, subtext }: { value: string; label: strin
 
 /* ─── Interactive Pipeline Stages ───────────────────────── */
 const PIPELINE_STAGES = [
-  { num: 1, name: "Image Quality Analysis", code: "01-quality", desc: "Assesses blur, resolution, glare, shadows, and perspective skew before inference." },
-  { num: 2, name: "Document Type Detection", code: "02-detect", desc: "Identifies document class (Passport, National ID, Aadhaar, Visa) and geometry." },
-  { num: 3, name: "OCR & Field Extraction", code: "03-ocr", desc: "Dual-engine PaddleOCR & Tesseract extracts structured identity fields with confidence scoring." },
-  { num: 4, name: "MRZ Analysis & Validation", code: "04-mrz", desc: "Parses TD1/TD2/TD3 zones with ISO/ICAO 9303 checksum calculation." },
-  { num: 5, name: "Cross-Field Rule Validation", code: "05-rules", desc: "Validates consistency between visual zone text, MRZ metadata, and issuing country rules." },
-  { num: 6, name: "Tampering Detection (ELA)", code: "06-forensics", desc: "Error Level Analysis & JPEG artifact inspection to detect photo swapping and text manipulation." },
-  { num: 7, name: "Face Analysis & Similarity", code: "07-face", desc: "128-D spatial gradient biometric comparison with calibrated ICAO 9303 cosine distance." },
-  { num: 8, name: "Identity Consistency Engine", code: "08-identity", desc: "Cross-correlates biometric, textual, and layout parameters for synthesized veracity." },
-  { num: 9, name: "Explainable Risk Scoring", code: "09-risk", desc: "TrustFusion multi-signal synthesis producing composite 0–100 index with reasoning." },
+  {
+    num: 1,
+    name: "Image Quality Analysis",
+    code: "01-quality",
+    desc: "Assesses blur, resolution, glare, shadows, and perspective skew before inference.",
+    engine: "Client-side OpenCV & Canvas Sobel Operator",
+    runtime: "~45ms",
+    input: "Raw Camera / Upload Frame (1080p+)",
+    output: "Quality Score, Blur Ratio & Skew Angle",
+    status: "LOCAL REALTIME",
+  },
+  {
+    num: 2,
+    name: "Document Type Detection",
+    code: "02-detect",
+    desc: "Identifies document class (Passport, National ID, Aadhaar, Visa) and geometry.",
+    engine: "Aspect-Ratio Geometry & Feature Keypoint Matcher",
+    runtime: "~35ms",
+    input: "Quality-Gated Image Matrix",
+    output: "Document Class, ISO Format (TD1/TD2/TD3)",
+    status: "HEURISTIC SENSING",
+  },
+  {
+    num: 3,
+    name: "OCR & Field Extraction",
+    code: "03-ocr",
+    desc: "Dual-engine PaddleOCR & Tesseract extracts structured identity fields with confidence scoring.",
+    engine: "Tesseract.js WASM + Bounding Box Normalizer",
+    runtime: "~180ms",
+    input: "Deskewed Document Visual Zone",
+    output: "Name, DOB, Doc Number, Expiry, Nationality",
+    status: "DUAL OCR ENGINE",
+  },
+  {
+    num: 4,
+    name: "MRZ Analysis & Validation",
+    code: "04-mrz",
+    desc: "Parses TD1/TD2/TD3 zones with ISO/ICAO 9303 checksum calculation.",
+    engine: "ICAO 9303 Checksum Validator (Weights 7-3-1)",
+    runtime: "~15ms",
+    input: "Cropped Machine-Readable Lines",
+    output: "Checksum Matrix & Cross-Zone Divergence",
+    status: "ISO / ICAO STANDARD",
+  },
+  {
+    num: 5,
+    name: "Cross-Field Rule Validation",
+    code: "05-rules",
+    desc: "Validates consistency between visual zone text, MRZ metadata, and issuing country rules.",
+    engine: "Country-Specific Rule Verification Matrices",
+    runtime: "~25ms",
+    input: "Visual OCR Fields + Parsed MRZ Fields",
+    output: "Field-Pair Consistency & Logic Violations",
+    status: "INTEGRITY AUDIT",
+  },
+  {
+    num: 6,
+    name: "Tampering Detection (ELA)",
+    code: "06-forensics",
+    desc: "Error Level Analysis & JPEG artifact inspection to detect photo swapping and text manipulation.",
+    engine: "JPEG Quantization Error Analysis (ELA 95%)",
+    runtime: "~110ms",
+    input: "Full Document Image Matrix",
+    output: "Pixel Heatmap & Resave Delta Histogram",
+    status: "FORENSIC VISION",
+  },
+  {
+    num: 7,
+    name: "Face Analysis & Similarity",
+    code: "07-face",
+    desc: "128-D spatial gradient biometric comparison with calibrated ICAO 9303 cosine distance.",
+    engine: "128-D HOG Descriptor + YCbCr Skin Locus Tracker",
+    runtime: "~85ms",
+    input: "Doc Photo Crop vs Live Officer Web-Cam",
+    output: "Cosine Similarity & Confidence Interval",
+    status: "BIOMETRIC ENGINE",
+  },
+  {
+    num: 8,
+    name: "Identity Consistency Engine",
+    code: "08-identity",
+    desc: "Cross-correlates biometric, textual, and layout parameters for synthesized veracity.",
+    engine: "Multi-Source Corroboration Engine",
+    runtime: "~30ms",
+    input: "Biometrics + OCR + MRZ + Watchlist Data",
+    output: "Identity Verification Confidence State",
+    status: "IDENTITY SYNTHESIS",
+  },
+  {
+    num: 9,
+    name: "Explainable Risk Scoring",
+    code: "09-risk",
+    desc: "TrustFusion multi-signal synthesis producing composite 0–100 index with reasoning.",
+    engine: "TrustFusion Multi-Signal Weighted Decision Core",
+    runtime: "~20ms",
+    input: "Aggregated Pipeline Signal Vector",
+    output: "0–100 Risk Score, Severity & Reason Codes",
+    status: "EXPLAINABLE FUSION",
+  },
 ];
 
 /* ─── Main Institutional Landing Page ───────────────────── */
@@ -105,6 +213,7 @@ export function LandingPage() {
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [activeStage, setActiveStage] = React.useState(1);
+  const [previewSpecimen, setPreviewSpecimen] = React.useState<"genuine" | "tampered">("genuine");
 
   // Close mobile menu on Escape key
   React.useEffect(() => {
@@ -116,18 +225,21 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-ink text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-signal-blue/20 selection:text-signal-blue relative">
-      {/* Soft Ambient Illumination (Eliminates harsh graph-paper grid lines, adds institutional depth) */}
+    <div className="min-h-screen bg-white dark:bg-ink text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-signal-blue/20 selection:text-signal-blue relative font-sans">
+      {/* High-Tech Ambient Matrix Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-gradient-to-b from-signal-blue/[0.04] via-sky-400/[0.02] to-transparent dark:from-signal-blue/[0.08] dark:via-transparent rounded-full blur-3xl" />
-        <div className="absolute top-[800px] -right-48 w-[650px] h-[450px] bg-slate-100/60 dark:bg-signal-purple/5 rounded-full blur-3xl" />
-        <div className="absolute top-[1800px] -left-48 w-[600px] h-[400px] bg-sky-50/40 dark:bg-signal-blue/5 rounded-full blur-3xl" />
+        {/* Subtle grid pattern for radar precision look */}
+        <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.035] dark:opacity-[0.06]" />
+        {/* Luminous atmospheric orbs */}
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-gradient-to-b from-signal-blue/[0.06] via-sky-400/[0.03] to-transparent dark:from-signal-blue/[0.12] dark:via-transparent rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-[800px] -right-48 w-[650px] h-[450px] bg-slate-100/60 dark:bg-signal-purple/8 rounded-full blur-3xl" />
+        <div className="absolute top-[1800px] -left-48 w-[600px] h-[400px] bg-sky-50/50 dark:bg-signal-blue/8 rounded-full blur-3xl" />
       </div>
 
       {/* ── Top Navigation Bar ── */}
       <nav
         aria-label="Main Navigation"
-        className="sticky top-0 z-50 border-b border-slate-200 dark:border-ink-border bg-white/95 dark:bg-ink/90 backdrop-blur-md transition-colors"
+        className="sticky top-0 z-50 border-b border-slate-200/90 dark:border-ink-border bg-white/95 dark:bg-ink/90 backdrop-blur-md transition-colors shadow-2xs"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* Brand Mark */}
@@ -135,11 +247,14 @@ export function LandingPage() {
             to="/"
             className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue rounded-lg p-1"
           >
-            <img
-              src="/trustgate-logo.png"
-              alt="TrustGate AI Logo"
-              className="h-9 w-9 rounded-xl object-cover shadow-xs border border-signal-blue/40 group-hover:scale-105 transition-transform"
-            />
+            <div className="relative">
+              <img
+                src="/trustgate-logo.png"
+                alt="TrustGate AI Logo"
+                className="h-9 w-9 rounded-xl object-cover shadow-xs border border-signal-blue/40 group-hover:scale-105 transition-transform"
+              />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-ink" />
+            </div>
             <div className="flex flex-col min-w-0">
               <span className="font-extrabold tracking-[0.18em] text-slate-900 dark:text-white text-sm leading-tight group-hover:text-signal-blue transition-colors">
                 TRUSTGATE
@@ -156,7 +271,7 @@ export function LandingPage() {
               href="#demo-video"
               className="hover:text-slate-900 dark:hover:text-white transition-colors py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue rounded flex items-center gap-1.5 text-signal-blue dark:text-signal-cyan font-semibold"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-signal-blue animate-pulse" />
+              <span className="h-2 w-2 rounded-full bg-signal-blue animate-pulse" />
               Live Demo
             </a>
             <a
@@ -359,24 +474,24 @@ export function LandingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           {/* Left Column: Headline & Action */}
           <div className="lg:col-span-7 text-center lg:text-left">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-signal-blue/40 bg-signal-blue/10 px-3.5 py-1 text-xs font-semibold text-signal-blue mb-5 shadow-xs">
+            <div className="inline-flex items-center gap-2 rounded-full border border-signal-blue/40 bg-signal-blue/10 px-3.5 py-1 text-xs font-semibold text-signal-blue mb-5 shadow-xs">
               <Shield className="h-3.5 w-3.5 text-signal-blue" />
               <span>AI-POWERED IDENTITY &amp; DOCUMENT SECURITY PLATFORM</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-[1.12]">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-slate-100 leading-[1.12]">
               See Beyond <br />
               <span className="text-gradient-signal">the Document.</span>
             </h1>
 
-            <p className="mt-5 text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+            <p className="mt-5 text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
               AI-assisted border security screening that detects inconsistencies,
               manipulation, and identity anomalies — before they become security risks.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-3.5">
               <Link to={isAuthenticated ? "/screening" : "/login"}>
-                <Button variant="primary" size="lg" className="shadow-glow font-semibold h-12 px-6">
+                <Button variant="primary" size="lg" className="shadow-glow font-bold h-12 px-6 text-sm">
                   <ScanLine className="h-5 w-5 mr-1" />
                   {isAuthenticated ? "Launch Live Screening" : "Start Screening"}
                 </Button>
@@ -420,8 +535,8 @@ export function LandingPage() {
 
             {/* Trust Statement */}
             <div className="mt-5 flex items-center justify-center lg:justify-start">
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800 dark:text-risk-low bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1 rounded-full">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-risk-low flex-shrink-0" />
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1 rounded-full shadow-2xs">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                 <span>HUMAN-IN-THE-LOOP — AI ASSISTS OFFICERS, NOT REPLACES THEM</span>
               </span>
             </div>
@@ -429,18 +544,53 @@ export function LandingPage() {
 
           {/* Right Column: Live Screening Console Demonstration Preview */}
           <div className="lg:col-span-5 w-full">
-            <div className="relative rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-5 sm:p-6 shadow-panel">
+            <div className="relative rounded-2xl border border-slate-200/90 dark:border-ink-border bg-white/95 dark:bg-ink-card p-5 sm:p-6 shadow-panel backdrop-blur-xl">
               {/* Terminal / Specimen Header */}
               <div className="flex items-center justify-between pb-3.5 mb-3 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2">
                   <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="font-mono text-xs font-semibold uppercase text-slate-700 dark:text-slate-300">
+                  <span className="font-mono text-xs font-bold uppercase text-slate-800 dark:text-slate-200 tracking-wider">
                     SCREENING PIPELINE
                   </span>
                 </div>
-                <Badge variant="pass" className="text-[10px] font-mono">
-                  VERIFIED GENUINE
+                <Badge
+                  variant={previewSpecimen === "genuine" ? "pass" : "critical"}
+                  className="text-[10px] font-mono font-bold"
+                >
+                  {previewSpecimen === "genuine" ? "VERIFIED GENUINE" : "TAMPERING FLAGGED"}
                 </Badge>
+              </div>
+
+              {/* Dynamic Interactive Specimen Toggle (Adds live dynamism) */}
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-3.5">
+                <button
+                  type="button"
+                  onClick={() => setPreviewSpecimen("genuine")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg text-xs font-semibold font-mono transition-all cursor-pointer",
+                    previewSpecimen === "genuine"
+                      ? "bg-white dark:bg-ink-card text-emerald-600 dark:text-emerald-400 shadow-xs border border-emerald-500/30 font-bold"
+                      : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                  )}
+                  title="Simulate genuine passport verification"
+                >
+                  <CheckCircle className="h-3 w-3 text-emerald-500" />
+                  <span>GENUINE DEMO</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewSpecimen("tampered")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg text-xs font-semibold font-mono transition-all cursor-pointer",
+                    previewSpecimen === "tampered"
+                      ? "bg-white dark:bg-ink-card text-rose-600 dark:text-rose-400 shadow-xs border border-rose-500/30 font-bold"
+                      : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                  )}
+                  title="Simulate fraudulent identity detection"
+                >
+                  <AlertTriangle className="h-3 w-3 text-rose-500" />
+                  <span>ALTERED DEMO</span>
+                </button>
               </div>
 
               {/* Live Operational Video Quick-Banner Link */}
@@ -462,46 +612,74 @@ export function LandingPage() {
               <div className="grid grid-cols-2 gap-2 text-xs mb-4 p-3 rounded-xl bg-slate-50 dark:bg-ink-raised/60 border border-slate-200/80 dark:border-slate-800/80 font-mono">
                 <div>
                   <span className="text-slate-500 block text-[10px]">DOCUMENT TYPE</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">TD3 PASSPORT</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {previewSpecimen === "genuine" ? "TD3 PASSPORT" : "ALTERED TD3 PASSPORT"}
+                  </span>
                 </div>
                 <div>
                   <span className="text-slate-500 block text-[10px]">PROCESSING RUN</span>
-                  <span className="font-semibold text-signal-blue">RUN-2026-LIVE</span>
+                  <span className="font-semibold text-signal-blue">
+                    {previewSpecimen === "genuine" ? "RUN-2026-LIVE" : "RUN-2026-SUSPECT"}
+                  </span>
                 </div>
               </div>
 
               {/* Pipeline Live Checks */}
               <div className="space-y-2.5 mb-5 text-xs">
-                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40">
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40 transition-colors">
                   <div className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-200">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-risk-low flex-shrink-0" />
+                    {previewSpecimen === "genuine" ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                    )}
                     <span>Visual OCR Extraction</span>
                   </div>
-                  <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400">98.4% conf</span>
+                  <span className={cn("font-mono text-[11px] font-semibold", previewSpecimen === "genuine" ? "text-slate-600 dark:text-slate-400" : "text-amber-500")}>
+                    {previewSpecimen === "genuine" ? "98.4% conf" : "78.2% (Field Blur)"}
+                  </span>
                 </div>
 
-                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40">
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40 transition-colors">
                   <div className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-200">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-risk-low flex-shrink-0" />
+                    {previewSpecimen === "genuine" ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-rose-500 flex-shrink-0" />
+                    )}
                     <span>MRZ Checksum Validation</span>
                   </div>
-                  <span className="font-mono text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">PASS (TD3)</span>
+                  <span className={cn("font-mono text-[11px] font-bold", previewSpecimen === "genuine" ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                    {previewSpecimen === "genuine" ? "PASS (TD3)" : "FAIL (Digit 7 ≠ 9)"}
+                  </span>
                 </div>
 
-                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40">
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40 transition-colors">
                   <div className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-200">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-risk-low flex-shrink-0" />
+                    {previewSpecimen === "genuine" ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-rose-500 flex-shrink-0" />
+                    )}
                     <span>ELA Tampering Forensics</span>
                   </div>
-                  <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400">0% anomaly</span>
+                  <span className={cn("font-mono text-[11px] font-bold", previewSpecimen === "genuine" ? "text-slate-600 dark:text-slate-400" : "text-rose-600 dark:text-rose-400")}>
+                    {previewSpecimen === "genuine" ? "0% anomaly" : "84% (Photo Swap)"}
+                  </span>
                 </div>
 
-                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40">
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-ink-card/40 transition-colors">
                   <div className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-200">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-risk-low flex-shrink-0" />
+                    {previewSpecimen === "genuine" ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-rose-500 flex-shrink-0" />
+                    )}
                     <span>Biometric Face Verification</span>
                   </div>
-                  <span className="font-mono text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">MATCH (94%)</span>
+                  <span className={cn("font-mono text-[11px] font-bold", previewSpecimen === "genuine" ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                    {previewSpecimen === "genuine" ? "MATCH (94%)" : "MISMATCH (38%)"}
+                  </span>
                 </div>
               </div>
 
@@ -511,13 +689,19 @@ export function LandingPage() {
                   <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wide">
                     COMPOSITE RISK INDEX
                   </div>
-                  <div className="text-xl font-bold text-emerald-700 dark:text-risk-low font-mono">
-                    8 / 100 <span className="text-xs font-normal text-slate-500">(LOW RISK)</span>
+                  <div className={cn("text-xl font-bold font-mono", previewSpecimen === "genuine" ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                    {previewSpecimen === "genuine" ? (
+                      <>8 / 100 <span className="text-xs font-normal text-slate-500">(LOW RISK)</span></>
+                    ) : (
+                      <>86 / 100 <span className="text-xs font-normal text-rose-500">(HIGH RISK)</span></>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] font-mono text-slate-500 block uppercase">CRYPTO SEAL</span>
-                  <span className="text-[11px] font-mono text-signal-blue font-semibold">SHA-256 SEALED</span>
+                  <span className={cn("text-[11px] font-mono font-bold", previewSpecimen === "genuine" ? "text-signal-blue" : "text-rose-500")}>
+                    {previewSpecimen === "genuine" ? "SHA-256 SEALED" : "FLAGGED RECORD"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -532,21 +716,25 @@ export function LandingPage() {
             value="9"
             label="TrustGate Fusion Engine Stages"
             subtext="End-to-end sequential pipeline"
+            badge="LOCAL INFERENCE"
           />
           <StatMetricCard
             value="32"
             label="Database Tables"
             subtext="PostgreSQL with RLS & Audit Ledger"
+            badge="143 ACTIVE CASES"
           />
           <StatMetricCard
             value="4"
             label="RBAC Roles"
             subtext="Officer, Supervisor, Admin, Analyst"
+            badge="ROLE ENFORCED"
           />
           <StatMetricCard
             value="< 5s"
             label="Avg Processing Time"
             subtext="Zero external API dependencies"
+            badge="WASM ACCELERATED"
           />
         </div>
       </section>
@@ -575,8 +763,9 @@ export function LandingPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Problem Card */}
-          <div className="rounded-2xl border border-rose-200 dark:border-risk-high/30 bg-rose-50/60 dark:bg-risk-high/5 p-7 sm:p-8 shadow-xs">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 mb-4">
+          <div className="relative rounded-2xl border border-rose-200/90 dark:border-risk-high/30 bg-rose-50/60 dark:bg-risk-high/5 p-7 sm:p-8 shadow-xs hover:border-rose-400/50 transition-colors">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500/80 via-rose-500 to-rose-400 rounded-t-2xl" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 mb-4 shadow-2xs">
               <AlertTriangle className="h-3.5 w-3.5" />
               The Problem
             </div>
@@ -603,8 +792,9 @@ export function LandingPage() {
           </div>
 
           {/* Solution Card */}
-          <div className="rounded-2xl border border-emerald-200 dark:border-risk-low/30 bg-emerald-50/60 dark:bg-risk-low/5 p-7 sm:p-8 shadow-xs">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 mb-4">
+          <div className="relative rounded-2xl border border-emerald-200/90 dark:border-risk-low/30 bg-emerald-50/60 dark:bg-risk-low/5 p-7 sm:p-8 shadow-xs hover:border-emerald-400/50 transition-colors">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500/80 via-emerald-500 to-teal-400 rounded-t-2xl" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 mb-4 shadow-2xs">
               <CheckCircle2 className="h-3.5 w-3.5" />
               The Solution
             </div>
@@ -731,6 +921,10 @@ export function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left: The 9 Pipeline Steps */}
             <div className="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-5 sm:p-6 shadow-xs space-y-2">
+              <div className="flex items-center justify-between pb-2 mb-1 border-b border-slate-100 dark:border-slate-800 text-[11px] font-mono text-slate-500 uppercase">
+                <span>PIPELINE STAGE SEQUENCE</span>
+                <span className="text-signal-blue">SELECT TO INSPECT SPECIFICATION</span>
+              </div>
               {PIPELINE_STAGES.map((stg) => {
                 const isSelected = activeStage === stg.num;
                 return (
@@ -741,16 +935,16 @@ export function LandingPage() {
                     className={cn(
                       "w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer",
                       isSelected
-                        ? "border-signal-blue bg-signal-blue/10 dark:bg-signal-blue/15 text-slate-900 dark:text-white"
+                        ? "border-signal-blue bg-signal-blue/10 dark:bg-signal-blue/15 text-slate-900 dark:text-white shadow-xs"
                         : "border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-ink-raised/60 text-slate-700 dark:text-slate-300"
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className={cn(
-                          "h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold font-mono",
+                          "h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold font-mono transition-transform",
                           isSelected
-                            ? "bg-signal-blue text-white"
+                            ? "bg-signal-blue text-white scale-105"
                             : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                         )}
                       >
@@ -761,7 +955,12 @@ export function LandingPage() {
                         <div className="text-[11px] font-mono text-slate-500">{stg.code}</div>
                       </div>
                     </div>
-                    <ChevronRight className={cn("h-4 w-4 transition-transform", isSelected ? "text-signal-blue translate-x-1" : "text-slate-400")} />
+                    <div className="flex items-center gap-2">
+                      <span className="hidden sm:inline-block text-[10px] font-mono text-slate-400">
+                        {stg.runtime}
+                      </span>
+                      <ChevronRight className={cn("h-4 w-4 transition-transform", isSelected ? "text-signal-blue translate-x-1" : "text-slate-400")} />
+                    </div>
                   </button>
                 );
               })}
@@ -769,18 +968,51 @@ export function LandingPage() {
 
             {/* Right: Stage Inspector & 3 Realistic Example Findings */}
             <div className="lg:col-span-6 space-y-4">
-              {/* Active Stage Inspector Box */}
-              <div className="rounded-2xl border border-signal-blue/30 bg-sky-50/50 dark:bg-signal-blue/5 p-5 shadow-xs">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-signal-blue uppercase mb-2">
-                  <Cpu className="h-4 w-4" />
-                  <span>Stage 0{activeStage} Specification</span>
+              {/* Active Stage Inspector Box (Enriched with Deep Dynamic Details) */}
+              <div className="rounded-2xl border border-signal-blue/40 bg-sky-50/60 dark:bg-signal-blue/10 p-5 shadow-xs transition-all">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 text-xs font-mono font-bold text-signal-blue uppercase">
+                    <Cpu className="h-4 w-4 text-signal-blue" />
+                    <span>Stage 0{activeStage} Specification</span>
+                  </div>
+                  <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-signal-blue/15 text-signal-cyan border border-signal-blue/30 font-bold">
+                    {PIPELINE_STAGES[activeStage - 1].status}
+                  </span>
                 </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                   {PIPELINE_STAGES[activeStage - 1].name}
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
                   {PIPELINE_STAGES[activeStage - 1].desc}
                 </p>
+
+                {/* Technical Telemetry Specs */}
+                <div className="mt-3.5 pt-3 border-t border-signal-blue/20 grid grid-cols-2 gap-2 text-[11px] font-mono">
+                  <div className="p-2 rounded-lg bg-white/70 dark:bg-ink-card/60 border border-signal-blue/15">
+                    <span className="text-[9px] text-slate-400 block font-sans uppercase">ENGINE CORE</span>
+                    <span className="text-slate-800 dark:text-slate-200 font-semibold truncate block">
+                      {PIPELINE_STAGES[activeStage - 1].engine}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white/70 dark:bg-ink-card/60 border border-signal-blue/15">
+                    <span className="text-[9px] text-slate-400 block font-sans uppercase">AVG RUNTIME</span>
+                    <span className="text-signal-blue font-bold truncate block">
+                      {PIPELINE_STAGES[activeStage - 1].runtime} (Local)
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white/70 dark:bg-ink-card/60 border border-signal-blue/15">
+                    <span className="text-[9px] text-slate-400 block font-sans uppercase">INPUT PAYLOAD</span>
+                    <span className="text-slate-700 dark:text-slate-300 truncate block">
+                      {PIPELINE_STAGES[activeStage - 1].input}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white/70 dark:bg-ink-card/60 border border-signal-blue/15">
+                    <span className="text-[9px] text-slate-400 block font-sans uppercase">OUTPUT ARTIFACT</span>
+                    <span className="text-slate-700 dark:text-slate-300 truncate block">
+                      {PIPELINE_STAGES[activeStage - 1].output}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Example 1: HIGH RISK (Exact points preserved) */}
@@ -859,6 +1091,7 @@ export function LandingPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
+              tier: "TIER 01 · CLIENT EXECUTION",
               icon: Layers,
               iconClass: "bg-signal-blue/15 text-signal-blue",
               title: "Frontend Client",
@@ -872,6 +1105,7 @@ export function LandingPage() {
               ],
             },
             {
+              tier: "TIER 02 · DATA PLATFORM",
               icon: Server,
               iconClass: "bg-signal-cyan/15 text-signal-cyan",
               title: "Backend (InsForge)",
@@ -885,6 +1119,7 @@ export function LandingPage() {
               ],
             },
             {
+              tier: "TIER 03 · INFERENCE PIPELINE",
               icon: BrainCircuit,
               iconClass: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
               title: "TrustGate Fusion Engine",
@@ -902,12 +1137,19 @@ export function LandingPage() {
             return (
               <div
                 key={col.title}
-                className="rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs hover:border-signal-blue/40 transition-colors"
+                className="group relative rounded-2xl border border-slate-200/90 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs hover:border-signal-blue/40 transition-all duration-300 hover:-translate-y-0.5"
               >
-                <div className={cn("h-11 w-11 rounded-xl flex items-center justify-center mb-4", col.iconClass)}>
-                  <Icon className="h-5 w-5" />
+                <div className="flex items-center justify-between mb-4">
+                  <div className={cn("h-11 w-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110", col.iconClass)}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <span className="text-[9px] font-mono font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    {col.tier}
+                  </span>
                 </div>
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg">{col.title}</h3>
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-signal-blue transition-colors">
+                  {col.title}
+                </h3>
                 <div className="text-xs text-slate-500 dark:text-slate-400 mb-4">{col.subtitle}</div>
                 <ul className="space-y-2.5">
                   {col.items.map((item) => (
@@ -940,7 +1182,7 @@ export function LandingPage() {
               </p>
               <div>
                 <Link to={isAuthenticated ? "/screening" : "/login"}>
-                  <Button variant="primary" size="lg" className="shadow-glow font-semibold">
+                  <Button variant="primary" size="lg" className="shadow-glow font-bold">
                     Launch Dashboard
                     <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>
@@ -964,7 +1206,7 @@ export function LandingPage() {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200/90 dark:border-ink-border bg-white dark:bg-ink-card/60 p-3 shadow-2xs"
+                  className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200/90 dark:border-ink-border bg-white dark:bg-ink-card/60 p-3 shadow-2xs hover:border-signal-blue/30 transition-colors"
                 >
                   {item.done ? (
                     <div className="h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center flex-shrink-0">
@@ -999,7 +1241,7 @@ export function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs">
+            <div className="rounded-2xl border border-slate-200/90 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs hover:border-signal-blue/40 transition-colors">
               <div className="h-10 w-10 rounded-xl bg-signal-blue/15 text-signal-blue flex items-center justify-center mb-3">
                 <ShieldCheck className="h-5 w-5" />
               </div>
@@ -1009,7 +1251,7 @@ export function LandingPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs">
+            <div className="rounded-2xl border border-slate-200/90 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs hover:border-signal-cyan/40 transition-colors">
               <div className="h-10 w-10 rounded-xl bg-signal-cyan/15 text-signal-cyan flex items-center justify-center mb-3">
                 <Binary className="h-5 w-5" />
               </div>
@@ -1019,7 +1261,7 @@ export function LandingPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs">
+            <div className="rounded-2xl border border-slate-200/90 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs hover:border-purple-400/40 transition-colors">
               <div className="h-10 w-10 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3">
                 <Lock className="h-5 w-5" />
               </div>
@@ -1029,7 +1271,7 @@ export function LandingPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs">
+            <div className="rounded-2xl border border-slate-200/90 dark:border-ink-border bg-white dark:bg-ink-card p-6 shadow-xs hover:border-emerald-400/40 transition-colors">
               <div className="h-10 w-10 rounded-xl bg-emerald-500/15 text-emerald-700 dark:text-risk-low flex items-center justify-center mb-3">
                 <FileCheck className="h-5 w-5" />
               </div>
@@ -1053,7 +1295,7 @@ export function LandingPage() {
         </p>
         <div className="flex flex-wrap gap-3.5 justify-center">
           <Link to="/login">
-            <Button variant="primary" size="lg" className="shadow-glow font-semibold h-12 px-6">
+            <Button variant="primary" size="lg" className="shadow-glow font-bold h-12 px-6">
               Get Started
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
@@ -1062,7 +1304,7 @@ export function LandingPage() {
             <Button
               variant="outline"
               size="lg"
-              className="border-slate-300 dark:border-ink-border bg-white dark:bg-transparent text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-ink-raised h-12 px-6 shadow-xs font-medium"
+              className="border-slate-300 dark:border-ink-border bg-white dark:bg-transparent text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-ink-raised h-12 px-6 shadow-xs font-semibold"
             >
               Sign In
             </Button>
