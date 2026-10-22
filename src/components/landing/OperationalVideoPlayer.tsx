@@ -687,21 +687,25 @@ export function OperationalVideoPlayer() {
       </div>
 
       {/* ── Interactive Chapter Navigator & System Telemetry ── */}
-      <div>
-        <div className="flex items-center justify-between mb-3 px-1">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-signal-blue" />
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+          <div className="flex items-center gap-2.5">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600 dark:bg-cyan-400"></span>
+            </span>
+            <h3 className="text-xs sm:text-sm font-mono font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-100">
               Interactive Forensic Milestones (Click to Jump)
             </h3>
           </div>
-          <span className="text-[11px] font-mono text-slate-500">
-            {VIDEO_CHAPTERS.length} Key Screening Chapters
-          </span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border border-slate-700 dark:border-slate-300 text-xs font-mono font-bold shadow-xs">
+            <span className="text-cyan-400 dark:text-blue-600 font-extrabold">{VIDEO_CHAPTERS.length}</span>
+            <span className="font-bold tracking-wide">Key Screening Chapters</span>
+          </div>
         </div>
 
         {/* Dynamic Chapter Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {VIDEO_CHAPTERS.map((ch, idx) => {
             const isActive = activeChapterIndex === idx;
             const Icon = ch.icon;
@@ -712,45 +716,52 @@ export function OperationalVideoPlayer() {
                 type="button"
                 onClick={() => handleJumpToChapter(ch.time)}
                 className={cn(
-                  "p-3 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group",
+                  "p-3.5 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group shadow-xs",
                   isActive
-                    ? "bg-signal-blue/10 dark:bg-signal-blue/15 border-signal-blue text-slate-900 dark:text-white shadow-sm ring-1 ring-signal-blue/40"
-                    : "bg-white dark:bg-ink-card/60 border-slate-200 dark:border-ink-border hover:border-signal-blue/40 hover:bg-slate-50 dark:hover:bg-ink-raised/60 text-slate-700 dark:text-slate-300"
+                    ? "bg-blue-50/90 dark:bg-blue-950/60 border-blue-600 dark:border-cyan-400 text-slate-900 dark:text-white shadow-md ring-2 ring-blue-500/20"
+                    : "bg-white dark:bg-slate-900/90 border-slate-300 dark:border-slate-800 hover:border-blue-500 dark:hover:border-cyan-400 hover:bg-blue-50/30 dark:hover:bg-slate-800/80 text-slate-900 dark:text-slate-100"
                 )}
               >
-                <div className="flex items-start justify-between gap-2 mb-1.5">
+                <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
                     <div
                       className={cn(
-                        "h-6 w-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors",
+                        "h-6 w-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors shadow-2xs",
                         isActive
-                          ? "bg-signal-blue text-white"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:text-signal-blue"
+                          ? "bg-blue-600 text-white"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-cyan-400 group-hover:bg-blue-50"
                       )}
                     >
                       <Icon className="h-3.5 w-3.5" />
                     </div>
-                    <span className="text-[10px] font-mono font-bold tracking-tight text-slate-500 dark:text-slate-400">
+                    <span
+                      className={cn(
+                        "text-[11px] font-mono font-bold tracking-tight",
+                        isActive
+                          ? "text-blue-700 dark:text-cyan-300 font-extrabold"
+                          : "text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-cyan-400"
+                      )}
+                    >
                       {ch.category}
                     </span>
                   </div>
                   <span
                     className={cn(
-                      "font-mono text-[10px] px-1.5 py-0.5 rounded",
+                      "font-mono text-[11px] font-bold px-2 py-0.5 rounded-md border",
                       isActive
-                        ? "bg-signal-blue text-white font-bold"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        ? "bg-blue-600 border-blue-600 text-white shadow-xs font-extrabold"
+                        : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                     )}
                   >
                     {formatTime(ch.time)}
                   </span>
                 </div>
 
-                <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 group-hover:text-signal-blue transition-colors mb-1">
+                <div className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors mb-1.5 leading-snug">
                   {ch.label}
                 </div>
 
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug line-clamp-2">
+                <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed line-clamp-2">
                   {ch.desc}
                 </p>
               </button>
@@ -760,19 +771,25 @@ export function OperationalVideoPlayer() {
       </div>
 
       {/* ── Operational Telemetry Summary Strip ── */}
-      <div className="p-4 rounded-xl border border-slate-200 dark:border-ink-border bg-slate-50/70 dark:bg-ink-card/40 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-risk-low flex-shrink-0" />
-          <span className="text-slate-700 dark:text-slate-300 font-medium">
+      <div className="p-4 rounded-xl border-2 border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/90 flex flex-wrap items-center justify-between gap-3 text-xs shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+          <span className="text-slate-900 dark:text-slate-100 font-bold text-xs sm:text-sm">
             Recorded Live on TrustGate AI Border Screening Node
           </span>
         </div>
-        <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-          <span>RESOLUTION: 1080P</span>
-          <span>•</span>
-          <span>LATENCY: &lt; 5s PER RUN</span>
-          <span>•</span>
-          <span className="text-signal-blue font-semibold">100% DEVICE-LOCAL AI</span>
+        <div className="flex items-center gap-2 sm:gap-3 text-slate-800 dark:text-slate-200 font-mono text-xs font-bold flex-wrap">
+          <span className="px-2.5 py-1 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xs">
+            RESOLUTION: <span className="text-blue-600 dark:text-cyan-400">1080P</span>
+          </span>
+          <span className="hidden sm:inline text-slate-400">•</span>
+          <span className="px-2.5 py-1 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xs">
+            LATENCY: <span className="text-emerald-600 dark:text-emerald-400">&lt; 5s PER RUN</span>
+          </span>
+          <span className="hidden sm:inline text-slate-400">•</span>
+          <span className="px-2.5 py-1 rounded bg-blue-600 text-white dark:bg-cyan-400 dark:text-slate-950 font-extrabold shadow-2xs">
+            100% DEVICE-LOCAL AI
+          </span>
         </div>
       </div>
     </div>
