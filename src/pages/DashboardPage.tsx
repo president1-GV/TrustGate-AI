@@ -633,10 +633,7 @@ export function DashboardPage() {
               </span>
               <span>LIVE DATABASE</span>
             </div>
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-              <span>IND-NPL ICP RAXAUL</span>
-            </div>
+
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1.5 flex items-center gap-2 flex-wrap">
             <span>
