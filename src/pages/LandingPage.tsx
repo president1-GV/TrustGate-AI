@@ -1276,37 +1276,45 @@ export function LandingPage() {
 
       {/* ── Section: Ready to Screen CTA ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-24 border-t border-slate-100 dark:border-slate-800/80">
-        <div className="relative rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-14 text-center shadow-xs overflow-hidden">
-          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-blue-600 to-transparent" />
+        <div className="relative rounded-3xl bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-950 text-white p-8 sm:p-14 text-center shadow-xl border border-blue-600/40 overflow-hidden">
+          <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
           
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 mb-5 shadow-2xs">
-            <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-cyan-400" />
-            <span>HUMAN-IN-THE-LOOP SCREENING · 100% LOCAL PROCESSING</span>
-          </div>
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-mono font-bold text-cyan-200 bg-white/10 border border-white/20 mb-5 shadow-inner backdrop-blur-md">
+              <ShieldCheck className="h-4 w-4 text-cyan-300" />
+              <span>HUMAN-IN-THE-LOOP SCREENING · 100% LOCAL PROCESSING</span>
+            </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight mb-4">
-            Ready to screen your first document?
-          </h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed font-normal">
-            Sign in as an authorized officer and run live document &amp; biometric screening in under 60 seconds.
-            The complete neural inspection pipeline executes locally on device with zero external dependencies.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center items-center">
-            <Link to={isAuthenticated ? "/screening" : "/login"}>
-              <Button variant="primary" size="lg" className="shadow-xs font-bold h-12 px-7 text-sm bg-blue-600 hover:bg-blue-700 text-white">
-                Get Started
-                <ArrowRight className="h-4 w-4 ml-1.5" />
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 h-12 px-7 shadow-2xs font-semibold text-sm"
-              >
-                Sign In
-              </Button>
-            </Link>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-4 drop-shadow-xs">
+              Ready to screen your first document?
+            </h2>
+            <p className="text-blue-100/90 mb-8 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed font-normal">
+              Sign in as an authorized officer and run live document &amp; biometric screening in under 60 seconds.
+              The complete neural inspection pipeline executes locally on device with zero external dependencies.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center items-center">
+              <Link to={isAuthenticated ? "/screening" : "/login"}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="font-bold h-12 px-8 text-sm bg-white hover:bg-blue-50 text-blue-900 hover:text-blue-950 border border-white shadow-lg transition-all duration-150"
+                >
+                  Get Started
+                  <ArrowRight className="h-4 w-4 ml-1.5 text-blue-900" />
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-white/30 hover:border-white bg-white/10 hover:bg-white/20 text-white hover:text-white h-12 px-8 font-semibold text-sm backdrop-blur-md transition-all duration-150"
+                >
+                  Sign In
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
