@@ -225,21 +225,11 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-ink text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-signal-blue/20 selection:text-signal-blue relative font-sans">
-      {/* High-Tech Ambient Matrix Background */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        {/* Subtle grid pattern for radar precision look */}
-        <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.035] dark:opacity-[0.06]" />
-        {/* Luminous atmospheric orbs */}
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-gradient-to-b from-signal-blue/[0.06] via-sky-400/[0.03] to-transparent dark:from-signal-blue/[0.12] dark:via-transparent rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-[800px] -right-48 w-[650px] h-[450px] bg-slate-100/60 dark:bg-signal-purple/8 rounded-full blur-3xl" />
-        <div className="absolute top-[1800px] -left-48 w-[600px] h-[400px] bg-sky-50/50 dark:bg-signal-blue/8 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-blue-100 selection:text-blue-900 relative font-sans">
       {/* ── Top Navigation Bar ── */}
       <nav
         aria-label="Main Navigation"
-        className="sticky top-0 z-50 border-b border-slate-200/90 dark:border-ink-border bg-white/95 dark:bg-ink/90 backdrop-blur-md transition-colors shadow-2xs"
+        className="sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md transition-colors shadow-2xs"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* Brand Mark */}
@@ -904,10 +894,10 @@ export function LandingPage() {
       </section>
 
       {/* ── Section: How It Works / TrustFusion Pipeline (Exact 9 Stages Preserved) ── */}
-      <section id="how-it-works" className="relative py-20 bg-slate-50/70 dark:bg-ink-card/25 border-y border-slate-200/80 dark:border-ink-border/50">
+      <section id="how-it-works" className="relative py-20 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <Badge variant="default" className="mb-3 border-signal-cyan/40 text-signal-cyan bg-signal-cyan/10">
+            <Badge variant="default" className="mb-3 border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 font-bold uppercase tracking-wider text-[11px]">
               TrustFusion Risk Engine
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -1075,9 +1065,9 @@ export function LandingPage() {
       </section>
 
       {/* ── Section: Architecture (Exact 3 Pillars Preserved) ── */}
-      <section id="architecture" className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
+      <section id="architecture" className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 pb-20 border-t border-slate-100 dark:border-slate-800/80">
         <div className="text-center mb-12">
-          <Badge variant="default" className="mb-3 border-purple-500/40 text-purple-600 dark:text-purple-400 bg-purple-500/10">
+          <Badge variant="default" className="mb-3 border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 font-bold uppercase tracking-wider text-[11px]">
             System Architecture
           </Badge>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -1226,10 +1216,10 @@ export function LandingPage() {
       </section>
 
       {/* ── Section: Security & Governance (Institutional Standards) ── */}
-      <section id="governance" className="relative py-20 bg-slate-50/70 dark:bg-ink-card/25 border-y border-slate-200/80 dark:border-ink-border/50">
+      <section id="governance" className="relative py-20 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <Badge variant="default" className="mb-3 border-emerald-500/40 text-emerald-700 dark:text-risk-low bg-emerald-500/10">
+            <Badge variant="default" className="mb-3 border-emerald-500/40 text-emerald-700 dark:text-risk-low bg-emerald-500/10 font-bold uppercase tracking-wider text-[11px]">
               Governance &amp; Evidence Integrity
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
