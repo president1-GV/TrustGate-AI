@@ -92,7 +92,7 @@ export function AdminUsersPage() {
           </Button>
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
             <Users className="h-6 w-6 text-signal-blue" />
             User Management
           </h1>

@@ -185,7 +185,7 @@ export function ModelsPage() {
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
               AI Model Registry
             </h1>
             <Badge variant="pass" className="font-mono text-xs uppercase px-2.5 py-0.5">

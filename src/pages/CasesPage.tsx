@@ -207,10 +207,10 @@ export function CasesPage() {
     <div className="space-y-5">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
             Case Management
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             Review, triage, and track all screening cases across checkpoints.
           </p>
         </div>
@@ -255,25 +255,25 @@ export function CasesPage() {
               />
             </div>
             <div className="md:col-span-3">
-              <div className="relative flex items-center gap-2 h-10 rounded-lg border border-ink-border bg-ink-card/60 px-3 text-sm">
+              <div className="relative flex items-center gap-2 h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm shadow-2xs">
                 <CalendarDays className="h-4 w-4 text-slate-500 flex-shrink-0" />
                 <input
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="flex-1 bg-transparent text-slate-300 outline-none text-sm"
+                  className="flex-1 bg-transparent text-slate-900 dark:text-slate-100 outline-none text-sm"
                   placeholder="From date"
                 />
               </div>
             </div>
             <div className="md:col-span-3">
-              <div className="relative flex items-center gap-2 h-10 rounded-lg border border-ink-border bg-ink-card/60 px-3 text-sm">
+              <div className="relative flex items-center gap-2 h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm shadow-2xs">
                 <CalendarDays className="h-4 w-4 text-slate-500 flex-shrink-0" />
                 <input
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="flex-1 bg-transparent text-slate-300 outline-none text-sm"
+                  className="flex-1 bg-transparent text-slate-900 dark:text-slate-100 outline-none text-sm"
                   placeholder="To date"
                 />
               </div>
@@ -297,16 +297,16 @@ export function CasesPage() {
                     type="button"
                     onClick={() => setRiskFilter(r.value)}
                     className={cn(
-                      "px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide border transition-all",
+                      "px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wide border transition-colors select-none",
                       riskFilter === r.value
                         ? r.value === "LOW"
-                          ? "bg-risk-low/15 text-risk-low border-risk-low/40"
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 font-bold"
                           : r.value === "MEDIUM"
-                          ? "bg-risk-medium/15 text-risk-medium border-risk-medium/40"
+                          ? "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 font-bold"
                           : r.value === "HIGH"
-                          ? "bg-risk-high/15 text-risk-high border-risk-high/40"
-                          : "bg-signal-blue/15 text-signal-blue border-signal-blue/40"
-                        : "bg-ink-card/40 text-slate-400 border-ink-border hover:text-slate-200 hover:border-slate-600/50"
+                          ? "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 font-bold"
+                          : "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 font-bold"
+                        : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200"
                     )}
                   >
                     {r.label}
@@ -326,10 +326,10 @@ export function CasesPage() {
                     type="button"
                     onClick={() => setStatusFilter(s.value)}
                     className={cn(
-                      "px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide border transition-all",
+                      "px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wide border transition-colors select-none",
                       statusFilter === s.value
-                        ? "bg-signal-blue/15 text-signal-blue border-signal-blue/40"
-                        : "bg-ink-card/40 text-slate-400 border-ink-border hover:text-slate-200 hover:border-slate-600/50"
+                        ? "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 font-bold"
+                        : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200"
                     )}
                   >
                     {s.label}
@@ -403,20 +403,20 @@ export function CasesPage() {
                       return (
                         <tr
                           key={c.id}
-                          className="border-b border-ink-border/60 last:border-none hover:bg-ink-raised/30 transition-colors"
+                          className="border-b border-slate-100 dark:border-slate-800/80 last:border-none hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                         >
                           <td className="px-5 py-3.5">
                             <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs text-signal-cyan">{c.case_code}</span>
+                              <span className="font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">{c.case_code}</span>
                               {c.is_demo && (
                                 <Badge variant="warning" className="text-[9px] py-0">DEMO</Badge>
                               )}
                             </div>
                           </td>
-                          <td className="px-5 py-3.5 text-slate-200 capitalize">
+                          <td className="px-5 py-3.5 text-slate-900 dark:text-slate-100 font-medium capitalize">
                             {c.document_type}
                           </td>
-                          <td className="px-5 py-3.5 text-slate-300">
+                          <td className="px-5 py-3.5 text-slate-700 dark:text-slate-300">
                             {c.country_code ?? "—"}
                           </td>
                           <td className="px-5 py-3.5">
@@ -431,7 +431,7 @@ export function CasesPage() {
                               {(c.status || "").replace(/_/g, " ")}
                             </Badge>
                           </td>
-                          <td className="px-5 py-3.5 text-slate-300">
+                          <td className="px-5 py-3.5 text-slate-700 dark:text-slate-300">
                             {c.profiles?.display_name ?? "—"}
                           </td>
                           <td className="px-5 py-3.5 text-slate-400 text-xs tabular-nums">

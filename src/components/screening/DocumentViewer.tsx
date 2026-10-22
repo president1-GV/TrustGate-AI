@@ -238,7 +238,7 @@ export function DocumentViewer({
     <div
       ref={wrapRef}
       className={cn(
-        "relative w-full max-w-full min-w-0 rounded-2xl border border-slate-200 dark:border-signal-blue/40 bg-white dark:bg-ink-card/80 backdrop-blur-xl flex flex-col shadow-xl transition-all duration-300 overflow-hidden",
+        "relative w-full max-w-full min-w-0 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shadow-xs transition-colors overflow-hidden",
         fullscreen
           ? "fixed inset-0 z-[60] rounded-none border-0 bg-ink"
           : expandedHeight

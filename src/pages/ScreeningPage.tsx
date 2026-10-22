@@ -109,38 +109,38 @@ function moduleTone(status: PipelineStatus): {
   switch (status) {
     case "PASS":
       return {
-        dot: "bg-risk-low",
-        chip: "bg-risk-low/15 text-risk-low border-risk-low/30",
+        dot: "bg-emerald-500",
+        chip: "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
         label: "PASS",
-        border: "border-risk-low/40",
+        border: "border-emerald-200 dark:border-emerald-800/60",
       };
     case "WARNING":
       return {
-        dot: "bg-risk-medium",
-        chip: "bg-risk-medium/15 text-risk-medium border-risk-medium/30",
+        dot: "bg-amber-500",
+        chip: "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
         label: "WARNING",
-        border: "border-risk-medium/40",
+        border: "border-amber-200 dark:border-amber-800/60",
       };
     case "FAIL":
       return {
-        dot: "bg-risk-high",
-        chip: "bg-risk-high/15 text-risk-high border-risk-high/30",
+        dot: "bg-rose-500",
+        chip: "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800",
         label: "FAIL",
-        border: "border-risk-high/40",
+        border: "border-rose-200 dark:border-rose-800/60",
       };
     case "PROCESSING":
       return {
-        dot: "bg-signal-cyan animate-pulseSoft",
-        chip: "bg-signal-blue/15 text-signal-blue border-signal-blue/40",
+        dot: "bg-blue-600 animate-pulse",
+        chip: "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
         label: "PROCESSING",
-        border: "border-signal-blue/40",
+        border: "border-blue-300 dark:border-blue-700",
       };
     default:
       return {
-        dot: "bg-slate-600",
-        chip: "bg-slate-700/40 text-slate-500 border-slate-600/40",
+        dot: "bg-slate-400 dark:bg-slate-600",
+        chip: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700",
         label: "IDLE",
-        border: "border-slate-700/50",
+        border: "border-slate-200 dark:border-slate-800",
       };
   }
 }
@@ -1093,7 +1093,7 @@ export function ScreeningPage() {
     <div className="space-y-5">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
             <ScanLine className="h-6 w-6 text-signal-blue" />
             Live Screening Workspace
           </h1>
@@ -1430,7 +1430,7 @@ export function ScreeningPage() {
                     }
                   }}
                   title="Open live camera scanner"
-                  className="h-14 w-14 mx-auto rounded-2xl bg-signal-blue hover:bg-signal-blue/90 border border-signal-blue/40 flex items-center justify-center mb-3 cursor-pointer shadow-lg shadow-signal-blue/30 hover:scale-105 active:scale-95 transition-all text-white"
+                  className="h-12 w-12 mx-auto rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 cursor-pointer shadow-2xs hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
                 >
                   <Camera className="h-7 w-7" />
                 </div>

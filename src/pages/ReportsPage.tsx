@@ -152,11 +152,11 @@ export function ReportsPage() {
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
               Screening Reports
             </h1>
           </div>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             Formal, explainable identity screening audit reports and forensic exports ({data?.length ?? 0} live reports).
           </p>
         </div>
@@ -242,7 +242,7 @@ export function ReportsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 border-b border-ink-border">
+                  <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 border-b border-slate-200 dark:border-slate-800">
                     <th className="px-5 py-3">Specimen</th>
                     <th className="px-5 py-3">Case Code</th>
                     <th className="px-5 py-3">Doc Type</th>
@@ -378,9 +378,9 @@ export function ReportsPage() {
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto print-keep print-modal-backdrop">
-            <div className="w-full max-w-4xl bg-ink-card border border-ink-border rounded-xl shadow-2xl p-6 my-8 space-y-6 max-h-[90vh] overflow-y-auto print-keep print-modal-container print-report-container">
+            <div className="w-full max-w-4xl bg-ink-card border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-6 my-8 space-y-6 max-h-[90vh] overflow-y-auto print-keep print-modal-container print-report-container">
               {/* Modal Controls Toolbar */}
-              <div className="flex items-center justify-between border-b border-ink-border pb-4 flex-wrap gap-3 no-print print:hidden">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 flex-wrap gap-3 no-print print:hidden">
                 <div className="flex items-center gap-2 flex-wrap">
                   <ShieldCheck className="h-5 w-5 text-signal-cyan" />
                   <span className="font-semibold text-slate-200 text-sm">
@@ -391,7 +391,7 @@ export function ReportsPage() {
                   </Badge>
 
                   {/* Mode Selector */}
-                  <div className="flex items-center bg-ink-raised/60 p-0.5 rounded-lg border border-ink-border text-xs ml-2">
+                  <div className="flex items-center bg-ink-raised/60 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs ml-2">
                     <button
                       type="button"
                       onClick={() => setViewMode("formal")}
@@ -524,7 +524,7 @@ export function ReportsPage() {
 
                     {/* Summary Metadata Grid */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="p-3 rounded-lg bg-ink-raised/50 border border-ink-border print:bg-slate-50 print:border-slate-300">
+                      <div className="p-3 rounded-lg bg-ink-raised/50 border border-slate-200 dark:border-slate-800 print:bg-slate-50 print:border-slate-300">
                         <div className="text-[11px] text-slate-500 print:text-slate-600 uppercase tracking-wider font-semibold">
                           Document Type
                         </div>
@@ -532,7 +532,7 @@ export function ReportsPage() {
                           {selectedReport.cases?.document_type ?? "Passport"}
                         </div>
                       </div>
-                      <div className="p-3 rounded-lg bg-ink-raised/50 border border-ink-border print:bg-slate-50 print:border-slate-300">
+                      <div className="p-3 rounded-lg bg-ink-raised/50 border border-slate-200 dark:border-slate-800 print:bg-slate-50 print:border-slate-300">
                         <div className="text-[11px] text-slate-500 print:text-slate-600 uppercase tracking-wider font-semibold">
                           Risk Assessment
                         </div>
@@ -543,7 +543,7 @@ export function ReportsPage() {
                           </span>
                         </div>
                       </div>
-                      <div className="p-3 rounded-lg bg-ink-raised/50 border border-ink-border print:bg-slate-50 print:border-slate-300">
+                      <div className="p-3 rounded-lg bg-ink-raised/50 border border-slate-200 dark:border-slate-800 print:bg-slate-50 print:border-slate-300">
                         <div className="text-[11px] text-slate-500 print:text-slate-600 uppercase tracking-wider font-semibold">
                           Review Status
                         </div>
@@ -551,7 +551,7 @@ export function ReportsPage() {
                           {selectedReport.cases?.status ?? "UNDER_REVIEW"}
                         </div>
                       </div>
-                      <div className="p-3 rounded-lg bg-ink-raised/50 border border-ink-border print:bg-slate-50 print:border-slate-300">
+                      <div className="p-3 rounded-lg bg-ink-raised/50 border border-slate-200 dark:border-slate-800 print:bg-slate-50 print:border-slate-300">
                         <div className="text-[11px] text-slate-500 print:text-slate-600 uppercase tracking-wider font-semibold">
                           Screening Officer
                         </div>
@@ -583,11 +583,11 @@ export function ReportsPage() {
                       <h3 className="text-sm font-semibold uppercase tracking-wider text-signal-cyan print:text-sky-900">
                         Forensic Pipeline Findings &amp; Evidence
                       </h3>
-                      <div className="p-4 rounded-lg bg-ink-raised/30 border border-ink-border print:border-slate-300 print:bg-slate-50 text-xs space-y-3">
+                      <div className="p-4 rounded-lg bg-ink-raised/30 border border-slate-200 dark:border-slate-800 print:border-slate-300 print:bg-slate-50 text-xs space-y-3">
                         {selectedReport.payload?.findings && Array.isArray(selectedReport.payload.findings) ? (
                           <div className="space-y-2">
                             {selectedReport.payload.findings.map((f: any, idx: number) => (
-                              <div key={idx} className="flex items-start gap-2 pb-2 border-b border-ink-border/50 print:border-slate-200">
+                              <div key={idx} className="flex items-start gap-2 pb-2 border-b border-slate-200 dark:border-slate-800/50 print:border-slate-200">
                                 <span className="font-mono text-signal-blue print:text-sky-800 font-bold">[{f.severity ?? "INFO"}]</span>
                                 <span className="font-medium text-slate-200 print:text-slate-900">{f.title ?? f.message}</span>
                                 {f.location && (

@@ -749,7 +749,7 @@ export function CaseDetailPage() {
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                 Case {row.case_code}
               </h1>
               {rc && (

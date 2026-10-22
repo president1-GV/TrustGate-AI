@@ -148,7 +148,7 @@ export function AdminAuthorizationsPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
               <ShieldCheck className="h-6 w-6 text-signal-blue" />
               Member Access Authority Panel
             </h1>

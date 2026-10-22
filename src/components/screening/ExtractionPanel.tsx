@@ -65,18 +65,18 @@ export function ExtractionPanel({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-signal-blue/30 bg-ink-card/85 backdrop-blur-xl shadow-2xl p-4 sm:p-5 space-y-5 text-slate-200",
+        "rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs p-4 sm:p-5 space-y-5 text-slate-900 dark:text-slate-100 transition-colors",
         className
       )}
     >
       {/* Header & Section Navigation */}
       <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-800 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-signal-blue/15 border border-signal-blue/30 flex items-center justify-center text-signal-cyan">
+          <div className="h-9 w-9 rounded-lg bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-2xs">
             <FileText className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
               Intelligent Extraction & Verification Panel
               <Badge variant="default" className="text-[10px] font-mono bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
                 SECTION 27 COMPLIANT
@@ -89,7 +89,7 @@ export function ExtractionPanel({
         </div>
 
         {/* Tab Filters */}
-        <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-[11px] font-mono">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] font-mono">
           {(["ALL", "DOCUMENT", "OCR", "MRZ", "FORENSICS", "DATABASE", "RISK"] as const).map((tab) => (
             <button
               key={tab}
@@ -98,8 +98,8 @@ export function ExtractionPanel({
               className={cn(
                 "px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer",
                 activeTab === tab
-                  ? "bg-signal-blue text-white shadow-xs"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-bold shadow-2xs border border-slate-200 dark:border-slate-700"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
               )}
             >
               {tab}
@@ -110,14 +110,14 @@ export function ExtractionPanel({
 
       {/* 1. DOCUMENT INFORMATION */}
       {(activeTab === "ALL" || activeTab === "DOCUMENT") && (
-        <div className="rounded-xl border border-slate-800/80 bg-ink/60 overflow-hidden">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection("document")}
-            className="w-full px-4 py-3 bg-slate-900/50 flex items-center justify-between text-left hover:bg-slate-900/80 transition-colors cursor-pointer"
+            className="w-full px-4 py-3 bg-slate-100/80 dark:bg-slate-900/80 flex items-center justify-between text-left hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-signal-cyan uppercase tracking-wider">
+              <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
                 1. Document Identity Profile
               </span>
               <Badge variant="default" className="text-[10px] font-mono bg-slate-800 text-slate-300">
@@ -156,14 +156,14 @@ export function ExtractionPanel({
 
       {/* 2. MULTI-PASS OCR EXTRACTION & PASS COMPARISON */}
       {(activeTab === "ALL" || activeTab === "OCR") && (
-        <div className="rounded-xl border border-slate-800/80 bg-ink/60 overflow-hidden">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection("ocr")}
-            className="w-full px-4 py-3 bg-slate-900/50 flex items-center justify-between text-left hover:bg-slate-900/80 transition-colors cursor-pointer"
+            className="w-full px-4 py-3 bg-slate-100/80 dark:bg-slate-900/80 flex items-center justify-between text-left hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-signal-cyan uppercase tracking-wider">
+              <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
                 2. Multi-Pass OCR Extractions & Reconciliation
               </span>
               <Badge variant="default" className="text-[10px] font-mono bg-signal-blue/20 text-signal-cyan">
@@ -260,14 +260,14 @@ export function ExtractionPanel({
 
       {/* 3. ICAO MRZ & MODULO-10 CHECKSUMS */}
       {(activeTab === "ALL" || activeTab === "MRZ") && (
-        <div className="rounded-xl border border-slate-800/80 bg-ink/60 overflow-hidden">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection("mrz")}
-            className="w-full px-4 py-3 bg-slate-900/50 flex items-center justify-between text-left hover:bg-slate-900/80 transition-colors cursor-pointer"
+            className="w-full px-4 py-3 bg-slate-100/80 dark:bg-slate-900/80 flex items-center justify-between text-left hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-signal-cyan uppercase tracking-wider">
+              <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
                 3. ICAO 9303 MRZ &amp; Modulo-10 Checksum Badges (Weights: 7-3-1)
               </span>
               {mrz.present ? (
@@ -377,14 +377,14 @@ export function ExtractionPanel({
 
       {/* 4. FORENSIC EVIDENCE & TAMPERING ANALYSIS */}
       {(activeTab === "ALL" || activeTab === "FORENSICS") && (
-        <div className="rounded-xl border border-slate-800/80 bg-ink/60 overflow-hidden">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection("forensics")}
-            className="w-full px-4 py-3 bg-slate-900/50 flex items-center justify-between text-left hover:bg-slate-900/80 transition-colors cursor-pointer"
+            className="w-full px-4 py-3 bg-slate-100/80 dark:bg-slate-900/80 flex items-center justify-between text-left hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-signal-cyan uppercase tracking-wider">
+              <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
                 4. Forensic Tampering &amp; Image Integrity (Executed on Original Evidence)
               </span>
               <Badge variant="default" className={cn(
@@ -448,14 +448,14 @@ export function ExtractionPanel({
 
       {/* 5. AUTHORIZED DATABASE VERIFICATION */}
       {(activeTab === "ALL" || activeTab === "DATABASE") && (
-        <div className="rounded-xl border border-slate-800/80 bg-ink/60 overflow-hidden">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection("database")}
-            className="w-full px-4 py-3 bg-slate-900/50 flex items-center justify-between text-left hover:bg-slate-900/80 transition-colors cursor-pointer"
+            className="w-full px-4 py-3 bg-slate-100/80 dark:bg-slate-900/80 flex items-center justify-between text-left hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-signal-cyan uppercase tracking-wider">
+              <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
                 5. Authorized Central Database Verification
               </span>
               <Badge variant="default" className={cn(
@@ -510,14 +510,14 @@ export function ExtractionPanel({
 
       {/* 6. AI RISK ANALYSIS & EXPLAINABLE REASONING */}
       {(activeTab === "ALL" || activeTab === "RISK") && (
-        <div className="rounded-xl border border-slate-800/80 bg-ink/60 overflow-hidden">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection("risk")}
-            className="w-full px-4 py-3 bg-slate-900/50 flex items-center justify-between text-left hover:bg-slate-900/80 transition-colors cursor-pointer"
+            className="w-full px-4 py-3 bg-slate-100/80 dark:bg-slate-900/80 flex items-center justify-between text-left hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-signal-cyan uppercase tracking-wider">
+              <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
                 6. AI Risk Analysis &amp; TrustFusion Multi-Modal Rationale
               </span>
               <Badge className={cn("text-[10px] font-mono", rc.badge)}>

@@ -190,7 +190,7 @@ export function AuthorizationGatePage() {
             <Lock className="h-3.5 w-3.5" />
             TRUSTGATE AI · NATIONAL BORDER SECURITY INTRANET
           </div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-wide flex items-center justify-center gap-2.5">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-wide flex items-center justify-center gap-2.5">
             {status === "approved" ? (
               <ShieldCheck className="h-7 w-7 text-emerald-400" />
             ) : status === "rejected" ? (

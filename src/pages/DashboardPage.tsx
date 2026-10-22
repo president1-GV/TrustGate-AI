@@ -92,84 +92,41 @@ interface StatCardProps {
 const ACCENT_STYLES: Record<
   AccentColor,
   {
-    borderTop: string;
-    glow: string;
     iconBox: string;
     badgeCls: string;
-    hoverBorder: string;
   }
 > = {
   sky: {
-    borderTop: "border-t-2 border-t-sky-500",
-    glow: "bg-sky-500",
-    iconBox:
-      "bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20",
-    badgeCls:
-      "bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/30",
-    hoverBorder: "hover:border-sky-500/40 hover:shadow-sky-500/5",
+    iconBox: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800",
+    badgeCls: "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
   },
   cyan: {
-    borderTop: "border-t-2 border-t-cyan-500",
-    glow: "bg-cyan-500",
-    iconBox:
-      "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20",
-    badgeCls:
-      "bg-cyan-50 text-cyan-800 border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30",
-    hoverBorder: "hover:border-cyan-500/40 hover:shadow-cyan-500/5",
+    iconBox: "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200 dark:border-sky-800",
+    badgeCls: "bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800",
   },
   rose: {
-    borderTop: "border-t-2 border-t-rose-500",
-    glow: "bg-rose-500",
-    iconBox:
-      "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
-    badgeCls:
-      "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30",
-    hoverBorder: "hover:border-rose-500/40 hover:shadow-rose-500/5",
+    iconBox: "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800",
+    badgeCls: "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800",
   },
   amber: {
-    borderTop: "border-t-2 border-t-amber-500",
-    glow: "bg-amber-500",
-    iconBox:
-      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
-    badgeCls:
-      "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30",
-    hoverBorder: "hover:border-amber-500/40 hover:shadow-amber-500/5",
+    iconBox: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800",
+    badgeCls: "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
   },
   emerald: {
-    borderTop: "border-t-2 border-t-emerald-500",
-    glow: "bg-emerald-500",
-    iconBox:
-      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
-    badgeCls:
-      "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30",
-    hoverBorder: "hover:border-emerald-500/40 hover:shadow-emerald-500/5",
+    iconBox: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800",
+    badgeCls: "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
   },
   purple: {
-    borderTop: "border-t-2 border-t-purple-500",
-    glow: "bg-purple-500",
-    iconBox:
-      "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20",
-    badgeCls:
-      "bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-500/15 dark:text-purple-300 dark:border-purple-500/30",
-    hoverBorder: "hover:border-purple-500/40 hover:shadow-purple-500/5",
+    iconBox: "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800",
+    badgeCls: "bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800",
   },
   indigo: {
-    borderTop: "border-t-2 border-t-indigo-500",
-    glow: "bg-indigo-500",
-    iconBox:
-      "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20",
-    badgeCls:
-      "bg-indigo-50 text-indigo-800 border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30",
-    hoverBorder: "hover:border-indigo-500/40 hover:shadow-indigo-500/5",
+    iconBox: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800",
+    badgeCls: "bg-indigo-50 text-indigo-800 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800",
   },
   teal: {
-    borderTop: "border-t-2 border-t-teal-500",
-    glow: "bg-teal-500",
-    iconBox:
-      "bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20",
-    badgeCls:
-      "bg-teal-50 text-teal-800 border-teal-200 dark:bg-teal-500/15 dark:text-teal-300 dark:border-teal-500/30",
-    hoverBorder: "hover:border-teal-500/40 hover:shadow-teal-500/5",
+    iconBox: "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 border border-teal-200 dark:border-teal-800",
+    badgeCls: "bg-teal-50 text-teal-800 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800",
   },
 };
 
@@ -187,39 +144,23 @@ function StatCard({
   const styles = ACCENT_STYLES[accent] || ACCENT_STYLES.sky;
 
   return (
-    <div
-      className={cn(
-        "group relative overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-800",
-        "bg-white dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-lg hover:-translate-y-0.5",
-        "transition-all duration-300 ease-out flex flex-col justify-between",
-        styles.borderTop,
-        styles.hoverBorder
-      )}
-    >
-      {/* Dynamic corner ambient glow on hover */}
-      <div
-        className={cn(
-          "absolute -top-12 -right-12 h-24 w-24 rounded-full blur-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 pointer-events-none",
-          styles.glow
-        )}
-      />
-
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-xs transition-colors flex flex-col justify-between">
       <div>
         <div className="flex items-start justify-between gap-2.5">
           <div
             className={cn(
-              "h-11 w-11 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-108 shadow-xs",
+              "h-10 w-10 rounded-lg flex items-center justify-center shadow-2xs",
               styles.iconBox
             )}
           >
-            <Icon className="h-5 w-5" />
+            <Icon className="h-5 w-5" aria-hidden="true" />
           </div>
 
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
             {badge && !loading && (
               <span
                 className={cn(
-                  "inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border tracking-wide",
+                  "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold border tracking-wide",
                   styles.badgeCls
                 )}
               >
@@ -229,16 +170,16 @@ function StatCard({
             {delta && !loading && (
               <span
                 className={cn(
-                  "inline-flex items-center gap-0.5 text-[11px] font-bold font-mono px-1.5 py-0.5 rounded-md border",
+                  "inline-flex items-center gap-0.5 text-[11px] font-semibold font-mono px-1.5 py-0.5 rounded border",
                   delta.positive
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30"
-                    : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30"
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                    : "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800"
                 )}
               >
                 {delta.positive ? (
-                  <TrendingUp className="h-3 w-3" />
+                  <TrendingUp className="h-3 w-3" aria-hidden="true" />
                 ) : (
-                  <TrendingDown className="h-3 w-3" />
+                  <TrendingDown className="h-3 w-3" aria-hidden="true" />
                 )}
                 {delta.value}
               </span>
@@ -246,20 +187,20 @@ function StatCard({
           </div>
         </div>
 
-        <div className="mt-4">
-          <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400 mb-1">
+        <div className="mt-3.5">
+          <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
             {label}
           </div>
 
           {loading ? (
-            <div className="h-8 w-24 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-lg" />
+            <div className="h-7 w-20 bg-slate-100 dark:bg-slate-800 animate-pulse rounded" />
           ) : (
             <div className="flex items-baseline justify-between gap-2">
-              <div className="text-3xl font-black tabular-nums tracking-tight text-slate-900 dark:text-slate-50">
+              <div className="text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-slate-100">
                 {value}
               </div>
               {subValue && (
-                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate text-right">
+                <span className="text-xs text-slate-500 dark:text-slate-400 truncate text-right">
                   {subValue}
                 </span>
               )}
@@ -269,15 +210,15 @@ function StatCard({
       </div>
 
       {progress && !loading && (
-        <div className="mt-3.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
           <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <div
               className={cn(
-                "h-full rounded-full transition-all duration-700",
+                "h-full rounded-full transition-all duration-300",
                 progress.colorClass
               )}
               style={{
-                width: `${Math.min(100, Math.max(4, progress.value))}%`,
+                width: `${Math.min(100, Math.max(0, progress.value))}%`,
               }}
             />
           </div>
@@ -548,7 +489,7 @@ export function DashboardPage() {
       value: displayTotalCases.toLocaleString(),
       subValue: "Live InsForge DB",
       badge: {
-        text: "100% PERSISTED",
+        text: "PERSISTED",
         variant: "sky",
       },
       progress: {
@@ -564,7 +505,7 @@ export function DashboardPage() {
       value: data?.todayCases.toLocaleString() ?? "0",
       subValue: "Terminal 01..04",
       badge: {
-        text: "ACTIVE SENTRY",
+        text: "ACTIVE",
         variant: "cyan",
       },
       progress: {
@@ -641,10 +582,10 @@ export function DashboardPage() {
       icon: Clock,
       accent: "indigo",
       label: "Avg Processing Time",
-      value: data ? formatDuration(data.avgProcessingTimeMs) : "3.9s",
-      subValue: "GPU Neural Pipeline",
+      value: data && data.totalCases > 0 && data.avgProcessingTimeMs ? formatDuration(data.avgProcessingTimeMs) : "—",
+      subValue: data && data.totalCases > 0 ? "GPU Neural Pipeline" : "Awaiting telemetry",
       badge: {
-        text: "NOMINAL (<5.0s)",
+        text: data && data.totalCases > 0 ? "NOMINAL" : "UNAVAILABLE",
         variant: "indigo",
       },
       progress: {
@@ -660,10 +601,10 @@ export function DashboardPage() {
       icon: Target,
       accent: "teal",
       label: "AI Risk Score Avg",
-      value: data ? `${data.avgAiConfidencePct}/100` : "48/100",
-      subValue: "Moderate Risk Tier",
+      value: data && data.totalCases > 0 && typeof data.avgAiConfidencePct === "number" ? `${data.avgAiConfidencePct}/100` : "—",
+      subValue: data && data.totalCases > 0 ? "Mean Confidence Index" : "Awaiting evaluation",
       badge: {
-        text: "TIER: MODERATE",
+        text: data && data.totalCases > 0 ? "MEASURED" : "UNAVAILABLE",
         variant: "teal",
       },
       progress: {
@@ -681,15 +622,12 @@ export function DashboardPage() {
       <div className="flex items-start justify-between flex-wrap gap-4 pb-2 border-b border-slate-200/80 dark:border-slate-800">
         <div>
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
               <span>Command Center</span>
             </h1>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 shadow-2xs">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span>LIVE DATABASE FEED</span>
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-mono font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 shadow-2xs">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+              <span>LIVE DATABASE</span>
             </div>
             <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">
               <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
@@ -770,7 +708,7 @@ export function DashboardPage() {
       </div>
 
       {/* ── Screening & Officer Decision Flow ── */}
-      <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-xs">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-xs">
         <div className="flex items-center justify-between flex-wrap gap-2 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800/80">
           <div>
             <div className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -846,7 +784,7 @@ export function DashboardPage() {
                 className={cn(
                   "group relative rounded-xl border border-slate-200 dark:border-slate-800",
                   "bg-slate-50/70 dark:bg-slate-800/40 p-4 transition-all duration-300",
-                  "hover:bg-white dark:hover:bg-slate-800/80 hover:-translate-y-0.5 hover:shadow-md",
+                  "hover:bg-white dark:hover:bg-slate-800/80 transition-colors",
                   cfg.borderTop,
                   cfg.hoverBorder
                 )}

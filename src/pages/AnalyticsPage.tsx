@@ -199,7 +199,7 @@ export function AnalyticsPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
             Intelligence Analytics
           </h1>
           <p className="text-sm text-slate-400 mt-1">
