@@ -78,7 +78,7 @@ function collectFiles(dir, baseDir = dir) {
   return results;
 }
 
-function doRequest(method, endpoint, headers = {}, body = null) {
+function doRequest(method, endpoint, headers = {}, body = null, timeoutMs = 90000) {
   return new Promise((resolve, reject) => {
     const url = new URL(endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`);
     const reqHeaders = {
@@ -93,7 +93,8 @@ function doRequest(method, endpoint, headers = {}, body = null) {
       hostname: url.hostname,
       port: url.port || 443,
       path: url.pathname + url.search,
-      headers: reqHeaders
+      headers: reqHeaders,
+      timeout: timeoutMs
     };
     const req = https.request(options, (res) => {
       const chunks = [];
@@ -107,6 +108,9 @@ function doRequest(method, endpoint, headers = {}, body = null) {
           resolve({ status: res.statusCode, raw });
         }
       });
+    });
+    req.on('timeout', () => {
+      req.destroy(new Error(`Request timed out after ${timeoutMs}ms for ${endpoint}`));
     });
     req.on('error', reject);
     if (body) {
@@ -122,13 +126,14 @@ function doRequest(method, endpoint, headers = {}, body = null) {
   });
 }
 
-async function request(method, endpoint, headers = {}, body = null, retries = 3) {
+async function request(method, endpoint, headers = {}, body = null, retries = 5, timeoutMs = 90000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      return await doRequest(method, endpoint, headers, body);
+      return await doRequest(method, endpoint, headers, body, timeoutMs);
     } catch (err) {
+      console.warn(`[Retry ${attempt}/${retries}] ${method} ${endpoint}: ${err.message}`);
       if (attempt === retries) throw err;
-      await new Promise(r => setTimeout(r, attempt * 1000));
+      await new Promise(r => setTimeout(r, attempt * 2000));
     }
   }
 }
@@ -158,7 +163,7 @@ async function main() {
 
   console.log('3. Uploading file contents in parallel batches...');
   const fileMap = new Map(files.map(f => [f.relPath, f]));
-  const concurrency = 3;
+  const concurrency = 2;
   const toUpload = serverFiles.filter(f => !f.uploadedAt);
   console.log(`Need to upload ${toUpload.length} files (cached: ${serverFiles.length - toUpload.length})`);
 
@@ -171,14 +176,16 @@ async function main() {
         'PUT',
         `/api/deployments/${deploymentId}/files/${sf.fileId}/content`,
         { 'Content-Type': 'application/octet-stream' },
-        local.content
+        local.content,
+        5,
+        120000
       );
       if (uploadRes.status !== 200) {
         console.error(`Failed to upload ${sf.path}:`, uploadRes);
         throw new Error(`Upload failed for ${sf.path}`);
       }
     }));
-    process.stdout.write(`Uploaded ${Math.min(i + concurrency, toUpload.length)}/${toUpload.length}\r`);
+    console.log(`Uploaded ${Math.min(i + concurrency, toUpload.length)}/${toUpload.length} files`);
   }
   console.log('\nAll files uploaded successfully.');
 

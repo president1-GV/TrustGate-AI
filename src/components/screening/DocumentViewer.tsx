@@ -74,10 +74,10 @@ const LAYER_STYLES: Record<
   original: {
     label: "Original Document",
     activeClass:
-      "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-sm shadow-blue-500/40 ring-1 ring-blue-400/50 font-bold",
+      "bg-signal-blue hover:bg-signal-blue/90 text-white border-signal-blue shadow-glow ring-1 ring-signal-blue/50 font-bold",
     inactiveClass:
       "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800/90 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-semibold",
-    dotClass: "bg-blue-500",
+    dotClass: "bg-signal-blue",
     activeDotClass: "bg-white",
   },
   ocr: {
@@ -249,7 +249,7 @@ export function DocumentViewer({
     >
       {/* Universal Image Enhancement & Lineage Bar */}
       <div
-        className="flex items-center justify-between gap-3 px-4 py-2.5 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex-wrap text-xs font-mono transition-colors"
+        className="flex items-center justify-between gap-3 px-4 py-2 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex-wrap text-xs font-mono transition-colors"
       >
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[11px] uppercase font-bold text-slate-700 dark:text-sky-400 tracking-wider">
@@ -262,7 +262,7 @@ export function DocumentViewer({
               className={cn(
                 "px-3 py-1 rounded-md text-[11px] font-mono font-bold transition-all cursor-pointer",
                 activeImageView === "original"
-                  ? "bg-blue-600 text-white shadow-xs font-black ring-1 ring-blue-500/40"
+                  ? "bg-signal-blue text-white shadow-xs font-black ring-1 ring-signal-blue/40"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800"
               )}
             >
@@ -313,29 +313,6 @@ export function DocumentViewer({
             </div>
           )}
         </div>
-
-        {/* Cryptographic SHA-256 Provenance & Lineage Badge */}
-        <div className="flex items-center gap-2 flex-wrap text-[11px]">
-          <span className="text-amber-800 dark:text-amber-400 font-bold uppercase tracking-wider">
-            {activeImageView === "original"
-              ? "ORIGINAL SHA-256:"
-              : activeImageView === "enhanced"
-              ? "ENHANCED HASH:"
-              : "RECTIFIED HASH:"}
-          </span>
-          <span className="text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-slate-900 border border-emerald-300 dark:border-emerald-500/50 px-2.5 py-0.5 rounded font-mono font-bold text-[11px] tracking-wider shadow-xs">
-            {((activeImageView === "original"
-              ? (originalHash || provenance?.documentHash)
-              : activeImageView === "enhanced"
-              ? enhancedHash
-              : rectifiedHash) || "HASH-PENDING").substring(0, 16)}...
-          </span>
-          {activeImageView !== "original" && (originalHash || provenance?.documentHash) && (
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-              (Parent: {(originalHash || provenance?.documentHash)?.substring(0, 8)}...)
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Viewer Header / Toolbar */}
@@ -365,6 +342,29 @@ export function DocumentViewer({
               </button>
             );
           })}
+
+          {/* Cryptographic SHA-256 Provenance & Lineage Badge */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-[11px] font-mono shadow-2xs">
+            <span className="text-amber-800 dark:text-amber-400 font-bold uppercase tracking-wider text-[10px]">
+              {activeImageView === "original"
+                ? "ORIGINAL SHA-256:"
+                : activeImageView === "enhanced"
+                ? "ENHANCED HASH:"
+                : "RECTIFIED HASH:"}
+            </span>
+            <span className="text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-slate-900 border border-emerald-300 dark:border-emerald-500/50 px-2 py-0.5 rounded font-mono font-bold text-[10px] tracking-wider shadow-2xs">
+              {((activeImageView === "original"
+                ? (originalHash || provenance?.documentHash)
+                : activeImageView === "enhanced"
+                ? enhancedHash
+                : rectifiedHash) || "HASH-PENDING").substring(0, 16)}...
+            </span>
+            {activeImageView !== "original" && (originalHash || provenance?.documentHash) && (
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                (Parent: {(originalHash || provenance?.documentHash)?.substring(0, 8)}...)
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Viewport Control Tools */}
@@ -378,7 +378,7 @@ export function DocumentViewer({
               className={cn(
                 "h-7 px-2.5 text-[11px] font-mono font-bold gap-1.5 border transition-all cursor-pointer shadow-xs",
                 imageFitMode === "contain"
-                  ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                  ? "bg-signal-blue text-white border-signal-blue shadow-sm"
                   : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700"
               )}
               title={
@@ -387,7 +387,7 @@ export function DocumentViewer({
                   : "Currently Fill Frame (object-cover). Click for Full View."
               }
             >
-              <Eye className={cn("h-3.5 w-3.5", imageFitMode === "contain" ? "text-white" : "text-blue-600 dark:text-cyan-400")} />
+              <Eye className={cn("h-3.5 w-3.5", imageFitMode === "contain" ? "text-white" : "text-signal-blue")} />
               {imageFitMode === "contain" ? "Full Document View" : "Fill Viewport"}
             </Button>
           )}
@@ -453,7 +453,7 @@ export function DocumentViewer({
             title="Auto Fit to Window"
             className="h-7 w-7 p-0 cursor-pointer border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
           >
-            {fit ? <RefreshCw className="h-3.5 w-3.5 text-blue-600 dark:text-cyan-400" /> : <Minimize2 className="h-3.5 w-3.5" />}
+            {fit ? <RefreshCw className="h-3.5 w-3.5 text-signal-blue" /> : <Minimize2 className="h-3.5 w-3.5" />}
           </Button>
 
           <Button
