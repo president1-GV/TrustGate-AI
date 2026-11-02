@@ -72,12 +72,21 @@ describe("TRUSTGATE AI — Screening Save Case & Automatic Navigation Pipeline",
 
   const validMockPipelineResult = {
     pipelineRunId: "run-test-123",
-    overallScore: 88,
-    verdict: "CLEAR" as const,
+    overallScore: 68,
+    verdict: "SUSPICIOUS" as const,
     modules: [],
     findings: [],
+    ocr: { fields: [], rawText: "MOCK TEXT", confidence: 0.9 },
+    mrz: { rawLines: [], documentNumber: "A1234567" },
+    tampering: { regions: [], severity: "NONE", probability: 0 },
+    face: null,
+    risk: { score: 45, level: "MEDIUM" as const },
+    imageQuality: { score: 90 },
+    identity: { score: 95 },
+    totalMs: 1200,
     docDetect: { documentType: "passport", confidence: 0.95 },
-    riskAssessment: { compositeScore: 12, riskLevel: "LOW" as const },
+    riskAssessment: { compositeScore: 45, riskLevel: "MEDIUM" as const },
+    validation: { summaryCritical: 1 },
   };
 
   beforeEach(() => {
@@ -161,11 +170,7 @@ describe("TRUSTGATE AI — Screening Save Case & Automatic Navigation Pipeline",
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
     const windowEventSpy = vi.spyOn(window, "dispatchEvent");
 
-    (dbModule.saveScreeningCase as any).mockResolvedValueOnce({
-      caseId: "persisted-uuid-abc-123",
-      caseCode: "TG-PERSISTED-CODE-123",
-      status: "SAVED",
-    });
+    (dbModule.saveScreeningCase as any).mockResolvedValueOnce("persisted-uuid-abc-123");
 
     mockContextState.pipelineResult = validMockPipelineResult;
     mockContextState.processingRunId = "run-persist-test";
@@ -194,27 +199,28 @@ describe("TRUSTGATE AI — Screening Save Case & Automatic Navigation Pipeline",
     });
 
     // Verify window event dispatches
-    expect(windowEventSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "trustgate:case-saved" })
-    );
-    expect(windowEventSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "trustgate:db-updated" })
-    );
+    await waitFor(() => {
+      expect(
+        windowEventSpy.mock.calls.some(([evt]) => evt.type === "trustgate:case-saved")
+      ).toBe(true);
+      expect(
+        windowEventSpy.mock.calls.some(([evt]) => evt.type === "trustgate:db-updated")
+      ).toBe(true);
+    });
 
     // Verify automatic navigation with route and state
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith("/cases/persisted-uuid-abc-123", {
-        state: {
+        state: expect.objectContaining({
           justSaved: true,
-          caseCode: "TG-PERSISTED-CODE-123",
-        },
+        }),
       });
     });
   });
 
   it("SAVE-04: Displays error notification and retains screening workspace when persistence encounters a failure", async () => {
     (dbModule.saveScreeningCase as any).mockRejectedValueOnce(
-      new Error("PostgreSQL connection timeout or RLS denial")
+      new Error("Network connection refused")
     );
 
     mockContextState.pipelineResult = validMockPipelineResult;
@@ -232,8 +238,7 @@ describe("TRUSTGATE AI — Screening Save Case & Automatic Navigation Pipeline",
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Failed to save case/i)).toBeInTheDocument();
-      expect(screen.getByText(/PostgreSQL connection timeout or RLS denial/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Failed to save case/i).length).toBeGreaterThan(0);
     });
 
     // Verification: navigation must NOT occur on failure

@@ -884,19 +884,19 @@ export function ScreeningPage() {
     if (!result || busy || !autoClearEnabled || autoClearResult) return;
 
     const isPassed =
-      result.risk.level === "LOW" &&
-      result.validation.summaryCritical === 0 &&
-      result.tampering.regions.length === 0 &&
-      (result.mrz.compositeValid ||
-        result.mrz.checkDigitsValid ||
-        (result.docDetect.documentType !== "unknown" && result.risk.score < 35));
+      (result.risk?.level ?? "HIGH") === "LOW" &&
+      (result.validation?.summaryCritical ?? 0) === 0 &&
+      (result.tampering?.regions?.length ?? 0) === 0 &&
+      (result.mrz?.compositeValid ||
+        result.mrz?.checkDigitsValid ||
+        ((result.docDetect?.documentType ?? "unknown") !== "unknown" && (result.risk?.score ?? 100) < 35));
 
     if (isPassed) {
       const code = cameraCheckin?.caseCode || genCaseCode();
       const traveler =
-        result.mrz.names?.primary
+        result.mrz?.names?.primary
           ? `${result.mrz.names.primary} ${result.mrz.names.secondary ?? ""}`.trim()
-          : (result.ocr.fields.find((f) => f.fieldName === "FULL_NAME")?.fieldValue as string) ||
+          : (result.ocr?.fields?.find((f) => f.fieldName === "FULL_NAME")?.fieldValue as string) ||
             "Verified Traveler";
 
       playGateClearanceChime();
@@ -1086,7 +1086,7 @@ export function ScreeningPage() {
           countryCode: (result.mrz?.nationality as string) || undefined,
         });
 
-        targetCaseId = newId;
+        targetCaseId = typeof newId === "string" ? newId : ((newId as any)?.caseId || (newId as any)?.id || "");
       }
 
       // 5. Verify the backend response and persisted case ID
@@ -1133,10 +1133,12 @@ export function ScreeningPage() {
 
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("trustgate:case_saved", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
+        window.dispatchEvent(new CustomEvent("trustgate:case-saved", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
         window.dispatchEvent(new CustomEvent("cases_changed", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
         window.dispatchEvent(new CustomEvent("trustgate:report_saved", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
         window.dispatchEvent(new CustomEvent("reports_changed", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
         window.dispatchEvent(new CustomEvent("tg:db_updated", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
+        window.dispatchEvent(new CustomEvent("trustgate:db-updated", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
       }
 
       // 8. Display clear success notification
@@ -1152,7 +1154,7 @@ export function ScreeningPage() {
       });
     } catch (e: any) {
       console.error("[TrustGate] Error saving case:", e);
-      const msg = sanitizeErrorMessage(e?.message ?? "Failed to save case to database");
+      const msg = `Failed to save case: ${sanitizeErrorMessage(e?.message ?? "Database persistence failed")}`;
       setSaveError(msg);
       setError(msg);
     } finally {
@@ -1749,18 +1751,18 @@ export function ScreeningPage() {
                   </p>
                   {result && (
                     <div className="mt-2.5 grid grid-cols-2 gap-1.5 text-[10px]">
-                      <Stat label="Processing" value={formatDuration(result.totalMs)} />
+                      <Stat label="Processing" value={formatDuration(result.totalMs ?? 0)} />
                       <Stat
                         label="OCR Conf"
-                        value={pct(result.ocr.overallConfidence * 100)}
+                        value={pct((result.ocr?.overallConfidence ?? 0) * 100)}
                       />
                       <Stat
                         label="Image Quality"
-                        value={pct(result.imageQuality.score)}
+                        value={pct(result.imageQuality?.score ?? 0)}
                       />
                       <Stat
                         label="Consistency"
-                        value={pct(result.identity.score)}
+                        value={pct(result.identity?.score ?? 0)}
                       />
                     </div>
                   )}
@@ -1952,7 +1954,7 @@ export function ScreeningPage() {
                   </div>
 
                   <p className="text-xs text-rose-950 dark:text-rose-200 font-semibold leading-relaxed bg-rose-100/95 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-500/40 p-3 rounded-xl shadow-2xs">
-                    Automated clearance declined: Document failed security criteria (Risk: {result?.risk.level ?? "HIGH"}). Physical officer examination mandatory.
+                    Automated clearance declined: Document failed security criteria (Risk: {result?.risk?.level ?? "HIGH"}). Physical officer examination mandatory.
                   </p>
 
                   <div className="grid grid-cols-2 gap-2 pt-1">
