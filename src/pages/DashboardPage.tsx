@@ -15,7 +15,6 @@ import {
   Loader2,
   Activity,
   RefreshCw,
-  Camera,
   Layers,
   BarChart3,
   PieChart as PieIcon,
@@ -49,7 +48,6 @@ import {
 } from "@/lib/db";
 import {
   resolveSpecimenUrl,
-  REAL_SHOWCASE_SPECIMENS,
   getUserScannedSpecimens,
 } from "@/lib/specimenResolver";
 import {
@@ -307,89 +305,6 @@ export function DashboardPage() {
   const alertTrends = data?.dailyAlertTrends ?? [];
   const documentTypes = data?.documentTypes ?? [];
   const statusFlow = data?.statusFlow ?? [];
-
-  const showcaseSpecimens = React.useMemo(() => {
-    const userScanned = getUserScannedSpecimens();
-    const dbCases = data?.recentCases ?? [];
-
-    const list: Array<{
-      id: string;
-      case_code: string;
-      document_type: string;
-      country_code: string | null;
-      risk_level: "LOW" | "MEDIUM" | "HIGH";
-      image_url: string;
-      created_at: string;
-    }> = [];
-
-    const isAllowedDocType = (type: string) => {
-      const t = (type || "").toLowerCase().trim();
-      return (
-        t.includes("passport") ||
-        t.includes("visa") ||
-        t.includes("aadhaar") ||
-        t.includes("adhar") ||
-        t.includes("national id") ||
-        t.includes("identity") ||
-        t === "id"
-      );
-    };
-
-    for (const u of userScanned) {
-      if (
-        isAllowedDocType(u.document_type) &&
-        !list.some((item) => item.case_code === u.case_code)
-      ) {
-        list.push({
-          id: u.id,
-          case_code: u.case_code,
-          document_type: u.document_type,
-          country_code: u.country_code ?? null,
-          risk_level: u.risk_level,
-          image_url: resolveSpecimenUrl(
-            u.image_url,
-            u.case_code,
-            u.document_type
-          ),
-          created_at: u.created_at,
-        });
-      }
-    }
-
-    for (const c of dbCases) {
-      if (!isAllowedDocType(c.document_type)) continue;
-      if (list.some((item) => item.case_code === c.case_code)) continue;
-
-      const resolved = resolveSpecimenUrl(
-        c.storage_url || c.image_url,
-        c.case_code,
-        c.document_type
-      );
-      if (resolved) {
-        list.push({
-          id: c.id,
-          case_code: c.case_code,
-          document_type: c.document_type,
-          country_code: c.country_code ?? null,
-          risk_level: ((c.risk_level as any) || "LOW") as
-            | "LOW"
-            | "MEDIUM"
-            | "HIGH",
-          image_url: resolved,
-          created_at: c.created_at,
-        });
-      }
-    }
-
-    for (const s of REAL_SHOWCASE_SPECIMENS) {
-      if (list.length >= 10) break;
-      if (!list.some((item) => item.case_code === s.case_code)) {
-        list.push(s);
-      }
-    }
-
-    return list.slice(0, 10);
-  }, [data?.recentCases, syncTick]);
 
   const liveRecentCases = React.useMemo(() => {
     const userScanned = getUserScannedSpecimens();
@@ -1277,100 +1192,6 @@ export function DashboardPage() {
               )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* ── Live Ingested Credential Specimens Gallery ── */}
-      <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-xs">
-        <div className="flex items-center justify-between flex-wrap gap-2 pb-3 mb-3 border-b border-slate-100 dark:border-slate-800/80">
-          <div>
-            <div className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Camera className="h-4 w-4 text-signal-cyan" />
-              Live Ingested Credential Specimens
-            </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Authoritative passport, visa, and national identity photo specimens synced live from InsForge backend & user screenings.
-            </div>
-          </div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>10 LIVE CREDENTIAL FEEDS ACTIVE</span>
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-10 gap-2.5">
-          {showcaseSpecimens.map((c, i) => {
-            const rc = c.risk_level ? riskColor(c.risk_level) : null;
-            const specimenUrl = resolveSpecimenUrl(
-              c.image_url,
-              c.case_code,
-              c.document_type
-            );
-            return (
-              <Link
-                key={`specimen-${c.id}-${c.case_code}-${i}`}
-                to={`/cases/${c.id}`}
-                className="group relative rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 p-2 transition-all duration-300 hover:border-signal-cyan/60 hover:bg-white dark:hover:bg-slate-900 hover:shadow-md flex flex-col justify-between"
-              >
-                <div className="relative aspect-[4/3] w-full rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800/80 bg-slate-100 dark:bg-slate-900 mb-2">
-                  <img
-                    src={specimenUrl}
-                    alt={c.case_code}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-108"
-                    onError={(e) => {
-                      const fallback =
-                        "/specimens/capture-1790478296233-94e9f5a0-5482-43e9-ba76-a03b449c3d44.jpg";
-                      if (
-                        e.currentTarget.src !== fallback &&
-                        !e.currentTarget.src.endsWith(fallback)
-                      ) {
-                        e.currentTarget.src = fallback;
-                      }
-                    }}
-                  />
-                  {/* Subtle top HUD strip */}
-                  <span className="absolute top-1 left-1 px-1 py-0.2 rounded text-[7px] font-mono font-bold bg-black/80 text-signal-cyan border border-signal-cyan/30">
-                    FEED {String(i + 1).padStart(2, "0")}
-                  </span>
-                  {c.country_code && (
-                    <span className="absolute top-1 right-1 px-1 py-0.2 rounded text-[8px] font-mono font-bold bg-black/80 text-white border border-white/20">
-                      {c.country_code}
-                    </span>
-                  )}
-                  {rc && (
-                    <span
-                      className={cn(
-                        "absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase shadow-2xs",
-                        rc.badge
-                      )}
-                    >
-                      {c.risk_level}
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <div
-                    className="text-[10px] font-mono font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-signal-blue transition-colors"
-                    title={c.case_code}
-                  >
-                    {c.case_code}
-                  </div>
-                  <div className="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400">
-                    <span
-                      className="capitalize truncate max-w-[55px]"
-                      title={c.document_type}
-                    >
-                      {c.document_type}
-                    </span>
-                    <span className="font-mono text-[8px] text-slate-400">
-                      {formatTimeAgo(c.created_at)}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
         </div>
       </div>
 
