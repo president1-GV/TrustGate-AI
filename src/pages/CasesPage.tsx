@@ -135,7 +135,7 @@ export function CasesPage() {
       const row: CaseRow = {
         id: u.id,
         case_code: u.case_code,
-        created_by: "d78d7bfa-d033-412d-8d20-987e0019467c",
+        created_by: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
         created_at: u.created_at,
         updated_at: u.created_at,
         document_type: u.document_type,

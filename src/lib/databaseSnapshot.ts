@@ -401,7 +401,7 @@ export const AUTHORITATIVE_REPORTS_SNAPSHOT: ReportRow[] = [
   {
     id: "554cd458-2a34-4639-b89e-002812ad74c2",
     case_id: "6e2fce48-2dc1-46c7-ab25-9ccc367e625c",
-    generated_by: "d78d7bfa-d033-412d-8d20-987e0019467c",
+    generated_by: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
     format: "json",
     created_at: "2026-09-15T06:01:56.855Z",
     cases: {
@@ -425,7 +425,7 @@ export const AUTHORITATIVE_REPORTS_SNAPSHOT: ReportRow[] = [
   {
     id: "db05cc02-d1af-4ef9-a4a6-0ef8d972ad7d",
     case_id: "5c39835f-17b8-4b98-aebf-7b961fa6d15f",
-    generated_by: "d78d7bfa-d033-412d-8d20-987e0019467c",
+    generated_by: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
     format: "json",
     created_at: "2026-09-09T06:54:03.460Z",
     cases: {

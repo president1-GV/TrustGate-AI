@@ -25,6 +25,7 @@ import type { FullPipelineResult } from "../ai/types";
 import { SEED_CASES } from "./seedCases";
 import { resolveSpecimenUrl, getUserScannedSpecimens, registerUserScannedSpecimen } from "./specimenResolver";
 import { AUTHORITATIVE_CASES_SNAPSHOT } from "./databaseSnapshot";
+import { resolveValidActorId } from "./security";
 
 const DB_NAME = "trustgate_realtime_offline_db";
 const DB_VERSION = 1;
@@ -631,7 +632,7 @@ export async function fetchCaseDetailsOffline(caseId: string): Promise<CaseDetai
             caseRow = {
               id: matchUser.id,
               case_code: matchUser.case_code,
-              created_by: "d78d7bfa-d033-412d-8d20-987e0019467c",
+              created_by: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
               created_at: matchUser.created_at,
               updated_at: matchUser.created_at,
               document_type: matchUser.document_type,
@@ -1047,7 +1048,7 @@ export async function listCasesForManagementOffline(filters: {
             const userRow: CaseRow = {
               id: u.id,
               case_code: u.case_code,
-              created_by: "d78d7bfa-d033-412d-8d20-987e0019467c",
+              created_by: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
               created_at: u.created_at,
               updated_at: u.created_at,
               document_type: u.document_type,
@@ -1137,7 +1138,7 @@ export async function listCasesForDashboardOffline(): Promise<DashboardSummary> 
             const syntheticRow: CaseRow = {
               id: item.case_id || p.caseCode || genId(),
               case_code: caseCode,
-              created_by: p.userId || "d78d7bfa-d033-412d-8d20-987e0019467c",
+              created_by: resolveValidActorId(p.userId),
               document_type: res?.docDetect?.documentType || "passport",
               country_code: p.countryCode || null,
               status: "UNDER_REVIEW",
@@ -1166,7 +1167,7 @@ export async function listCasesForDashboardOffline(): Promise<DashboardSummary> 
             all.push({
               id: snap.id,
               case_code: snap.case_code,
-              created_by: "d78d7bfa-d033-412d-8d20-987e0019467c",
+              created_by: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
               created_at: snap.created_at,
               updated_at: snap.created_at,
               document_type: snap.document_type,
@@ -1201,7 +1202,7 @@ export async function listCasesForDashboardOffline(): Promise<DashboardSummary> 
             const userRow: CaseRow = {
               id: u.id,
               case_code: u.case_code,
-              created_by: "d78d7bfa-d033-412d-8d20-987e0019467c",
+              created_by: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
               created_at: u.created_at,
               updated_at: u.created_at,
               document_type: u.document_type,
@@ -1687,8 +1688,8 @@ export async function syncLocalDbWithRemote(): Promise<number> {
     const snapshotCases = AUTHORITATIVE_CASES_SNAPSHOT.map((s) => ({
       id: s.id,
       case_code: s.case_code,
-      created_by: "d78d7bfa-d033-412d-8d20-987e0019467c",
-      assigned_to: "d78d7bfa-d033-412d-8d20-987e0019467c",
+      created_by: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
+      assigned_to: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
       document_type: s.document_type,
       country_code: s.country_code,
       status: s.status,
@@ -1714,8 +1715,8 @@ export async function syncLocalDbWithRemote(): Promise<number> {
       return {
         id: u.id,
         case_code: u.case_code,
-        created_by: "d78d7bfa-d033-412d-8d20-987e0019467c",
-        assigned_to: "d78d7bfa-d033-412d-8d20-987e0019467c",
+        created_by: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
+        assigned_to: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
         document_type: u.document_type,
         country_code: u.country_code ?? null,
         status: u.risk_level === "HIGH" ? "FLAGGED" : "CLEARED",
@@ -1902,8 +1903,7 @@ export async function flushSyncQueue(): Promise<{ synced: number; failed: number
             .maybeSingle();
 
           if (!existing.data) {
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            const validUserId = uuidRegex.test(p.userId) ? p.userId : "d78d7bfa-d033-412d-8d20-987e0019467c";
+            const validUserId = resolveValidActorId(p.userId);
             const priority =
               res?.risk?.level === "HIGH"
                 ? res?.risk?.score >= 85
@@ -1964,8 +1964,8 @@ export async function flushSyncQueue(): Promise<{ synced: number; failed: number
                 cStore.put({
                   id: item.case_id || p.caseCode || genId(),
                   case_code: p.caseCode,
-                  created_by: p.userId || "d78d7bfa-d033-412d-8d20-987e0019467c",
-                  assigned_to: p.userId || "d78d7bfa-d033-412d-8d20-987e0019467c",
+                  created_by: (p.userId && p.userId !== "1400f02a-dbaa-40d0-9e56-de2d00d30b88" ? p.userId : "1400f02a-dbaa-40d0-9e56-de2d00d30b88"),
+                  assigned_to: (p.userId && p.userId !== "1400f02a-dbaa-40d0-9e56-de2d00d30b88" ? p.userId : "1400f02a-dbaa-40d0-9e56-de2d00d30b88"),
                   document_type: res?.docDetect?.documentType || "passport",
                   country_code: p.countryCode ?? null,
                   status: "UNDER_REVIEW",

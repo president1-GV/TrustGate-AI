@@ -2504,7 +2504,11 @@ export async function listAuditLogs(filters?: {
   // Profile cache for known profiles
   const profileMap: Record<string, { display_name: string }> = {
     "d78d7bfa-d033-412d-8d20-987e0019467c": { display_name: "Admin" },
-    "06d9077b-2a97-460e-b6ed-38d6a16581c3": { display_name: "Officer" },
+    "1400f02a-dbaa-40d0-9e56-de2d00d30b88": { display_name: "Admin" },
+    "d10e0c8e-4eb6-4b4c-8e16-7e0037e1fe33": { display_name: "Officer Sarah Chen" },
+    "90cb3e0d-6bb6-435b-b9b2-8cf4afdbcbf8": { display_name: "Supervisor Marcus Vance" },
+    "eeafc303-c06b-46a5-b6b8-c38989520e9b": { display_name: "Border Intelligence Analyst" },
+    "06d9077b-2a97-460e-b6ed-38d6a16581c3": { display_name: "Officer Sarah Chen" },
     "e49cf4a5-e63d-4cac-a54a-436f47da9e52": { display_name: "Supervisor" },
     "59119414-9a9b-4b00-bade-16e0b1e11ed1": { display_name: "Analyst" },
     "88c8e318-d3bd-475a-807f-c82a662c7424": { display_name: "Aditya singhania" },
