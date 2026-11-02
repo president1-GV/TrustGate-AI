@@ -16,6 +16,7 @@ export interface DetectedCredential {
   source: "camera" | "upload" | null;
   realFields: {
     documentNumber?: string;
+    maskedDocumentNumber?: string;
     fullName?: string;
     dateOfBirth?: string;
     expiryDate?: string;
@@ -223,6 +224,7 @@ export function detectCredential(
     nominalAspect = 1.586;
     if (!countryCode) countryCode = "IND";
   } else if (
+    docDetect?.documentType === "aadhaar" ||
     rawText.includes("AADHAAR") ||
     rawText.includes("AADHAR") ||
     rawText.includes("ADHAAR") ||
@@ -233,7 +235,8 @@ export function detectCredential(
     rawText.includes("आधार") ||
     rawText.includes("भारत सरकार") ||
     /\b[2-9]\d{3}[\s\-]?[0-9]{4}[\s\-]?[0-9]{4}\b/.test(rawText) ||
-    /(?:X{4}|[xX]{4}|\*{4}|•{4})[\s\-]+(?:X{4}|[xX]{4}|\*{4}|•{4})[\s\-]+\d{4}/.test(rawText)
+    /(?:X{4}|[xX]{4}|\*{4}|•{4})[\s\-]+(?:X{4}|[xX]{4}|\*{4}|•{4})[\s\-]+\d{4}/.test(rawText) ||
+    ocr?.fields?.some((f) => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI"))
   ) {
     docType = "aadhaar";
     docTitle = "Unique Identification Authority of India (Aadhaar)";
@@ -311,7 +314,7 @@ export function detectCredential(
     docTitle = countryCode
       ? `${ICAO_COUNTRY_MAP[countryCode] || countryCode} Identity Card`
       : "National Identity Card";
-    standard = "ICAO 9303 TD1";
+    standard = countryCode ? "ICAO 9303 TD1" : "National Identity Card Standard";
     nominalAspect = 1.586;
   }
 
@@ -381,13 +384,22 @@ export function detectCredential(
     detectedAspect = docDetect.boundingBox.w / docDetect.boundingBox.h;
   }
 
+  // Account for rotated camera capture: if ID card was uploaded in portrait orientation (< 0.90),
+  // compare the upright/corrected aspect ratio against nominal landscape standards
+  let comparisonAspect = detectedAspect;
+  if (docDetect?.correctedAspectRatio && docDetect.isRotated) {
+    comparisonAspect = docDetect.correctedAspectRatio;
+  } else if (comparisonAspect && comparisonAspect < 0.90 && nominalAspect > 1.0) {
+    comparisonAspect = 1 / comparisonAspect;
+  }
+
   // Handle e-Aadhaar portrait format vs standard PVC card
-  if (docType === "aadhaar" && detectedAspect && detectedAspect < 1.0) {
+  if (docType === "aadhaar" && comparisonAspect && comparisonAspect < 0.80) {
     nominalAspect = 0.50; // Official portrait e-Aadhaar slip format
   }
 
-  if (detectedAspect && nominalAspect) {
-    devPercent = Math.abs(detectedAspect - nominalAspect) / nominalAspect * 100;
+  if (comparisonAspect && nominalAspect) {
+    devPercent = Math.abs(comparisonAspect - nominalAspect) / nominalAspect * 100;
   }
 
   // 5. Gather Strictly Real Extracted Fields
@@ -403,9 +415,18 @@ export function detectCredential(
   const ocrExp = ocr?.fields?.find((f) => f.fieldName === "EXPIRY_DATE")?.fieldValue as string | undefined;
 
   const resolvedName = mrzName || ocrName;
-  const resolvedDocNum = mrz?.documentNumber || ocrDocNum;
+  let resolvedDocNum = mrz?.documentNumber || ocrDocNum;
   const resolvedDob = mrz?.dateOfBirth || ocrDob;
   const resolvedExp = mrz?.expiryDate || ocrExp;
+
+  // Mask 12-digit Aadhaar UID for privacy preservation in UI
+  let maskedDocNum: string | undefined = undefined;
+  if (docType === "aadhaar" && resolvedDocNum) {
+    const digitsOnly = resolvedDocNum.replace(/\D/g, "");
+    if (digitsOnly.length === 12) {
+      maskedDocNum = `XXXX XXXX ${digitsOnly.slice(8)}`;
+    }
+  }
 
   // Real Confidence calculation based strictly on genuine evidence
   let conf = 0.4;
@@ -433,6 +454,7 @@ export function detectCredential(
     source: captureSource || (provenance?.source === "LIVE_CAMERA" ? "camera" : "upload"),
     realFields: {
       documentNumber: resolvedDocNum,
+      maskedDocumentNumber: maskedDocNum,
       fullName: resolvedName,
       dateOfBirth: resolvedDob,
       expiryDate: resolvedExp,

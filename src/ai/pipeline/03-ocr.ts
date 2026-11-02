@@ -1,5 +1,6 @@
 import type { OcrResult, OcrField } from "../types";
 import { createWorker } from "tesseract.js";
+import { rotateCanvas } from "../../lib/imageProcessing";
 
 function parseDate(text: string): string | null {
   const iso = text.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
@@ -543,12 +544,62 @@ export async function runOcr(
   // 2. Fallback: Browser Tesseract OCR
   let overallConfidence = 0;
   let rawText = "";
+  let orientedCanvas = canvas;
+  let orientationApplied = 0;
 
   try {
     const worker = await createWorker("eng");
-    const ret = await worker.recognize(canvas.toDataURL("image/png"));
-    rawText = ret.data.text || "";
-    overallConfidence = (ret.data.confidence || 0) / 100;
+
+    // If image is portrait (W < H), a standard ID card is rotated sideways:
+    if (canvas.width < canvas.height) {
+      // Rotate 270° CW to convert 90° CCW portrait image into landscape
+      const cand270 = rotateCanvas(canvas, 270);
+      const ret270 = await worker.recognize(cand270.toDataURL("image/png"));
+      const text270 = ret270.data.text || "";
+      const conf270 = (ret270.data.confidence || 0) / 100;
+
+      let bestCanvas = cand270;
+      let bestText = text270;
+      let bestConf = conf270;
+      let bestAngle = 270;
+
+      // If 270° produced low text length or low confidence, also evaluate 90° CW
+      if (text270.trim().length < 15 || conf270 < 0.40) {
+        const cand90 = rotateCanvas(canvas, 90);
+        const ret90 = await worker.recognize(cand90.toDataURL("image/png"));
+        const text90 = ret90.data.text || "";
+        const conf90 = (ret90.data.confidence || 0) / 100;
+        if (text90.trim().length > bestText.trim().length || conf90 > bestConf) {
+          bestCanvas = cand90;
+          bestText = text90;
+          bestConf = conf90;
+          bestAngle = 90;
+        }
+      }
+
+      orientedCanvas = bestCanvas;
+      rawText = bestText;
+      overallConfidence = bestConf;
+      orientationApplied = bestAngle;
+    } else {
+      const ret = await worker.recognize(canvas.toDataURL("image/png"));
+      rawText = ret.data.text || "";
+      overallConfidence = (ret.data.confidence || 0) / 100;
+
+      // If 0 lines or very low confidence on landscape card, test 180° upside-down
+      if (rawText.trim().length < 12 && (context?.documentTypeHint === "id" || context?.documentTypeHint === "aadhaar")) {
+        const cand180 = rotateCanvas(canvas, 180);
+        const ret180 = await worker.recognize(cand180.toDataURL("image/png"));
+        const text180 = ret180.data.text || "";
+        const conf180 = (ret180.data.confidence || 0) / 100;
+        if (text180.trim().length > rawText.trim().length) {
+          orientedCanvas = cand180;
+          rawText = text180;
+          overallConfidence = conf180;
+          orientationApplied = 180;
+        }
+      }
+    }
     await worker.terminate();
   } catch (err) {
     console.warn("[TrustGate OCR] Tesseract fallback error or timeout:", err);
@@ -561,7 +612,15 @@ export async function runOcr(
 
   if (lines.length === 0) {
     const executionMs = performance.now() - start;
-    return { provider: "tesseract.js", rawText: "", overallConfidence: 0, fields: [], executionMs };
+    return {
+      provider: "tesseract.js",
+      rawText: "",
+      overallConfidence: 0,
+      fields: [],
+      executionMs,
+      orientationApplied,
+      orientedCanvas,
+    };
   }
 
   // 1. Full Name
@@ -722,5 +781,13 @@ export async function runOcr(
 
   const enrichedFields = enrichOcrFields(fields, rawText, overallConfidence);
   const executionMs = performance.now() - start;
-  return { provider: "tesseract.js", rawText, overallConfidence, fields: enrichedFields, executionMs };
+  return {
+    provider: "tesseract.js",
+    rawText,
+    overallConfidence,
+    fields: enrichedFields,
+    executionMs,
+    orientationApplied,
+    orientedCanvas,
+  };
 }

@@ -55,7 +55,9 @@ export async function computeRisk(input: {
     (ocr.fields.some((f) => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
       ocr.fields.some((f) => f.fieldName === "DOCUMENT_NUMBER" && /\d{4}/.test(f.fieldValue || "")));
 
-  const mrzValid = isAadhaar
+  const isNonMrz = isAadhaar || mrz.applicability === "NOT_APPLICABLE";
+
+  const mrzValid = isNonMrz
     ? 100
     : mrz.present && mrz.compositeValid
       ? 100
@@ -64,7 +66,7 @@ export async function computeRisk(input: {
         : 0;
 
   const notExpiredIssue = validation.issues.find((i) => i.ruleCode === "not_expired");
-  const expiryValid = isAadhaar
+  const expiryValid = isNonMrz
     ? 100
     : !notExpiredIssue || notExpiredIssue.severity === "PASS"
       ? 100
@@ -125,14 +127,17 @@ export async function computeRisk(input: {
     rawScore = Math.max(rawScore, 88);
   }
 
-  // If credential has NO MRZ and NO face portrait, enforce high risk rejection
-  if (!mrz.present && !face.detected && !isAadhaar) {
+  // If credential has NO MRZ and NO face portrait, enforce high risk rejection (only on MRZ-applicable travel docs)
+  if (!mrz.present && !face.detected && !isNonMrz) {
     rawScore = Math.max(rawScore, 90);
   }
 
-  // If critical validation issues occurred
-  if (validation.summaryCritical > 0) {
+  // If critical validation issues occurred (and not merely inconclusive OCR evidence)
+  if (validation.summaryCritical > 0 && validation.status !== "INSUFFICIENT_EVIDENCE") {
     rawScore = Math.max(rawScore, 85);
+  } else if (validation.status === "INSUFFICIENT_EVIDENCE" || ocr.fields.length === 0) {
+    // Missing OCR evidence must not automatically declare a credential fraudulent
+    rawScore = Math.min(rawScore, 58);
   }
 
   factors.push({
@@ -166,8 +171,8 @@ export async function computeRisk(input: {
     code: "mrz_validity",
     weight: weights.mrzValid * 100,
     contribution: weights.mrzValid * (100 - components.mrzValid),
-    explanation: isAadhaar
-      ? "Republic of India Aadhaar smart card format verified (ICAO MRZ not required)."
+    explanation: isNonMrz
+      ? "Republic of India domestic smart card standard (ICAO MRZ not applicable)."
       : mrz.present
         ? mrz.compositeValid
           ? `MRZ composite checksum valid (${mrz.format || "ICAO"}).`

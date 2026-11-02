@@ -44,15 +44,20 @@ export async function parseMrz(
 ): Promise<MrzResult> {
   const rawText = ocr.rawText || "";
   const isAadhaarDoc =
-    /Unique\s+Identification\s+Authority\s+of\s+India/i.test(rawText) ||
-    /Aadhaar|Aadhar/i.test(rawText) ||
-    /UIDAI/i.test(rawText) ||
-    /\b[2-9]\d{3}\s\d{4}\s\d{4}\b/.test(rawText);
+    /Unique\s+Identification\s+Authority/i.test(rawText) ||
+    /Aadhaar|Aadhar|UIDAI/i.test(rawText) ||
+    /आधार|भारत\s*सरकार/u.test(rawText) ||
+    /\b[2-9]\d{3}\s\d{4}\s\d{4}\b/.test(rawText) ||
+    ocr.fields.some((f) => f.fieldName === "ISSUING_AUTHORITY" && f.fieldValue?.includes("UIDAI")) ||
+    ocr.fields.some((f) => f.fieldName === "DOCUMENT_NUMBER" && /\d{4}\s\d{4}\s\d{4}/.test(f.fieldValue || ""));
 
   // Indian Aadhaar credentials are national smart cards that do not have an ICAO MRZ
   if (isAadhaarDoc && !rawText.includes("P<") && !rawText.includes("I<IND")) {
     return {
       present: false,
+      applicability: "NOT_APPLICABLE",
+      status: "NOT_APPLICABLE",
+      nonApplicableReason: "Aadhaar does not use an ICAO passport MRZ (Domestic Smart Card)",
       compositeValid: false,
       checkDigitsValid: false,
       rawLines: [],
@@ -98,6 +103,9 @@ export async function parseMrz(
   if (mrzLines.length === 0) {
     return {
       present: false,
+      applicability: isAadhaarDoc ? "NOT_APPLICABLE" : "APPLICABLE",
+      status: isAadhaarDoc ? "NOT_APPLICABLE" : "FAIL",
+      nonApplicableReason: isAadhaarDoc ? "Aadhaar does not use an ICAO passport MRZ (Domestic Smart Card)" : undefined,
       compositeValid: false,
       checkDigitsValid: false,
       rawLines: [],

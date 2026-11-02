@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  FileX2,
   ChevronDown,
   ChevronRight,
   Gauge,
@@ -21,6 +20,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -134,6 +134,21 @@ function moduleTone(status: PipelineStatus): {
         chip: "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
         label: "PROCESSING",
         border: "border-blue-300 dark:border-blue-700",
+      };
+    case "NOT_APPLICABLE":
+      return {
+        dot: "bg-slate-400 dark:bg-slate-500",
+        chip: "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+        label: "N/A",
+        border: "border-slate-200 dark:border-slate-800",
+      };
+    case "INSUFFICIENT_EVIDENCE":
+    case "NOT_EVALUATED":
+      return {
+        dot: "bg-amber-400",
+        chip: "bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
+        label: status === "NOT_EVALUATED" ? "NOT EVALUATED" : "INCONCLUSIVE",
+        border: "border-amber-200 dark:border-amber-800/60",
       };
     default:
       return {
@@ -254,6 +269,11 @@ function Row({ label, value }: { label: string; value: string }) {
 export function ScreeningPage() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const queryClient = useQueryClient();
+  const savingRef = React.useRef(false);
+  const inFlightCheckinPromiseRef = React.useRef<Promise<any> | null>(null);
+  const [saveSuccessNotice, setSaveSuccessNotice] = React.useState<string | null>(null);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
 
   const [pipelineModules, setPipelineModules] = React.useState<
     PipelineModule[]
@@ -606,7 +626,7 @@ export function ScreeningPage() {
 
       const cameraCaseCode = genCaseCode();
       setCheckinLoading(true);
-      autoCheckinCameraScan({
+      const checkinPromise = autoCheckinCameraScan({
         userId: user?.id,
         file,
         result: pipelineResult,
@@ -614,7 +634,9 @@ export function ScreeningPage() {
         storageUrl: storage?.url,
         mime: sInfo.mime,
         fileSizeBytes: sInfo.size,
-      })
+      });
+      inFlightCheckinPromiseRef.current = checkinPromise;
+      checkinPromise
         .then((chk) => {
           if (activeRunIdRef.current === runId) {
             setCameraCheckin(chk);
@@ -804,7 +826,7 @@ export function ScreeningPage() {
 
       // 11. Central database check-in (Unified for camera and uploaded files)
       setCheckinLoading(true);
-      autoCheckinCameraScan({
+      const checkinPromise = autoCheckinCameraScan({
         userId: user?.id,
         file,
         result: r,
@@ -812,7 +834,9 @@ export function ScreeningPage() {
         storageUrl: undefined,
         mime: validation.detectedMime ?? file.type,
         fileSizeBytes: file.size,
-      })
+      });
+      inFlightCheckinPromiseRef.current = checkinPromise;
+      checkinPromise
         .then((chk) => {
           if (activeRunIdRef.current === runId) {
             setCameraCheckin(chk);
@@ -980,66 +1004,106 @@ export function ScreeningPage() {
     }
   };
 
-  const saveCase = async () => {
-    if (!result || saving) return;
-    if (cameraCheckin?.caseId) {
-      navigate(`/cases/${cameraCheckin.caseId}`);
+  const handleSaveCase = async () => {
+    // 1. Prevent duplicate submissions via synchronous ref & state guards
+    if (savingRef.current || saving) return;
+
+    // 2. Validate current screening run
+    if (!result) {
+      setSaveError("No screening evidence available to save. Please upload or scan a document first.");
       return;
     }
-    const activeUserId = user?.id || "d78d7bfa-d033-412d-8d20-987e0019467c";
+
+    savingRef.current = true;
     setSaving(true);
-    setError(null);
+    setSaveError(null);
+    setSaveSuccessNotice(null);
+
     try {
-      const caseCode = cameraCheckin?.caseCode || genCaseCode();
-      const persistentDataUrl = currentDataUrlRef.current || null;
+      let targetCaseId: string | null = null;
+      let targetCaseCode: string = cameraCheckin?.caseCode || genCaseCode();
 
-      if (persistentDataUrl) {
+      // If an auto-checkin operation is in-flight, await its completion to avoid duplicate case creation
+      if (inFlightCheckinPromiseRef.current) {
         try {
-          sessionStorage.setItem("tg_doc_img_" + caseCode, persistentDataUrl);
-        } catch {}
-      }
-
-      let storageBucket = storageInfo?.bucket;
-      let storageKey = storageInfo?.key;
-      let storageUrl =
-        storageInfo?.url && !storageInfo.url.startsWith("blob:") ? storageInfo.url : undefined;
-
-      // Attempt background cloud upload to InsForge storage if online
-      if (currentFileRef.current && navigator.onLine && (!storageUrl || !storageKey)) {
-        try {
-          const uploaded = await uploadScreeningDocument(currentFileRef.current, caseCode);
-          if (uploaded?.url) {
-            storageUrl = uploaded.url;
-            storageKey = uploaded.key;
-            storageBucket = uploaded.bucket;
+          const chk = await inFlightCheckinPromiseRef.current;
+          if (chk?.caseId) {
+            targetCaseId = chk.caseId;
+            targetCaseCode = chk.caseCode || targetCaseCode;
           }
-        } catch (uploadErr) {
-          console.warn("[TrustGate Storage] Background cloud upload fallback to local base64:", uploadErr);
+        } catch (checkinErr) {
+          console.warn("[TrustGate] In-flight checkin error caught during save:", checkinErr);
         }
+      } else if (cameraCheckin?.caseId) {
+        targetCaseId = cameraCheckin.caseId;
+        targetCaseCode = cameraCheckin.caseCode || targetCaseCode;
       }
 
-      const newId = await saveScreeningCase({
-        userId: activeUserId,
-        caseCode,
-        result,
-        isDemo: false,
-        storageUrl:
-          storageUrl ||
-          (persistentDataUrl && persistentDataUrl.length < 2_000_000 ? persistentDataUrl : undefined),
-        storageKey: storageKey,
-        storageBucket: storageBucket,
-        mime: storageInfo?.mime,
-        fileSizeBytes: storageInfo?.size,
-        imageWidth: storageInfo?.width,
-        imageHeight: storageInfo?.height,
-      });
+      // If not yet persisted, perform authoritative persistence to database
+      if (!targetCaseId) {
+        const activeUserId = user?.id || "d78d7bfa-d033-412d-8d20-987e0019467c";
+        const persistentDataUrl = currentDataUrlRef.current || null;
 
+        if (persistentDataUrl) {
+          try {
+            sessionStorage.setItem("tg_doc_img_" + targetCaseCode, persistentDataUrl);
+          } catch {}
+        }
+
+        let storageBucket = storageInfo?.bucket;
+        let storageKey = storageInfo?.key;
+        let storageUrl =
+          storageInfo?.url && !storageInfo.url.startsWith("blob:") ? storageInfo.url : undefined;
+
+        // Background cloud upload if online and not already uploaded
+        if (currentFileRef.current && navigator.onLine && (!storageUrl || !storageKey)) {
+          try {
+            const uploaded = await uploadScreeningDocument(currentFileRef.current, targetCaseCode);
+            if (uploaded?.url) {
+              storageUrl = uploaded.url;
+              storageKey = uploaded.key;
+              storageBucket = uploaded.bucket;
+            }
+          } catch (uploadErr) {
+            console.warn("[TrustGate Storage] Background cloud upload fallback to local base64:", uploadErr);
+          }
+        }
+
+        const newId = await saveScreeningCase({
+          userId: activeUserId,
+          caseCode: targetCaseCode,
+          result,
+          isDemo: false,
+          storageUrl:
+            storageUrl ||
+            (persistentDataUrl && persistentDataUrl.length < 2_000_000 ? persistentDataUrl : undefined),
+          storageKey,
+          storageBucket,
+          mime: storageInfo?.mime,
+          fileSizeBytes: storageInfo?.size,
+          imageWidth: storageInfo?.width,
+          imageHeight: storageInfo?.height,
+          countryCode: (result.mrz?.nationality as string) || undefined,
+        });
+
+        targetCaseId = newId;
+      }
+
+      // 5. Verify the backend response and persisted case ID
+      if (!targetCaseId || typeof targetCaseId !== "string" || targetCaseId.trim() === "") {
+        throw new Error("Case persistence unconfirmed: no valid case ID returned from database.");
+      }
+
+      // Store persistent image in session for immediate specimen viewer retrieval
+      const persistentDataUrl = currentDataUrlRef.current || null;
       if (persistentDataUrl) {
         try {
-          sessionStorage.setItem("tg_doc_img_" + newId, persistentDataUrl);
+          sessionStorage.setItem("tg_doc_img_" + targetCaseId, persistentDataUrl);
+          sessionStorage.setItem("tg_doc_img_" + targetCaseCode, persistentDataUrl);
         } catch {}
       }
 
+      // Register specimen in user scanned registry
       const savedDocType = result.docDetect?.documentType || "passport";
       const savedDocTypeLabel =
         savedDocType === "aadhaar"
@@ -1049,35 +1113,68 @@ export function ScreeningPage() {
           : savedDocType === "id"
           ? "National ID"
           : "Passport";
+
       registerUserScannedSpecimen({
-        id: newId,
-        case_code: caseCode,
+        id: targetCaseId,
+        case_code: targetCaseCode,
         document_type: savedDocTypeLabel,
         country_code: (result.mrz?.nationality as string) || (savedDocType === "aadhaar" ? "IND" : null),
         risk_level: result.risk?.level || "LOW",
-        image_url: persistentDataUrl || storageUrl || "",
+        image_url: persistentDataUrl || storageInfo?.url || "",
       });
 
-      navigate(`/cases/${newId}`);
+      // 7. Invalidate and refresh all relevant case, report, and dashboard queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["cases"] }),
+        queryClient.invalidateQueries({ queryKey: ["case", targetCaseId] }),
+        queryClient.invalidateQueries({ queryKey: ["reports"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      ]);
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("trustgate:case_saved", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
+        window.dispatchEvent(new CustomEvent("cases_changed", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
+        window.dispatchEvent(new CustomEvent("trustgate:report_saved", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
+        window.dispatchEvent(new CustomEvent("reports_changed", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
+        window.dispatchEvent(new CustomEvent("tg:db_updated", { detail: { caseId: targetCaseId, caseCode: targetCaseCode } }));
+      }
+
+      // 8. Display clear success notification
+      setSaveSuccessNotice("Case saved successfully. Opening case review...");
+
+      // 9. Automatically navigate to the saved case's review/details page
+      navigate(`/cases/${targetCaseId}`, {
+        state: {
+          justSaved: true,
+          caseCode: targetCaseCode,
+          message: "Case saved successfully. Opening case review...",
+        },
+      });
     } catch (e: any) {
-      setError(sanitizeErrorMessage(e?.message ?? "Failed to save case"));
+      console.error("[TrustGate] Error saving case:", e);
+      const msg = sanitizeErrorMessage(e?.message ?? "Failed to save case to database");
+      setSaveError(msg);
+      setError(msg);
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
 
+  const saveCase = handleSaveCase;
+
   const findingsCritical =
-    result?.findings.filter((f) => f.severity === "CRITICAL") ?? [];
+    result?.findings?.filter((f) => f.severity === "CRITICAL") ?? [];
   const findingsHigh =
-    result?.findings.filter((f) => f.severity === "HIGH") ?? [];
+    result?.findings?.filter((f) => f.severity === "HIGH") ?? [];
   const findingsMed =
-    result?.findings.filter(
+    result?.findings?.filter(
       (f) => f.severity === "MEDIUM"
     ) ?? [];
   const findingsLow =
-    result?.findings.filter((f) => f.severity === "LOW") ?? [];
+    result?.findings?.filter((f) => f.severity === "LOW") ?? [];
   const findingsPass =
-    result?.findings.filter((f) => f.severity === "PASS") ?? [];
+    result?.findings?.filter((f) => f.severity === "PASS") ?? [];
 
   const overallProgress = React.useMemo(() => {
     const done = pipelineModules.filter(
@@ -1508,10 +1605,10 @@ export function ScreeningPage() {
             enhancedHash={result?.enhancedHash || undefined}
             rectifiedHash={result?.rectifiedHash || undefined}
             transformationsApplied={result?.enhancement?.transformationsApplied || []}
-            docBBox={result?.docDetect.boundingBox ?? null}
-            ocrFields={result?.ocr.fields ?? []}
-            mrzLines={result?.mrz.rawLines ?? []}
-            tamperingRegions={result?.tampering.regions ?? []}
+            docBBox={result?.docDetect?.boundingBox ?? null}
+            ocrFields={result?.ocr?.fields ?? []}
+            mrzLines={result?.mrz?.rawLines ?? []}
+            tamperingRegions={result?.tampering?.regions ?? []}
             face={result?.face ?? null}
             provenance={currentProvenance || result?.provenance}
             onActivateCamera={() => setCameraOpen(true)}
@@ -1590,7 +1687,10 @@ export function ScreeningPage() {
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {typeof m.score === "number" &&
                           !Number.isNaN(m.score) &&
-                          m.status !== "PROCESSING" && (
+                          m.status !== "PROCESSING" &&
+                          m.status !== "NOT_APPLICABLE" &&
+                          m.status !== "NOT_EVALUATED" &&
+                          m.status !== "INSUFFICIENT_EVIDENCE" && (
                             <span className="text-[10px] tabular-nums text-slate-400">
                               {pct(m.score, 0)}
                             </span>
@@ -1667,30 +1767,49 @@ export function ScreeningPage() {
                 </div>
               )}
 
-              <Button
-                variant="primary"
-                size="lg"
-                disabled={!result || saving || !user}
-                onClick={saveCase}
-                className="w-full"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Saving case…
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" /> Save Case & Open Review
-                  </>
-                )}
-              </Button>
+              <div className="space-y-2.5">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  disabled={!result || saving}
+                  onClick={handleSaveCase}
+                  className="w-full font-bold shadow-sm cursor-pointer"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> Saving Case...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-1.5" /> Save Case & Open Review
+                    </>
+                  )}
+                </Button>
 
-              {!user && (
-                <p className="text-[11px] text-risk-high flex items-center gap-2">
-                  <FileX2 className="h-3.5 w-3.5" />
-                  Not authenticated — login to save.
-                </p>
-              )}
+                {saveSuccessNotice && (
+                  <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2.5 animate-fadeIn shadow-2xs">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>{saveSuccessNotice}</span>
+                  </div>
+                )}
+
+                {saveError && (
+                  <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center gap-2.5 shadow-2xs">
+                    <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                    <div className="flex-1">
+                      <span>{saveError}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSaveCase}
+                      className="h-6 px-2 text-[10px] text-rose-700 dark:text-rose-300 hover:bg-rose-500/20"
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -1777,7 +1896,7 @@ export function ScreeningPage() {
                     </div>
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-slate-600 dark:text-slate-400 font-medium">Risk Assessment:</span>
-                      <span className="text-emerald-700 dark:text-emerald-400 font-bold font-mono">LOW ({pct(result?.risk.score ?? 0)})</span>
+                      <span className="text-emerald-700 dark:text-emerald-400 font-bold font-mono">LOW ({pct(result?.risk?.score ?? 0)})</span>
                     </div>
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-slate-600 dark:text-slate-400 font-medium">Database Record:</span>

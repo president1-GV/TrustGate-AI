@@ -176,5 +176,23 @@ export async function detectTampering(
 
   const confidence = clamp(Math.round(80 + Math.min(18, blocks.length / 500)), 70, 99);
 
-  return { probability: overallProb, confidence, severity, regions };
+  const verdict: TamperingResult["verdict"] =
+    regions.length === 0 ? "NO_ANOMALY_DETECTED" : "ANOMALIES_IDENTIFIED";
+
+  const limitations = [
+    "Error Level Analysis evaluates 2D JPEG compression grid consistency.",
+    "Physical substrate security features (UV watermark, hologram, tactile printing) require specialized hardware scanners.",
+  ];
+
+  const analysisScope = "Optical DCT Quantization & JPEG Grid Consistency";
+
+  return {
+    probability: overallProb,
+    confidence,
+    severity,
+    regions,
+    analysisScope,
+    limitations,
+    verdict,
+  };
 }

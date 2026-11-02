@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import {
   useQuery,
   useMutation,
@@ -286,6 +286,8 @@ export function CaseDetailPage() {
   const { id: rawId } = useParams<{ id: string }>();
   const id = React.useMemo(() => (rawId ? rawId.trim().replace(/\s+/g, "-") : undefined), [rawId]);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const qc = useQueryClient();
   const [tab, setTab] = React.useState<TabId>("overview");
@@ -327,6 +329,34 @@ export function CaseDetailPage() {
     const t = setTimeout(() => setToast(null), 3200);
     return () => clearTimeout(t);
   }, [toast]);
+
+  // Display automatic arrival notice if navigated directly from save case
+  React.useEffect(() => {
+    if (location.state?.justSaved) {
+      setToast({
+        tone: "ok",
+        msg: location.state.message || "Case saved successfully. Opening case review...",
+      });
+      // Clear location.state to prevent repeat on internal state updates
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  // Sync initial tab from URL query parameter or navigation state
+  React.useEffect(() => {
+    const requestedTab = (searchParams.get("tab") || location.state?.tab) as TabId | undefined;
+    if (requestedTab && TAB_ITEMS.some((t) => t.id === requestedTab)) {
+      setTab(requestedTab);
+    }
+  }, [searchParams, location.state]);
+
+  // Sync reportPreview when reports are loaded in the bundle
+  React.useEffect(() => {
+    if (data?.reports && data.reports.length > 0 && !reportPreview) {
+      const latest = data.reports[0];
+      setReportPreview({ id: latest.id, createdAt: latest.created_at });
+    }
+  }, [data?.reports, reportPreview]);
 
   const statusMut = useMutation({
     mutationFn: async (p: {
@@ -2003,9 +2033,18 @@ export function CaseDetailPage() {
                   <Button variant="outline" onClick={printReport}>
                     <Printer className="h-4 w-4" /> Print / Save PDF
                   </Button>
-                  {reportPreview && (
+                  <Link to={`/reports?caseId=${id}`}>
+                    <Button variant="outline" className="gap-1.5">
+                      <ExternalLink className="h-4 w-4" /> Reports Registry
+                    </Button>
+                  </Link>
+                  {reportPreview ? (
                     <Badge variant="pass">
                       Saved dossier #{shortId(reportPreview.id, 8)} · {formatDate(reportPreview.createdAt, "PPp")}
+                    </Badge>
+                  ) : (
+                    <Badge variant="warning" className="gap-1.5 font-mono text-xs">
+                      <Clock className="h-3.5 w-3.5" /> REPORT_GENERATION_PENDING
                     </Badge>
                   )}
                 </div>

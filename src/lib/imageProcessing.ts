@@ -116,6 +116,36 @@ export function createCanvas(width: number, height: number): HTMLCanvasElement {
   } as unknown as HTMLCanvasElement;
 }
 
+/**
+ * Rotates a canvas by 90, 180, or 270 degrees clockwise, producing a correctly dimensioned output canvas.
+ */
+export function rotateCanvas(
+  source: HTMLCanvasElement,
+  degrees: 90 | 180 | 270
+): HTMLCanvasElement {
+  const is90or270 = degrees === 90 || degrees === 270;
+  const targetW = is90or270 ? source.height : source.width;
+  const targetH = is90or270 ? source.width : source.height;
+  const target = createCanvas(targetW, targetH);
+  const ctx = target.getContext("2d");
+  if (!ctx) return target;
+
+  ctx.save();
+  if (degrees === 90) {
+    ctx.translate(targetW, 0);
+    ctx.rotate(Math.PI / 2);
+  } else if (degrees === 180) {
+    ctx.translate(targetW, targetH);
+    ctx.rotate(Math.PI);
+  } else if (degrees === 270) {
+    ctx.translate(0, targetH);
+    ctx.rotate((3 * Math.PI) / 2);
+  }
+  ctx.drawImage(source, 0, 0);
+  ctx.restore();
+  return target;
+}
+
 export async function canvasToBlob(canvas: HTMLCanvasElement, mime = "image/jpeg", quality = 0.95): Promise<Blob> {
   return new Promise((resolve) => {
     let settled = false;

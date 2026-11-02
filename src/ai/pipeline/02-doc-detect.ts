@@ -57,6 +57,11 @@ export async function detectDocument(
 
   let documentType: DocDetectResult["documentType"] = "unknown";
   let confidence = 0.25;
+  let isRotated = false;
+  let detectedOrientation: DocDetectResult["detectedOrientation"] = "LANDSCAPE";
+  let rotationDegreesNeeded: DocDetectResult["rotationDegreesNeeded"] = 0;
+  const rawAspectRatio = aspect;
+  let correctedAspectRatio = aspect;
 
   // ICAO 9303 TD3 standard passport page (aspect ~1.420)
   if (aspect >= 1.36 && aspect <= 1.48 && hasDocumentTextStructure) {
@@ -95,10 +100,14 @@ export async function detectDocument(
     documentType = "id";
     confidence = 0.75;
   }
-  // ID Permit / Portrait orientation mobile scan / e-Aadhaar letter slip (aspect ~0.38 - 0.78)
-  else if (aspect >= 0.38 && aspect <= 0.78 && hasDocumentTextStructure) {
+  // Rotated landscape credential / Portrait mobile capture (aspect ~0.38 - 0.85)
+  else if (aspect >= 0.38 && aspect <= 0.85 && hasDocumentTextStructure) {
     documentType = "id";
-    confidence = 0.82;
+    confidence = 0.88;
+    isRotated = true;
+    detectedOrientation = "PORTRAIT_ROTATED_90_CCW";
+    rotationDegreesNeeded = 270;
+    correctedAspectRatio = Math.round((1 / aspect) * 1000) / 1000;
   }
   // Non-matching aspect ratio or lacks document structures
   else {
@@ -122,5 +131,10 @@ export async function detectDocument(
     documentType,
     confidence: Math.round(confidence * 100) / 100,
     boundingBox,
+    isRotated,
+    detectedOrientation,
+    rotationDegreesNeeded,
+    rawAspectRatio,
+    correctedAspectRatio,
   };
 }

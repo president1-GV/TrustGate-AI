@@ -1,4 +1,14 @@
-export type PipelineStatus = "IDLE" | "PROCESSING" | "PASS" | "WARNING" | "FAIL";
+export type PipelineStatus =
+  | "IDLE"
+  | "PROCESSING"
+  | "PASS"
+  | "WARNING"
+  | "FAIL"
+  | "NOT_APPLICABLE"
+  | "NOT_AVAILABLE"
+  | "INSUFFICIENT_EVIDENCE"
+  | "NOT_EVALUATED"
+  | "ERROR";
 
 export interface PipelineModule {
   id: string;
@@ -28,9 +38,14 @@ export interface ImageQualityResult {
 }
 
 export interface DocDetectResult {
-  documentType: "passport" | "visa" | "id" | "permit" | "aadhaar" | "unknown";
+  documentType: "passport" | "visa" | "id" | "permit" | "aadhaar" | "pan" | "voter_id" | "drivinglicense" | "unknown";
   confidence: number;
   boundingBox?: BBox;
+  isRotated?: boolean;
+  detectedOrientation?: "LANDSCAPE" | "PORTRAIT_ROTATED_90_CW" | "PORTRAIT_ROTATED_90_CCW" | "UPSIDE_DOWN_180";
+  rotationDegreesNeeded?: 0 | 90 | 180 | 270;
+  rawAspectRatio?: number;
+  correctedAspectRatio?: number;
 }
 
 export interface OcrField {
@@ -48,11 +63,17 @@ export interface OcrResult {
   overallConfidence: number;
   fields: OcrField[];
   executionMs?: number;
+  orientationApplied?: number;
+  scriptDetected?: string;
+  orientedCanvas?: HTMLCanvasElement;
 }
 
 export interface MrzResult {
   present: boolean;
   format?: "TD1" | "TD2" | "TD3" | "MRVA" | "MRVB";
+  applicability?: "APPLICABLE" | "NOT_APPLICABLE";
+  nonApplicableReason?: string;
+  status?: "PASS" | "WARNING" | "FAIL" | "NOT_APPLICABLE" | "INSUFFICIENT_EVIDENCE";
   documentNumber?: string;
   dateOfBirth?: string;
   expiryDate?: string;
@@ -83,6 +104,7 @@ export interface ValidationResult {
   summaryWarn: number;
   summaryHigh: number;
   summaryCritical: number;
+  status?: "PASS" | "WARNING" | "FAIL" | "NOT_APPLICABLE" | "INSUFFICIENT_EVIDENCE" | "NOT_EVALUATED";
 }
 
 export interface TamperingRegion {
@@ -98,6 +120,9 @@ export interface TamperingResult {
   confidence: number;
   severity: "NONE" | "LOW" | "MEDIUM" | "HIGH";
   regions: TamperingRegion[];
+  analysisScope?: string;
+  limitations?: string[];
+  verdict?: "NO_ANOMALY_DETECTED" | "ANOMALIES_IDENTIFIED" | "INCONCLUSIVE_RESOLUTION";
 }
 
 export interface FaceResult {

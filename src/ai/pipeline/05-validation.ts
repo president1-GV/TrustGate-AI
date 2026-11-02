@@ -79,11 +79,18 @@ export async function validateCase(input: {
         ? "All required Aadhaar identity fields are present and verified."
         : "All required fields are present and non-empty.",
     });
+  } else if (ocr.fields.length === 0) {
+    issues.push({
+      ruleCode: "required_fields",
+      severity: "WARNING",
+      message: "INSUFFICIENT_EVIDENCE: OCR did not yield usable fields. Optical extraction inconclusive; physical document contradiction not established.",
+      details: { missing, status: "INSUFFICIENT_EVIDENCE" },
+    });
   } else if (docType !== "unknown" || isAadhaar) {
     issues.push({
       ruleCode: "required_fields",
-      severity: missing.length > 4 ? "CRITICAL" : "HIGH",
-      message: `Missing required fields: ${missing.join(", ")}.`,
+      severity: missing.length > 4 ? "HIGH" : "WARNING",
+      message: `Incomplete field extraction: missing ${missing.join(", ")}.`,
       details: { missing },
     });
   } else {
@@ -275,5 +282,14 @@ export async function validateCase(input: {
     else if (i.severity === "CRITICAL") summaryCritical++;
   }
 
-  return { issues, summaryPass, summaryWarn, summaryHigh, summaryCritical };
+  let status: ValidationResult["status"] = "PASS";
+  if (ocr.fields.length === 0 && !mrz.present) {
+    status = "INSUFFICIENT_EVIDENCE";
+  } else if (summaryCritical > 0) {
+    status = "FAIL";
+  } else if (summaryHigh > 0) {
+    status = "WARNING";
+  }
+
+  return { issues, summaryPass, summaryWarn, summaryHigh, summaryCritical, status };
 }

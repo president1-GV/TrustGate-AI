@@ -206,7 +206,100 @@ rey arene. JE 3a`;
     expect(detected.documentType).toBe("aadhaar");
     expect(detected.matchedArchetypeId).toBe("ind_aadhaar");
     expect(detected.realFields.documentNumber).toBe("7208 5852 3813");
+    expect(detected.realFields.maskedDocumentNumber).toBe("XXXX XXXX 3813");
     expect(detected.realFields.fullName).toBe("Vinitbhai Mukeshbhai Chaudhari");
     expect(detected.confidence).toBeGreaterThanOrEqual(90);
+  });
+
+  it("AADHAAR-06: parseMrz returns NOT_APPLICABLE status for Aadhaar", async () => {
+    const dummyCanvas = {} as HTMLCanvasElement;
+    const mrz = await parseMrz(realAadhaarOcr, dummyCanvas);
+
+    expect(mrz.present).toBe(false);
+    expect(mrz.applicability).toBe("NOT_APPLICABLE");
+    expect(mrz.status).toBe("NOT_APPLICABLE");
+    expect(mrz.nonApplicableReason).toContain("Domestic Smart Card");
+  });
+
+  it("AADHAAR-07: Inconclusive OCR (0 fields) produces INSUFFICIENT_EVIDENCE without false CRITICAL fraud", async () => {
+    const emptyOcr: OcrResult = {
+      provider: "tesseract.js",
+      rawText: "",
+      overallConfidence: 0.46,
+      fields: [],
+    };
+    const dummyCanvas = {} as HTMLCanvasElement;
+    const mrz = await parseMrz(emptyOcr, dummyCanvas);
+
+    const validation = await validateCase({
+      ocr: emptyOcr,
+      mrz,
+      docType: "id",
+      countryCode: undefined,
+    });
+
+    // Zero extracted fields must NOT produce CRITICAL severity
+    expect(validation.summaryCritical).toBe(0);
+    expect(validation.status).toBe("INSUFFICIENT_EVIDENCE");
+
+    const tampering: TamperingResult = {
+      probability: 0,
+      confidence: 85,
+      severity: "NONE",
+      regions: [],
+      verdict: "NO_ANOMALY_DETECTED",
+    };
+    const face: FaceResult = { detected: false };
+    const docDetect: DocDetectResult = { documentType: "id", confidence: 0.88, isRotated: true, correctedAspectRatio: 1.782 };
+    const imageQuality: ImageQualityResult = { score: 67, blur: 20, brightness: 70, contrast: 75, resolutionScore: 70, glare: 15, grade: "FAIR" };
+    const identity = await identityConsistency({ ocr: emptyOcr, mrz, face, validation });
+
+    const risk = await computeRisk({
+      imageQuality,
+      docDetect,
+      ocr: emptyOcr,
+      mrz,
+      validation,
+      tampering,
+      face,
+      identity,
+    });
+
+    // Inconclusive evidence must NOT result in automatic 85/100 fraud score
+    expect(risk.score).toBeLessThan(75);
+    expect(risk.factors.some((f) => f.code === "ocr_confidence")).toBe(true);
+  });
+
+  it("AADHAAR-08: Rotated portrait card (335 x 597) uses corrected aspect ratio in detectCredential", () => {
+    const fullPipe: FullPipelineResult = {
+      imageQuality: { score: 67, blur: 20, brightness: 70, contrast: 75, resolutionScore: 70, glare: 15, grade: "FAIR" },
+      docDetect: {
+        documentType: "aadhaar",
+        confidence: 0.88,
+        isRotated: true,
+        detectedOrientation: "PORTRAIT_ROTATED_90_CCW",
+        rotationDegreesNeeded: 270,
+        rawAspectRatio: 0.561,
+        correctedAspectRatio: 1.782,
+      },
+      ocr: realAadhaarOcr,
+      mrz: { present: false, applicability: "NOT_APPLICABLE", status: "NOT_APPLICABLE", rawLines: [], mismatches: [] },
+      validation: { issues: [], summaryPass: 5, summaryWarn: 0, summaryHigh: 0, summaryCritical: 0, status: "PASS" },
+      tampering: { probability: 0, confidence: 85, severity: "NONE", regions: [] },
+      face: { detected: true, quality: 85 },
+      identity: { score: 90, perField: [] },
+      risk: { score: 18, level: "LOW", recommendedAction: "Clearance approved.", engineVersion: "2.1.0", factors: [] },
+      findings: [],
+      modules: [],
+      startedAt: Date.now(),
+      finishedAt: Date.now(),
+      totalMs: 100,
+    };
+
+    const detected = detectCredential(fullPipe, null, { width: 335, height: 597 });
+    expect(detected.isDetected).toBe(true);
+    expect(detected.documentType).toBe("aadhaar");
+    // Nominal is 1.586, corrected aspect 1.782 has deviation ~12.4%, NOT 64.6%
+    expect(detected.aspectRatioDeviationPercent).toBeLessThan(20.0);
   });
 });

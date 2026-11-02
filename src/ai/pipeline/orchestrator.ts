@@ -86,12 +86,13 @@ function statusForStep03(ocr: OcrResult): PipelineStatus {
   return "WARNING";
 }
 function statusForStep04(mrz: MrzResult, isNonMrzDoc?: boolean): PipelineStatus {
-  if (isNonMrzDoc) return "PASS";
+  if (isNonMrzDoc || mrz.applicability === "NOT_APPLICABLE") return "NOT_APPLICABLE";
   if (mrz.present && mrz.compositeValid) return "PASS";
   if (mrz.present && !mrz.compositeValid) return "WARNING";
   return "FAIL";
 }
 function statusForStep05(v: ValidationResult): PipelineStatus {
+  if (v.status === "INSUFFICIENT_EVIDENCE") return "INSUFFICIENT_EVIDENCE";
   if (v.summaryCritical > 0) return "FAIL";
   if (v.summaryHigh > 0) return "WARNING";
   return "PASS";
@@ -456,8 +457,8 @@ export async function runPipeline(
   const mrzCanvas = enhancement.rectifiedCanvas || enhancement.enhancedCanvas || canvas;
   const mrz = await parseMrz(ocr, mrzCanvas);
   await ensureDelay(t3);
-  if (isAadhaarDoc) {
-    stepFinish(mod4, "PASS", 100, "MRZ Waived (Domestic Smart Card)");
+  if (isAadhaarDoc || mrz.applicability === "NOT_APPLICABLE") {
+    stepFinish(mod4, "NOT_APPLICABLE", undefined, "Not Applicable (Domestic Smart Card)");
   } else {
     stepFinish(mod4, statusForStep04(mrz), mrz.present ? (mrz.compositeValid ? 100 : 60) : 0, mrz.format ? `Format=${mrz.format}` : mrz.present ? "MRZ found" : "No MRZ");
   }
@@ -643,7 +644,14 @@ export async function runPipeline(
     countryCode: resolvedCountry,
   });
   await ensureDelay(t4);
-  stepFinish(mod5, statusForStep05(validation), undefined, `${validation.summaryPass}P ${validation.summaryWarn}W ${validation.summaryHigh}H ${validation.summaryCritical}C`);
+  stepFinish(
+    mod5,
+    statusForStep05(validation),
+    undefined,
+    validation.status === "INSUFFICIENT_EVIDENCE"
+      ? "INSUFFICIENT EVIDENCE (Extraction Inconclusive)"
+      : `${validation.summaryPass}P ${validation.summaryWarn}W ${validation.summaryHigh}H ${validation.summaryCritical}C`
+  );
   partial = { ...partial, validation };
   fire(mod5, partial);
 
@@ -659,7 +667,7 @@ export async function runPipeline(
   const mod6Msg = isNonDocument
     ? "UNVERIFIED — Non-credential image"
     : tampering.regions.length === 0
-    ? "CLEAN — 0 tamper anomalies"
+    ? "CLEAN — 0 tamper anomalies (ELA Optical)"
     : `${tampering.severity} — ${tampering.regions.length} anomalous region(s)`;
 
   stepFinish(mod6, mod6Status, integrityScore, mod6Msg);
@@ -668,7 +676,8 @@ export async function runPipeline(
 
   const t6 = performance.now();
   const mod7 = stepStart(6);
-  const face = await analyzeFace(canvas, imageQuality, opts?.referenceFaceCanvas);
+  const faceCanvas = ocr.orientedCanvas || canvas;
+  const face = await analyzeFace(faceCanvas, imageQuality, opts?.referenceFaceCanvas);
   await ensureDelay(t6);
   stepFinish(mod7, statusForStep07(face), face.quality, face.resultLabel ?? (face.detected ? "Detected" : "No face"));
   partial = { ...partial, face };

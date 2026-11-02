@@ -60,7 +60,7 @@
     "provenanceValid": true,
     "crossContaminationDetected": false,
     "timingsMs": {
-      "total": 1,
+      "total": 0,
       "ocr": 45,
       "tampering": 30,
       "face": 25,
@@ -561,8 +561,8 @@
     "title": "Sub-Standard Resolution (Case #9)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",
@@ -630,8 +630,8 @@
     "title": "Sub-Standard Resolution (Case #10)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",
@@ -699,8 +699,8 @@
     "title": "Sub-Standard Resolution (Case #11)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",
@@ -768,8 +768,8 @@
     "title": "Motion Blur Artifacts (Case #12)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",
@@ -837,8 +837,8 @@
     "title": "Motion Blur Artifacts (Case #13)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",
@@ -906,8 +906,8 @@
     "title": "Motion Blur Artifacts (Case #14)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",
@@ -975,8 +975,8 @@
     "title": "Laminate Specular Glare (Case #15)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",
@@ -1044,8 +1044,8 @@
     "title": "Laminate Specular Glare (Case #16)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",
@@ -1113,8 +1113,8 @@
     "title": "Laminate Specular Glare (Case #17)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",
@@ -1389,8 +1389,8 @@
     "title": "Partial Document Crop (Case #21)",
     "passed": true,
     "actualDecision": "REVIEW",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",
@@ -1458,8 +1458,8 @@
     "title": "Partial Document Crop (Case #22)",
     "passed": true,
     "actualDecision": "REVIEW",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",
@@ -4839,8 +4839,8 @@
     "title": "15-Second Ingestion Timeout (Case #71)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "PASS",
@@ -4908,8 +4908,8 @@
     "title": "15-Second Ingestion Timeout (Case #72)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "PASS",
@@ -4977,8 +4977,8 @@
     "title": "15-Second Ingestion Timeout (Case #73)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "PASS",
@@ -5046,8 +5046,8 @@
     "title": "Corrupted API Payload (Case #74)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "PASS",
@@ -5115,8 +5115,8 @@
     "title": "Corrupted API Payload (Case #75)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "PASS",
@@ -5736,8 +5736,8 @@
     "title": "Client Refresh During Pipeline (Case #84)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "PASS",
@@ -5805,8 +5805,8 @@
     "title": "Client Refresh During Pipeline (Case #85)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "PASS",
@@ -6840,8 +6840,8 @@
     "title": "28MB Oversized Payload (Case #100)",
     "passed": true,
     "actualDecision": "INCONCLUSIVE",
-    "actualRiskScore": 90,
-    "actualAiConfidence": 64,
+    "actualRiskScore": 58,
+    "actualAiConfidence": 77,
     "stageResults": {
       "imageQuality": {
         "status": "FAIL",

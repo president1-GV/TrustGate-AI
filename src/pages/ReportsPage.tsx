@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   FileText,
   Search,
@@ -35,9 +35,18 @@ import { resolveSpecimenUrl } from "@/lib/specimenResolver";
 import { insforge } from "@/lib/insforge";
 
 export function ReportsPage() {
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = React.useState("");
   const [selectedReport, setSelectedReport] = React.useState<ReportRow | null>(null);
   const [viewMode, setViewMode] = React.useState<"formal" | "json" | "both">("formal");
+
+  // Pre-filter or select report if caseId query parameter is provided
+  React.useEffect(() => {
+    const caseParam = searchParams.get("caseId") || searchParams.get("case") || searchParams.get("search");
+    if (caseParam) {
+      setSearch(caseParam);
+    }
+  }, [searchParams]);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<ReportRow[]>({
     queryKey: ["reports"],
@@ -45,6 +54,14 @@ export function ReportsPage() {
     staleTime: 3_000,
     refetchInterval: 3_000,
   });
+
+  React.useEffect(() => {
+    const caseParam = searchParams.get("caseId") || searchParams.get("case");
+    if (data && caseParam && !selectedReport) {
+      const match = data.find((r) => r.case_id === caseParam || r.cases?.case_code === caseParam);
+      if (match) setSelectedReport(match);
+    }
+  }, [data, searchParams, selectedReport]);
 
   // Real-time synchronization: listen to scan events, storage changes, and InsForge WebSocket updates
   React.useEffect(() => {

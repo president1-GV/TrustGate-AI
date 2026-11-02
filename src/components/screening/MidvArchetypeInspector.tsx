@@ -236,7 +236,7 @@ export function MidvArchetypeInspector({
               <div className="rounded-lg bg-white dark:bg-slate-950/60 p-2 border border-slate-200 dark:border-slate-800/80 shadow-2xs">
                 <span className="text-slate-600 dark:text-slate-400 block text-[9.5px] font-bold uppercase tracking-wider">Document Number:</span>
                 <span className="text-signal-blue dark:text-signal-cyan font-extrabold text-xs block mt-0.5 truncate">
-                  {detected.realFields.documentNumber || "—"}
+                  {detected.realFields.maskedDocumentNumber || detected.realFields.documentNumber || "—"}
                 </span>
               </div>
               <div className="rounded-lg bg-white dark:bg-slate-950/60 p-2 border border-slate-200 dark:border-slate-800/80 shadow-2xs">
@@ -266,7 +266,9 @@ export function MidvArchetypeInspector({
               <div className="rounded-lg bg-white dark:bg-slate-950/60 p-2 border border-slate-200 dark:border-slate-800/80 shadow-2xs">
                 <span className="text-slate-600 dark:text-slate-400 block text-[9.5px] font-bold uppercase tracking-wider">MRZ Validation:</span>
                 <span className="text-slate-900 dark:text-slate-100 font-extrabold text-xs flex items-center gap-1 mt-0.5 truncate">
-                  {detected.realFields.mrzCheckDigitsValid === true ? (
+                  {detected.documentType === "aadhaar" || detected.documentType === "pan" || detected.documentType === "voter_id" ? (
+                    <span className="text-slate-600 dark:text-slate-400">NOT APPLICABLE (Domestic Smart Card)</span>
+                  ) : detected.realFields.mrzCheckDigitsValid === true ? (
                     <>
                       <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span className="text-emerald-700 dark:text-emerald-400">7-3-1 Valid</span>
@@ -283,22 +285,28 @@ export function MidvArchetypeInspector({
               </div>
             </div>
 
-            {detected.matchedArchetypeId ? (
+            {detected.matchedArchetypeId || detected.documentType === "aadhaar" ? (
               <div className="flex items-center justify-between text-[10.5px] text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900/60 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
                 <span className="flex items-center gap-1.5 min-w-0">
                   <FileCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span className="truncate">
-                    Matched MIDV Archetype:{" "}
-                    <strong className="text-slate-900 dark:text-slate-100 font-extrabold">{selectedArch?.name || detected.matchedArchetypeId}</strong>
+                    Matched Profile:{" "}
+                    <strong className="text-slate-900 dark:text-slate-100 font-extrabold">
+                      {detected.documentType === "aadhaar"
+                        ? "Republic of India UIDAI Aadhaar"
+                        : selectedArch?.name || detected.matchedArchetypeId}
+                    </strong>
                   </span>
                 </span>
-                <span className="font-mono text-emerald-700 dark:text-emerald-400 font-black shrink-0 ml-2">{detected.confidence}% Match</span>
+                <span className="font-mono text-emerald-700 dark:text-emerald-400 font-black shrink-0 ml-2">
+                  {detected.confidence}% Match
+                </span>
               </div>
             ) : (
               <div className="flex items-center gap-1.5 text-[10.5px] text-amber-900 dark:text-amber-300/90 bg-amber-100/90 dark:bg-amber-950/20 px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-800/40 font-medium">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-700 dark:text-amber-400" />
                 <span>
-                  No predefined archetype directly matched this credential geometry. Evaluated under general ICAO 9303 rules.
+                  No predefined archetype directly matched this credential geometry. Evaluated under standard sovereign identity rules.
                 </span>
               </div>
             )}

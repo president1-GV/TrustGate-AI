@@ -39,8 +39,10 @@ export async function identityConsistency(input: {
     (ocr.fields.some((f) => f.fieldName === "NATIONALITY" && f.fieldValue === "IND") &&
       ocr.fields.some((f) => f.fieldName === "DOCUMENT_NUMBER" && /\d{4}/.test(f.fieldValue || "")));
 
+  const isNonMrz = isAadhaar || mrz.applicability === "NOT_APPLICABLE";
+
   if (!mrz.present) {
-    if (!isAadhaar) {
+    if (!isNonMrz) {
       score -= 25;
     }
   } else if (mrz.mismatches && mrz.mismatches.length > 0) {
