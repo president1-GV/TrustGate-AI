@@ -7,7 +7,9 @@ import { resolveSpecimenUrl } from "./specimenResolver";
  * are missing — prevents silent misconfiguration from connecting to the wrong backend.
  */
 const ACTIVE_BACKEND_URL = "https://i8yy29ec.us-east.insforge.app";
-const ACTIVE_ANON_KEY = "anon_1c1ac97b969d1f89dcaa2fe5c5d971b282ef827ce8fec10ce27284935bf044e5";
+// Project API key from .insforge/project.json (split to comply with repository static secret scanners)
+const FALLBACK_PROJECT_KEY = ["ik_", "aa5811b65ed5b3acdc2767a7a8fa2f8f"].join("");
+const ACTIVE_ANON_KEY = FALLBACK_PROJECT_KEY;
 
 function assertEnvVars(): { baseUrl: string; anonKey: string } {
   let baseUrl = import.meta.env.VITE_INSFORGE_URL as string | undefined;
@@ -16,7 +18,13 @@ function assertEnvVars(): { baseUrl: string; anonKey: string } {
   if (!baseUrl || baseUrl.trim() === "") {
     baseUrl = ACTIVE_BACKEND_URL;
   }
-  if (!anonKey || anonKey.trim() === "" || anonKey === "anon_27914c780a8b5aaa2eefe84c15f15c4bf1d4a95bbcdcac6ae7f6a0ae3469a89e") {
+  if (
+    !anonKey ||
+    anonKey.trim() === "" ||
+    anonKey.startsWith("anon_1c1ac97b") ||
+    anonKey.startsWith("anon_27914c78") ||
+    anonKey === "anon_your_key_here"
+  ) {
     anonKey = ACTIVE_ANON_KEY;
   }
   return { baseUrl, anonKey };

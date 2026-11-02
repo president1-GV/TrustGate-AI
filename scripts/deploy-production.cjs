@@ -196,10 +196,10 @@ async function main() {
       outputDirectory: 'dist'
     },
     envVars: [
-      { key: 'VITE_INSFORGE_URL', value: 'https://i8yy29ec.us-east.insforge.app' },
-      { key: 'VITE_INSFORGE_ANON_KEY', value: 'anon_1c1ac97b969d1f89dcaa2fe5c5d971b282ef827ce8fec10ce27284935bf044e5' },
-      { key: 'VITE_SUPABASE_URL', value: 'https://i8yy29ec.us-east.insforge.app' },
-      { key: 'VITE_SUPABASE_ANON_KEY', value: 'anon_1c1ac97b969d1f89dcaa2fe5c5d971b282ef827ce8fec10ce27284935bf044e5' }
+      { key: 'VITE_INSFORGE_URL', value: API_BASE },
+      { key: 'VITE_INSFORGE_ANON_KEY', value: API_KEY },
+      { key: 'VITE_SUPABASE_URL', value: API_BASE },
+      { key: 'VITE_SUPABASE_ANON_KEY', value: API_KEY }
     ]
   });
 

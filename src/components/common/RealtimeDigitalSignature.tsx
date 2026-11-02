@@ -70,7 +70,7 @@ export function RealtimeDigitalSignature({
       badgeId: fromDb?.badge_id || "ADMIN-001",
       station: fromDb?.station || "Central Command",
       role: "Chief Border Administrator & Authority",
-      id: fromDb?.id || "d78d7bfa-d033-412d-8d20-987e0019467c",
+      id: fromDb?.id || "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
     };
   }, [dbOfficers]);
 

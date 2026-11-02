@@ -56,7 +56,7 @@ import {
 } from "@/lib/db";
 import { genCaseCode, uploadScreeningDocument } from "@/lib/insforge";
 import { registerUserScannedSpecimen } from "@/lib/specimenResolver";
-import { validateUploadedFile, sanitizeErrorMessage } from "@/lib/security";
+import { validateUploadedFile, sanitizeErrorMessage, resolveValidActorId } from "@/lib/security";
 import {
   cn,
   riskColor,
@@ -856,6 +856,21 @@ export function ScreeningPage() {
                 risk_level: r.risk?.level || "LOW",
                 image_url: currentDataUrlRef.current || url,
               });
+
+              // Instantly invalidate TanStack queries so cases, dashboard, and reports refresh everywhere
+              queryClient.invalidateQueries({ queryKey: ["cases"] });
+              queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+              queryClient.invalidateQueries({ queryKey: ["reports"] });
+
+              // Dispatch global case saved and db updated events for live dashboards
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("trustgate:case_saved", { detail: { caseId: chk.caseId, caseCode: chk.caseCode } }));
+                window.dispatchEvent(new CustomEvent("cases_changed", { detail: { caseId: chk.caseId, caseCode: chk.caseCode } }));
+                window.dispatchEvent(new CustomEvent("tg:db_updated", { detail: { caseId: chk.caseId, caseCode: chk.caseCode } }));
+                try {
+                  localStorage.setItem("tg:last_db_change", String(Date.now()));
+                } catch {}
+              }
             }
           }
         })
@@ -924,7 +939,7 @@ export function ScreeningPage() {
         return;
       }
 
-      const activeUserId = user?.id || "d78d7bfa-d033-412d-8d20-987e0019467c";
+      const activeUserId = resolveValidActorId(user?.id);
       saveScreeningCase({
         userId: activeUserId,
         caseCode: code,
@@ -1019,9 +1034,10 @@ export function ScreeningPage() {
     setSaveError(null);
     setSaveSuccessNotice(null);
 
+    let targetCaseId: string | null = null;
+    let targetCaseCode: string = cameraCheckin?.caseCode || genCaseCode();
+
     try {
-      let targetCaseId: string | null = null;
-      let targetCaseCode: string = cameraCheckin?.caseCode || genCaseCode();
 
       // If an auto-checkin operation is in-flight, await its completion to avoid duplicate case creation
       if (inFlightCheckinPromiseRef.current) {
@@ -1041,7 +1057,7 @@ export function ScreeningPage() {
 
       // If not yet persisted, perform authoritative persistence to database
       if (!targetCaseId) {
-        const activeUserId = user?.id || "d78d7bfa-d033-412d-8d20-987e0019467c";
+        const activeUserId = resolveValidActorId(user?.id);
         const persistentDataUrl = currentDataUrlRef.current || null;
 
         if (persistentDataUrl) {
@@ -1142,6 +1158,8 @@ export function ScreeningPage() {
       }
 
       // 8. Display clear success notification
+      setError(null);
+      setSaveError(null);
       setSaveSuccessNotice("Case saved successfully. Opening case review...");
 
       // 9. Automatically navigate to the saved case's review/details page
@@ -1152,13 +1170,12 @@ export function ScreeningPage() {
           message: "Case saved successfully. Opening case review...",
         },
       });
-    } catch (e: any) {
+        } catch (e: any) {
       console.error("[TrustGate] Error saving case:", e);
       const msg = `Failed to save case: ${sanitizeErrorMessage(e?.message ?? "Database persistence failed")}`;
       setSaveError(msg);
       setError(msg);
-    } finally {
-      savingRef.current = false;
+    } finally {savingRef.current = false;
       setSaving(false);
     }
   };

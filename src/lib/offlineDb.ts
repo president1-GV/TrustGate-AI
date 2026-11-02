@@ -194,19 +194,39 @@ export async function saveScreeningCaseOffline(params: {
   countryCode?: string;
 }): Promise<string> {
   const db = await getDb();
-  const caseId = genId();
+
+  // Deduplication guard: Check if case with this case_code already exists in local DB
+  const existingCaseId = await new Promise<string | null>((resolve) => {
+    try {
+      const tx = db.transaction("cases", "readonly");
+      const store = tx.objectStore("cases");
+      const index = store.index("case_code");
+      const req = index.get(params.caseCode);
+      req.onsuccess = () => resolve(req.result?.id || null);
+      req.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+
+  const caseId = existingCaseId || genId();
   const documentId = genId();
   const ocrResultId = genId();
   const tamperingResultId = genId();
   const riskId = genId();
   const now = new Date().toISOString();
 
+  const riskLevel = params.result?.risk?.level ?? "LOW";
+  const riskScore = Math.round(params.result?.risk?.score ?? 0);
+  const totalMs = Math.round(params.result?.totalMs ?? 0);
+  const docType = params.result?.docDetect?.documentType || "passport";
+
   const priority: "LOW" | "NORMAL" | "HIGH" | "CRITICAL" =
-    params.result.risk.level === "HIGH"
-      ? params.result.risk.score >= 85
+    riskLevel === "HIGH"
+      ? riskScore >= 85
         ? "CRITICAL"
         : "HIGH"
-      : params.result.risk.level === "MEDIUM"
+      : riskLevel === "MEDIUM"
       ? "NORMAL"
       : "LOW";
 
@@ -216,12 +236,12 @@ export async function saveScreeningCaseOffline(params: {
     created_by: params.userId,
     created_at: now,
     updated_at: now,
-    document_type: params.result.docDetect.documentType,
+    document_type: docType,
     country_code: params.countryCode ?? null,
     status: "UNDER_REVIEW",
-    risk_score: Math.round(params.result.risk.score),
-    risk_level: params.result.risk.level,
-    processing_time_ms: Math.round(params.result.totalMs),
+    risk_score: riskScore,
+    risk_level: riskLevel,
+    processing_time_ms: totalMs,
     review_status: "OPEN",
     priority,
     is_demo: params.isDemo,
@@ -235,9 +255,9 @@ export async function saveScreeningCaseOffline(params: {
   const docRow = {
     id: documentId,
     case_id: caseId,
-    document_type: params.result.docDetect.documentType,
+    document_type: docType,
     country_code: params.countryCode ?? null,
-    image_quality_score: Math.round(params.result.imageQuality.score),
+    image_quality_score: Math.round(params.result?.imageQuality?.score ?? 80),
     image_width: params.imageWidth ?? 1280,
     image_height: params.imageHeight ?? 720,
     processing_status: "COMPLETED",
@@ -246,25 +266,25 @@ export async function saveScreeningCaseOffline(params: {
     storage_url: params.storageUrl ?? null,
     mime_type: params.mime ?? "image/jpeg",
     file_size_bytes: params.fileSizeBytes ?? 0,
-    document_hash: params.result.provenance?.documentHash ?? null,
-    processing_run_id: params.result.provenance?.processingRunId ?? null,
+    document_hash: params.result?.provenance?.documentHash ?? null,
+    processing_run_id: params.result?.provenance?.processingRunId ?? null,
     created_at: now,
   };
 
   const ocrRow = {
     id: ocrResultId,
     document_id: documentId,
-    provider: params.result.ocr.provider,
-    raw_text: params.result.ocr.rawText ?? null,
-    overall_confidence: params.result.ocr.overallConfidence,
+    provider: params.result?.ocr?.provider ?? "dual-engine",
+    raw_text: params.result?.ocr?.rawText ?? null,
+    overall_confidence: params.result?.ocr?.overallConfidence ?? 0,
   };
 
-  const ocrFieldRows = params.result.ocr.fields.map((f) => ({
+  const ocrFieldRows = (params.result?.ocr?.fields ?? []).map((f) => ({
     id: genId(),
     ocr_result_id: ocrResultId,
     field_name: f.fieldName,
     field_value: f.fieldValue ?? null,
-    confidence: f.confidence,
+    confidence: f.confidence ?? 0,
     bounding_box: f.boundingBox ?? null,
     source: f.source,
     validation_status: f.validationStatus ?? "UNVALIDATED",
@@ -273,69 +293,69 @@ export async function saveScreeningCaseOffline(params: {
   const mrzRow = {
     id: genId(),
     document_id: documentId,
-    present: params.result.mrz.present,
-    format: params.result.mrz.format ?? null,
-    document_number: params.result.mrz.documentNumber ?? null,
-    date_of_birth: params.result.mrz.dateOfBirth ?? null,
-    expiry_date: params.result.mrz.expiryDate ?? null,
-    nationality: params.result.mrz.nationality ?? null,
-    sex: params.result.mrz.sex ?? null,
-    check_digits_valid: params.result.mrz.checkDigitsValid ?? null,
-    composite_valid: params.result.mrz.compositeValid ?? null,
-    raw_lines: params.result.mrz.rawLines ? JSON.stringify(params.result.mrz.rawLines) : null,
+    present: params.result?.mrz?.present ?? false,
+    format: params.result?.mrz?.format ?? null,
+    document_number: params.result?.mrz?.documentNumber ?? null,
+    date_of_birth: params.result?.mrz?.dateOfBirth ?? null,
+    expiry_date: params.result?.mrz?.expiryDate ?? null,
+    nationality: params.result?.mrz?.nationality ?? null,
+    sex: params.result?.mrz?.sex ?? null,
+    check_digits_valid: params.result?.mrz?.checkDigitsValid ?? null,
+    composite_valid: params.result?.mrz?.compositeValid ?? null,
+    raw_lines: params.result?.mrz?.rawLines ? JSON.stringify(params.result.mrz.rawLines) : null,
   };
 
   const tampRow = {
     id: tamperingResultId,
     document_id: documentId,
-    probability: Math.round(params.result.tampering.probability * 100),
-    confidence: params.result.tampering.confidence,
-    severity: params.result.tampering.severity,
+    probability: Math.round((params.result?.tampering?.probability ?? 0) * 100),
+    confidence: params.result?.tampering?.confidence ?? 0,
+    severity: params.result?.tampering?.severity ?? "NONE",
   };
 
-  const tampRegionRows = params.result.tampering.regions.map((r) => ({
+  const tampRegionRows = (params.result?.tampering?.regions ?? []).map((r) => ({
     id: genId(),
     tampering_result_id: tamperingResultId,
     manipulation_type: r.manipulationType,
     region_label: r.regionLabel,
     bounding_box: r.boundingBox ?? null,
     evidence: r.evidence,
-    probability: Math.round(r.probability * 100),
+    probability: Math.round((r.probability ?? 0) * 100),
   }));
 
   const faceRow = {
     id: genId(),
     document_id: documentId,
-    detected: params.result.face.detected,
-    quality: typeof params.result.face.quality === "number" ? Math.round(params.result.face.quality * 100) : null,
-    similarity: typeof params.result.face.similarity === "number" ? Math.round(params.result.face.similarity * 100) : null,
-    pose_yaw: params.result.face.poseYaw ?? null,
-    pose_pitch: params.result.face.posePitch ?? null,
-    blur_score: params.result.face.blurScore ?? null,
-    result_label: params.result.face.resultLabel ?? null,
-    bounding_box: params.result.face.boundingBox ?? null,
+    detected: params.result?.face?.detected ?? false,
+    quality: typeof params.result?.face?.quality === "number" ? Math.round(params.result.face.quality * 100) : null,
+    similarity: typeof params.result?.face?.similarity === "number" ? Math.round(params.result.face.similarity * 100) : null,
+    pose_yaw: params.result?.face?.poseYaw ?? null,
+    pose_pitch: params.result?.face?.posePitch ?? null,
+    blur_score: params.result?.face?.blurScore ?? null,
+    result_label: params.result?.face?.resultLabel ?? null,
+    bounding_box: params.result?.face?.boundingBox ?? null,
   };
 
   const riskRow = {
     id: riskId,
     case_id: caseId,
-    score: Math.round(params.result.risk.score),
-    level: params.result.risk.level,
-    recommended_action: params.result.risk.recommendedAction,
-    engine_version: params.result.risk.engineVersion,
+    score: riskScore,
+    level: riskLevel,
+    recommended_action: params.result?.risk?.recommendedAction ?? "STANDARD_INSPECTION",
+    engine_version: params.result?.risk?.engineVersion ?? "v2.0",
   };
 
-  const riskFactorRows = params.result.risk.factors.map((f) => ({
+  const riskFactorRows = (params.result?.risk?.factors ?? []).map((f) => ({
     id: genId(),
     risk_score_id: riskId,
     code: f.code,
-    weight: Math.round(f.weight * 100),
-    contribution: Math.round(f.contribution * 100),
+    weight: Math.round((f.weight ?? 0) * 100),
+    contribution: Math.round((f.contribution ?? 0) * 100),
     explanation: f.explanation,
   }));
 
   const findingRows = [
-    ...(params.result.findings ?? []).map((f) => ({
+    ...(params.result?.findings ?? []).map((f) => ({
       id: genId(),
       case_id: caseId,
       title: f.title,
@@ -347,7 +367,7 @@ export async function saveScreeningCaseOffline(params: {
       recommendation: f.recommendation ?? null,
       created_at: now,
     })),
-    ...params.result.validation.issues.map((i) => ({
+    ...(params.result?.validation?.issues ?? []).map((i) => ({
       id: genId(),
       case_id: caseId,
       title: i.message,
@@ -370,77 +390,82 @@ export async function saveScreeningCaseOffline(params: {
     result: "SUCCESS",
     metadata: {
       caseCode: params.caseCode,
-      riskScore: params.result.risk.score,
-      riskLevel: params.result.risk.level,
+      riskScore,
+      riskLevel,
       isDemo: params.isDemo,
-      pipelineMs: params.result.totalMs,
+      pipelineMs: totalMs,
       airGapped: true,
     },
     created_at: now,
     actor: { display_name: "Field Officer (Local Station)" },
   };
 
-  // Perform transactional atomic write to IndexedDB
+  // Perform transactional atomic write to IndexedDB using .put to avoid duplicate key errors
   await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(
-      [
-        "cases",
-        "documents",
-        "document_images",
-        "ocr_results",
-        "ocr_fields",
-        "mrz_results",
-        "tampering_results",
-        "tampering_regions",
-        "face_results",
-        "risk_scores",
-        "risk_factors",
-        "findings",
-        "audit_logs",
-        "sync_queue",
-      ],
-      "readwrite"
-    );
+    try {
+      const tx = db.transaction(
+        [
+          "cases",
+          "documents",
+          "document_images",
+          "ocr_results",
+          "ocr_fields",
+          "mrz_results",
+          "tampering_results",
+          "tampering_regions",
+          "face_results",
+          "risk_scores",
+          "risk_factors",
+          "findings",
+          "audit_logs",
+          "sync_queue",
+        ],
+        "readwrite"
+      );
 
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error("Transaction aborted"));
 
-    tx.objectStore("cases").add(caseRow);
-    tx.objectStore("documents").add(docRow);
-    if (params.storageUrl) {
-      tx.objectStore("document_images").add({
+      tx.objectStore("cases").put(caseRow);
+      tx.objectStore("documents").put(docRow);
+      if (params.storageUrl) {
+        tx.objectStore("document_images").put({
+          id: genId(),
+          document_id: documentId,
+          case_id: caseId,
+          kind: "SPECIMEN",
+          storage_url: params.storageUrl,
+          storage_key: params.storageKey ?? null,
+          created_at: now,
+        });
+      }
+      tx.objectStore("ocr_results").put(ocrRow);
+      ocrFieldRows.forEach((r) => tx.objectStore("ocr_fields").put(r));
+      tx.objectStore("mrz_results").put(mrzRow);
+      tx.objectStore("tampering_results").put(tampRow);
+      tampRegionRows.forEach((r) => tx.objectStore("tampering_regions").put(r));
+      tx.objectStore("face_results").put(faceRow);
+      tx.objectStore("risk_scores").put(riskRow);
+      riskFactorRows.forEach((r) => tx.objectStore("risk_factors").put(r));
+      findingRows.forEach((r) => tx.objectStore("findings").put(r));
+      tx.objectStore("audit_logs").put(auditRow);
+
+      // Enqueue for cloud sync when connection returns
+      tx.objectStore("sync_queue").put({
         id: genId(),
-        document_id: documentId,
+        type: "CASE_CREATED",
         case_id: caseId,
-        kind: "SPECIMEN",
-        storage_url: params.storageUrl,
-        storage_key: params.storageKey ?? null,
+        payload: params,
         created_at: now,
       });
+    } catch (txErr) {
+      reject(txErr);
     }
-    tx.objectStore("ocr_results").add(ocrRow);
-    ocrFieldRows.forEach((r) => tx.objectStore("ocr_fields").add(r));
-    tx.objectStore("mrz_results").add(mrzRow);
-    tx.objectStore("tampering_results").add(tampRow);
-    tampRegionRows.forEach((r) => tx.objectStore("tampering_regions").add(r));
-    tx.objectStore("face_results").add(faceRow);
-    tx.objectStore("risk_scores").add(riskRow);
-    riskFactorRows.forEach((r) => tx.objectStore("risk_factors").add(r));
-    findingRows.forEach((r) => tx.objectStore("findings").add(r));
-    tx.objectStore("audit_logs").add(auditRow);
-
-    // Enqueue for cloud sync when connection returns
-    tx.objectStore("sync_queue").add({
-      id: genId(),
-      type: "CASE_CREATED",
-      case_id: caseId,
-      payload: params,
-      created_at: now,
-    });
   });
 
   try {
-    const rawType = (params.result.docDetect?.documentType || "passport").toLowerCase();
+    const rawType = (docType || "passport").toLowerCase();
     const docTypeLabel =
       rawType === "aadhaar"
         ? "Aadhaar Card"
@@ -454,7 +479,7 @@ export async function saveScreeningCaseOffline(params: {
       case_code: params.caseCode,
       document_type: docTypeLabel,
       country_code: params.countryCode ?? null,
-      risk_level: params.result.risk?.level || "LOW",
+      risk_level: riskLevel,
       image_url: params.storageUrl || "",
     });
   } catch {}

@@ -365,11 +365,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const actorId =
       role === "officer"
-        ? "06d9077b-2a97-460e-b6ed-38d6a16581c3"
+        ? "d10e0c8e-4eb6-4b4c-8e16-7e0037e1fe33"
         : role === "supervisor"
-        ? "e49cf4a5-e63d-4cac-a54a-436f47da9e52"
+        ? "90cb3e0d-6bb6-435b-b9b2-8cf4afdbcbf8"
         : role === "analyst"
-        ? "59119414-9a9b-4b00-bade-16e0b1e11ed1"
+        ? "eeafc303-c06b-46a5-b6b8-c38989520e9b"
         : AUTHORITATIVE_SYSTEM_ACTOR_ID;
 
     const offlineSession = {

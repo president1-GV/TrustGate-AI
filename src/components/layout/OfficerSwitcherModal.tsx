@@ -73,7 +73,7 @@ export const ROSTER_OFFICERS: DutyOfficerProfile[] = [
     description: "Deep Error Level Analysis (ELA), spectral photo inspection, and synthetic face detection.",
   },
   {
-    id: "d78d7bfa-d033-412d-8d20-987e0019467c",
+    id: "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
     name: "Admin",
     role: "admin",
     badgeId: "ADM-001",

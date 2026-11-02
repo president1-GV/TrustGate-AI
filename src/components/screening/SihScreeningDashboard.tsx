@@ -765,6 +765,37 @@ export function SihScreeningDashboard() {
 
   React.useEffect(() => {
     refreshDbCases();
+
+    const handleCaseUpdate = () => {
+      refreshDbCases();
+    };
+
+    window.addEventListener("trustgate:case_saved", handleCaseUpdate);
+    window.addEventListener("cases_changed", handleCaseUpdate);
+    window.addEventListener("tg:db_updated", handleCaseUpdate);
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      if (typeof BroadcastChannel !== "undefined") {
+        bc = new BroadcastChannel("trustgate_live_events");
+        bc.onmessage = () => handleCaseUpdate();
+      }
+    } catch {}
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "tg:last_db_change") {
+        handleCaseUpdate();
+      }
+    };
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener("trustgate:case_saved", handleCaseUpdate);
+      window.removeEventListener("cases_changed", handleCaseUpdate);
+      window.removeEventListener("tg:db_updated", handleCaseUpdate);
+      window.removeEventListener("storage", onStorage);
+      if (bc) bc.close();
+    };
   }, [refreshDbCases]);
 
   // Synchronize when current screening context document image changes

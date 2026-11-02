@@ -43,6 +43,7 @@ import {
   type BlockchainAnchorRecord,
   type VerificationResult,
 } from "@/lib/blockchain";
+import { registerUserScannedSpecimen } from "@/lib/specimenResolver";
 
 export type ExecutionMode = "PRODUCTION" | "DEMO" | "TRAINING" | "EVALUATION";
 
@@ -582,7 +583,7 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
             }
           }
 
-          const currentUserId = useAuthStore.getState().user?.id || "d78d7bfa-d033-412d-8d20-987e0019467c";
+          const currentUserId = useAuthStore.getState().user?.id || "1400f02a-dbaa-40d0-9e56-de2d00d30b88";
           const savedCaseId = await saveScreeningCase({
             userId: currentUserId,
             caseCode: generatedCaseCode,
@@ -610,6 +611,36 @@ export function ScreeningProvider({ children }: { children: React.ReactNode }) {
                 sessionStorage.setItem("tg_doc_img_" + savedCaseId, cached);
               }
             } catch {}
+
+            // Register specimen in user scanned registry & sync live databases
+            try {
+              const docTypeLabel =
+                pipeRes.docDetect?.documentType === "aadhaar"
+                  ? "Aadhaar Card"
+                  : pipeRes.docDetect?.documentType === "visa"
+                  ? "Visa"
+                  : pipeRes.docDetect?.documentType === "id"
+                  ? "National ID"
+                  : "Passport";
+
+              registerUserScannedSpecimen({
+                id: savedCaseId,
+                case_code: generatedCaseCode,
+                document_type: docTypeLabel,
+                country_code: (pipeRes.mrz?.nationality as string) || (countryField?.fieldValue as string) || null,
+                risk_level: pipeRes.risk?.level || "LOW",
+                image_url: sessionStorage.getItem("tg_doc_img_" + generatedCaseCode) || storageUrl || "",
+              });
+            } catch {}
+
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("trustgate:case_saved", { detail: { caseId: savedCaseId, caseCode: generatedCaseCode } }));
+              window.dispatchEvent(new CustomEvent("cases_changed", { detail: { caseId: savedCaseId, caseCode: generatedCaseCode } }));
+              window.dispatchEvent(new CustomEvent("tg:db_updated", { detail: { caseId: savedCaseId, caseCode: generatedCaseCode } }));
+              try {
+                localStorage.setItem("tg:last_db_change", String(Date.now()));
+              } catch {}
+            }
           }
 
           addAuditEvent(

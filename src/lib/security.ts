@@ -335,17 +335,24 @@ export function validateRiskOverrideRequest(params: {
 
 import { saveAuditLogOffline } from "@/lib/offlineDb";
 
-export const AUTHORITATIVE_SYSTEM_ACTOR_ID = "d78d7bfa-d033-412d-8d20-987e0019467c";
+export const AUTHORITATIVE_SYSTEM_ACTOR_ID = "1400f02a-dbaa-40d0-9e56-de2d00d30b88";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const ROSTER_PROFILE_MAP: Record<string, string> = {
-  "officer-duty-roster": "06d9077b-2a97-460e-b6ed-38d6a16581c3",
-  "supervisor-duty-roster": "e49cf4a5-e63d-4cac-a54a-436f47da9e52",
-  "analyst-duty-roster": "59119414-9a9b-4b00-bade-16e0b1e11ed1",
-  "admin-duty-roster": "d78d7bfa-d033-412d-8d20-987e0019467c",
-  "field-officer-airgap-01": "d78d7bfa-d033-412d-8d20-987e0019467c",
-  "90cb3e0d-6bb6-435b-b9b2-8cf4afdbcbf8": "d78d7bfa-d033-412d-8d20-987e0019467c",
+  "officer-duty-roster": "d10e0c8e-4eb6-4b4c-8e16-7e0037e1fe33",
+  "d78d7bfa-d033-412d-8d20-987e0019467c": "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
+  "06d9077b-2a97-460e-b6ed-38d6a16581c3": "d10e0c8e-4eb6-4b4c-8e16-7e0037e1fe33",
+  "supervisor-duty-roster": "90cb3e0d-6bb6-435b-b9b2-8cf4afdbcbf8",
+  "e49cf4a5-e63d-4cac-a54a-436f47da9e52": "90cb3e0d-6bb6-435b-b9b2-8cf4afdbcbf8",
+  "analyst-duty-roster": "eeafc303-c06b-46a5-b6b8-c38989520e9b",
+  "59119414-9a9b-4b00-bade-16e0b1e11ed1": "eeafc303-c06b-46a5-b6b8-c38989520e9b",
+  "admin-duty-roster": "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
+  "field-officer-airgap-01": "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
+  "90cb3e0d-6bb6-435b-b9b2-8cf4afdbcbf8": "90cb3e0d-6bb6-435b-b9b2-8cf4afdbcbf8",
+  "1400f02a-dbaa-40d0-9e56-de2d00d30b88": "1400f02a-dbaa-40d0-9e56-de2d00d30b88",
+  "d10e0c8e-4eb6-4b4c-8e16-7e0037e1fe33": "d10e0c8e-4eb6-4b4c-8e16-7e0037e1fe33",
+  "eeafc303-c06b-46a5-b6b8-c38989520e9b": "eeafc303-c06b-46a5-b6b8-c38989520e9b",
 };
 
 export function resolveValidActorId(actorId?: string | null): string {

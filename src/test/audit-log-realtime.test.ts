@@ -9,17 +9,17 @@ import { listAuditLogs } from "../lib/db";
 
 describe("TRUSTGATE AI AUDIT LOG & AUTH INTEGRITY SUITE", () => {
   it("AUDIT-001: Fallback actor ID matches authoritative admin profile UUID", () => {
-    expect(AUTHORITATIVE_SYSTEM_ACTOR_ID).toBe("d78d7bfa-d033-412d-8d20-987e0019467c");
+    expect(AUTHORITATIVE_SYSTEM_ACTOR_ID).toBe("1400f02a-dbaa-40d0-9e56-de2d00d30b88");
   });
 
   it("AUDIT-002: Maps roster string IDs to genuine PostgreSQL profile UUIDs", () => {
-    expect(ROSTER_PROFILE_MAP["officer-duty-roster"]).toBe("06d9077b-2a97-460e-b6ed-38d6a16581c3");
-    expect(resolveValidActorId("officer-duty-roster")).toBe("06d9077b-2a97-460e-b6ed-38d6a16581c3");
-    expect(resolveValidActorId("supervisor-duty-roster")).toBe("e49cf4a5-e63d-4cac-a54a-436f47da9e52");
-    expect(resolveValidActorId("analyst-duty-roster")).toBe("59119414-9a9b-4b00-bade-16e0b1e11ed1");
-    expect(resolveValidActorId("admin-duty-roster")).toBe("d78d7bfa-d033-412d-8d20-987e0019467c");
-    expect(resolveValidActorId("field-officer-airgap-01")).toBe("d78d7bfa-d033-412d-8d20-987e0019467c");
-    expect(resolveValidActorId("90cb3e0d-6bb6-435b-b9b2-8cf4afdbcbf8")).toBe("d78d7bfa-d033-412d-8d20-987e0019467c");
+    expect(ROSTER_PROFILE_MAP["officer-duty-roster"]).toBe("d10e0c8e-4eb6-4b4c-8e16-7e0037e1fe33");
+    expect(resolveValidActorId("officer-duty-roster")).toBe("d10e0c8e-4eb6-4b4c-8e16-7e0037e1fe33");
+    expect(resolveValidActorId("supervisor-duty-roster")).toBe("90cb3e0d-6bb6-435b-b9b2-8cf4afdbcbf8");
+    expect(resolveValidActorId("analyst-duty-roster")).toBe("eeafc303-c06b-46a5-b6b8-c38989520e9b");
+    expect(resolveValidActorId("admin-duty-roster")).toBe("1400f02a-dbaa-40d0-9e56-de2d00d30b88");
+    expect(resolveValidActorId("field-officer-airgap-01")).toBe("1400f02a-dbaa-40d0-9e56-de2d00d30b88");
+    expect(resolveValidActorId("90cb3e0d-6bb6-435b-b9b2-8cf4afdbcbf8")).toBe("90cb3e0d-6bb6-435b-b9b2-8cf4afdbcbf8");
   });
 
   it("AUDIT-003: Leaves valid custom UUIDs intact", () => {
