@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { insforge } from "@/lib/insforge";
+import { listAuditLogsOffline } from "@/lib/offlineDb";
 import { cn, formatTimeAgo, formatDate } from "@/lib/utils";
 
 
@@ -158,13 +159,22 @@ export function SecurityPage() {
   const { data: auditEvents, isLoading: loadingAudits, refetch } = useQuery({
     queryKey: ["security-audit-events"],
     queryFn: async () => {
-      const { data, error } = await insforge.database
-        .from("audit_logs")
-        .select("id,action,event_type,actor_id,result,case_id,metadata,created_at")
-        .order("created_at", { ascending: false })
-        .limit(25);
-      if (error) throw error;
-      return data ?? [];
+      try {
+        const { data, error } = await insforge.database
+          .from("audit_logs")
+          .select("id,action,event_type,actor_id,result,case_id,metadata,created_at")
+          .order("created_at", { ascending: false })
+          .limit(25);
+        if (!error && data && data.length > 0) return data;
+      } catch (err) {
+        console.warn("[TrustGate Security] Remote audit fetch fallback to local:", err);
+      }
+      try {
+        const offlineLogs = await listAuditLogsOffline();
+        return offlineLogs.slice(0, 25);
+      } catch {
+        return [];
+      }
     },
     staleTime: 10_000,
   });

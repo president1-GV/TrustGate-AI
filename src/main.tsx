@@ -19,6 +19,28 @@ const queryClient = new QueryClient({
   },
 });
 
+// Real-time automatic query synchronization across tabs and events
+if (typeof window !== "undefined") {
+  const invalidateAllCaseQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["cases"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    queryClient.invalidateQueries({ queryKey: ["reports"] });
+    queryClient.invalidateQueries({ queryKey: ["screening_cases"] });
+  };
+  window.addEventListener("trustgate:case_saved", invalidateAllCaseQueries);
+  window.addEventListener("cases_changed", invalidateAllCaseQueries);
+  window.addEventListener("tg:db_updated", invalidateAllCaseQueries);
+  window.addEventListener("storage", (e) => {
+    if (e.key === "tg:last_db_change") invalidateAllCaseQueries();
+  });
+  if (typeof BroadcastChannel !== "undefined") {
+    try {
+      const bc = new BroadcastChannel("trustgate_live_events");
+      bc.onmessage = () => invalidateAllCaseQueries();
+    } catch {}
+  }
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

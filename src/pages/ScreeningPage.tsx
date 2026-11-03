@@ -664,6 +664,21 @@ export function ScreeningPage() {
               risk_level: pipelineResult.risk?.level || "LOW",
               image_url: dUrl || storage?.url || "",
             });
+
+            // Instantly invalidate TanStack queries so cases, dashboard, and reports refresh everywhere
+            queryClient.invalidateQueries({ queryKey: ["cases"] });
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+            queryClient.invalidateQueries({ queryKey: ["reports"] });
+
+            // Dispatch global case saved and db updated events for live dashboards
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("trustgate:case_saved", { detail: { caseId: chk.caseId, caseCode: chk.caseCode } }));
+              window.dispatchEvent(new CustomEvent("cases_changed", { detail: { caseId: chk.caseId, caseCode: chk.caseCode } }));
+              window.dispatchEvent(new CustomEvent("tg:db_updated", { detail: { caseId: chk.caseId, caseCode: chk.caseCode } }));
+              try {
+                localStorage.setItem("tg:last_db_change", String(Date.now()));
+              } catch {}
+            }
           }
         })
         .catch((chkErr) => console.warn("[TrustGate DB] Camera auto-checkin notice:", chkErr))
@@ -780,6 +795,11 @@ export function ScreeningPage() {
         risk_level: r.risk?.level || "LOW",
         image_url: currentDataUrlRef.current || url,
       });
+
+      // Instantly invalidate queries so newly scanned case immediately appears even while auto-checkin runs in background
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
 
       // 9. Inspect natural image dimensions & trigger deep MIDV/Face forensic audits
       const img = new Image();

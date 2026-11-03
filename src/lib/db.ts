@@ -22,7 +22,7 @@ import {
   listAuditLogsOffline,
 } from "./offlineDb";
 
-export { flushSyncQueue, removeSyncQueueItemByCaseId, saveAuditLogOffline, syncLocalDbWithRemote };
+export { flushSyncQueue, removeSyncQueueItemByCaseId, saveAuditLogOffline, listAuditLogsOffline, syncLocalDbWithRemote };
 import type {
   FullPipelineResult,
   OcrField,
@@ -863,6 +863,42 @@ export async function saveScreeningCase(params: {
     return caseId;
   } catch (remoteErr) {
     console.warn("[TrustGate] InsForge remote save failed or unreachable, persisting locally:", remoteErr);
+    try {
+      const rawType = (result.docDetect?.documentType || "passport").toLowerCase();
+      const docTypeLabel =
+        rawType === "aadhaar"
+          ? "Aadhaar Card"
+          : rawType === "visa"
+          ? "Visa"
+          : rawType === "id" || rawType === "national_id"
+          ? "National ID"
+          : "Passport";
+      const resolvedImg =
+        storageUrl ||
+        (typeof window !== "undefined"
+          ? sessionStorage.getItem("tg_doc_img_" + caseCode) ||
+            localStorage.getItem("tg_doc_img_" + caseCode) ||
+            ""
+          : "");
+      registerUserScannedSpecimen({
+        id: offlineCaseId,
+        case_code: caseCode,
+        document_type: docTypeLabel,
+        country_code: countryCode ?? null,
+        risk_level: result.risk?.level || "LOW",
+        image_url: resolvedImg,
+      });
+    } catch {}
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("trustgate:case_saved", { detail: { caseId: offlineCaseId, caseCode } }));
+      window.dispatchEvent(new CustomEvent("cases_changed", { detail: { caseId: offlineCaseId, caseCode } }));
+      window.dispatchEvent(new CustomEvent("tg:db_updated", { detail: { caseId: offlineCaseId, caseCode } }));
+      try {
+        localStorage.setItem("tg:last_db_change", String(Date.now()));
+      } catch {}
+    }
+
     return offlineCaseId;
   }
 }

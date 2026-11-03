@@ -372,6 +372,7 @@ export function CasesPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 border-b border-ink-border">
+                    <th className="px-5 py-3">Specimen</th>
                     <th className="px-5 py-3">Case ID</th>
                     <th className="px-5 py-3">Doc Type</th>
                     <th className="px-5 py-3">Country</th>
@@ -385,7 +386,7 @@ export function CasesPage() {
                 <tbody>
                   {liveCases.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-5 py-16 text-center">
+                      <td colSpan={9} className="px-5 py-16 text-center">
                         <div className="flex flex-col items-center gap-3 text-slate-500">
                           <Search className="h-8 w-8 opacity-30" />
                           <div className="text-sm">No cases match the current filters.</div>
@@ -405,6 +406,21 @@ export function CasesPage() {
                           key={c.id}
                           className="border-b border-slate-100 dark:border-slate-800/80 last:border-none hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                         >
+                          <td className="px-5 py-2.5">
+                            <Link to={`/cases/${c.id}`} className="inline-block relative group/thumb">
+                              <img
+                                src={c.image_url || resolveSpecimenUrl(c.storage_url || c.image_url, c.case_code, c.document_type)}
+                                alt={c.case_code}
+                                className="h-9 w-14 object-cover rounded border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 shadow-2xs transition-transform duration-200 group-hover/thumb:scale-125 group-hover/thumb:z-20 group-hover/thumb:shadow-md"
+                                onError={(e) => {
+                                  const fallback = resolveSpecimenUrl(null, c.case_code, c.document_type);
+                                  if (e.currentTarget.src !== fallback && !e.currentTarget.src.endsWith(fallback)) {
+                                    e.currentTarget.src = fallback;
+                                  }
+                                }}
+                              />
+                            </Link>
+                          </td>
                           <td className="px-5 py-3.5">
                             <div className="flex items-center gap-2">
                               <span className="font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">{c.case_code}</span>

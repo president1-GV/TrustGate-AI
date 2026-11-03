@@ -231,6 +231,14 @@ export async function saveScreeningCaseOffline(params: {
       ? "NORMAL"
       : "LOW";
 
+  const persistentImg =
+    params.storageUrl ||
+    (typeof window !== "undefined"
+      ? sessionStorage.getItem("tg_doc_img_" + params.caseCode) ||
+        localStorage.getItem("tg_doc_img_" + params.caseCode) ||
+        null
+      : null);
+
   const caseRow: CaseRow = {
     id: caseId,
     case_code: params.caseCode,
@@ -249,6 +257,8 @@ export async function saveScreeningCaseOffline(params: {
     officer_decision: null,
     decision_timestamp: null,
     notes: null,
+    storage_url: persistentImg,
+    image_url: persistentImg,
     profiles: { display_name: "Field Officer (Local Station)", badge_id: "AIRGAP-01" },
     assigned: { display_name: "Field Officer (Local Station)" },
   };
